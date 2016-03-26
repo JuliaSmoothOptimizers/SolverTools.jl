@@ -18,23 +18,23 @@ function jump_vs_ampl_helper(nlp_jump :: AbstractNLPModel,
     f_jump = obj(nlp_jump, x)
     f_ampl = obj(nlp_ampl, x)
     err_f = abs(f_jump - f_ampl) / max(abs(f_ampl), 1.0)
-    err_f > rtol && println(err_f)  # @printf("\n|∆f/f| = %7.1e", err_f)
+    err_f > rtol && @printf("\n|∆f/f| = %7.1e", err_f)
 
     g_jump = grad(nlp_jump, x)
     g_ampl = grad(nlp_ampl, x)
     err_g = norm(g_jump - g_ampl) / max(norm(g_ampl), 1.0)
-    err_g > rtol && println(err_g)  # @printf("\n|∆g/g| = %7.1e")
+    err_g > rtol && @printf("\n|∆g/g| = %7.1e", err_g)
 
     H_jump = hess(nlp_jump, x)
     H_ampl = hess(nlp_ampl, x)
     err_H = vecnorm(H_jump - H_ampl) / max(vecnorm(H_ampl), 1.0)
-    err_H > rtol && println(err_H)  # @printf("\n|∆H/H| = %7.1e", err_H)
+    err_H > rtol && @printf("\n|∆H/H| = %7.1e", err_H)
 
     v = 10 * (rand(n) - 0.5)
     Hv_jump = hprod(nlp_jump, x, v)
     Hv_ampl = hprod(nlp_ampl, x, v)
     err_Hv = norm(Hv_jump - Hv_ampl) / max(norm(Hv_ampl), 1.0)
-    err_Hv > rtol && println(err_Hv)  # @printf("\n|∆Hv/Hv| = %7.1e", err_Hv)
+    err_Hv > rtol && @printf("\n|∆Hv/Hv| = %7.1e", err_Hv)
 
     if m > 0
       c_jump = cons(nlp_jump, x)
@@ -55,13 +55,13 @@ function jump_vs_ampl_helper(nlp_jump :: AbstractNLPModel,
       p = [lin ; lnet ; nnet ; nln]
       c_ampl = c_ampl[p]
       err_c = norm(c_jump - c_ampl) / max(norm(c_ampl), 1.0)
-      err_c > rtol && println(err_c)  # @printf("\n|∆c/c| = %7.1e", err_c)
+      err_c > rtol && @printf("\n|∆c/c| = %7.1e", err_c)
 
       J_jump = jac(nlp_jump, x)
       J_ampl = jac(nlp_ampl, x)
       J_ampl = J_ampl[p, :]
       err_J = vecnorm(J_jump - J_ampl) / max(vecnorm(J_ampl), 1.0)
-      err_J > rtol && println(err_J)  # @printf("\n|∆J/J| = %7.1e", err_J)
+      err_J > rtol && @printf("\n|∆J/J| = %7.1e", err_J)
 
       y = 10 * (rand(m) - 0.5)
 
@@ -70,12 +70,12 @@ function jump_vs_ampl_helper(nlp_jump :: AbstractNLPModel,
       H_jump = hess(nlp_jump, x, -y)
       H_ampl = hess(nlp_ampl, x, y=y[p])
       err_H = vecnorm(H_jump - H_ampl) / max(vecnorm(H_ampl), 1.0)
-      err_H > rtol && println(err_H)  # @printf("\n|∆H/H| = %7.1e", err_H)
+      err_H > rtol && @printf("\n|∆H/H| = %7.1e", err_H)
 
       Hv_jump = hprod(nlp_jump, x, -y, v)
       Hv_ampl = hprod(nlp_ampl, x, v, y=y[p])
       err_Hv = norm(Hv_jump - Hv_ampl) / max(norm(Hv_ampl), 1.0)
-      err_Hv > rtol && println(err_Hv)  # @printf("\n|∆Hv/Hv| = %7.1e", err_Hv)
+      err_Hv > rtol && @printf("\n|∆Hv/Hv| = %7.1e", err_Hv)
     end
   end
 end
