@@ -15,7 +15,7 @@ end
 function profile_solvers(stats :: Dict{Symbol, Array{Int,2}};
                          title :: AbstractString="", kwargs...)
   performance_profile(hcat([sum(p, 2) for p in values(stats)]...),
-                      labels=collect(AbstractString, [string(s) for s in keys(stats)]),
+                      collect(AbstractString, [string(s) for s in keys(stats)]),
                       title=title)
 end
 
