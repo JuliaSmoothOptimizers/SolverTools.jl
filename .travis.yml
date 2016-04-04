@@ -31,9 +31,16 @@ before_install:
   - julia -e 'Pkg.build("AmplNLReader")'
   - julia -e 'Pkg.clone("https://github.com/JuliaOptimizers/Profiles.jl.git")'
 
-script:
+before_install:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia -e 'Pkg.clone(pwd()); Pkg.build("Optimize"); Pkg.test("Optimize"; coverage=true)'
+
+install:
+  - julia -e 'versioninfo()'
+  - julia -E 'Pkg.clone(pwd())'
+  - julia -E 'Pkg.build("Optimize")'
+
+script:
+  - julia --check-bounds=yes -E 'Pkg.test("Optimize", coverage=true)'
 
 after_success:
   - julia -e 'cd(Pkg.dir("Optimize")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
