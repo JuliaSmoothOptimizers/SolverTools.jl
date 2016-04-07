@@ -51,7 +51,7 @@ function run_ampl_problem(solver :: Symbol, problem :: Symbol, dim :: Int; verbo
 end
 
 "Apply a solver to a generic `AbstractNLPModel`."
-function run_solver(solver :: Symbol, nlp :: AbstractNLPModel, name :: AbstractString; verbose :: Bool=true, args...)
+function run_solver(solver :: Symbol, nlp :: AbstractNLPModel; verbose :: Bool=true, args...)
   solver_f = eval(solver)
   (x, f, gNorm, iter, optimal, tired, status) = solver_f(nlp, verbose=verbose; args...)
   # if nlp.scale_obj
@@ -59,7 +59,7 @@ function run_solver(solver :: Symbol, nlp :: AbstractNLPModel, name :: AbstractS
   #   gNorm /= nlp.scale_obj_factor
   # end
   @printf("%-15s  %8d  %9.2e  %7.1e  %5d  %5d  %6d  %s\n",
-          name, nlp.meta.nvar, f, gNorm,
+          nlp.meta.name, nlp.meta.nvar, f, gNorm,
           nlp.counters.neval_obj, nlp.counters.neval_grad,
           nlp.counters.neval_hprod, status)
   return optimal ? (nlp.counters.neval_obj, nlp.counters.neval_grad, nlp.counters.neval_hprod) : (-nlp.counters.neval_obj, -nlp.counters.neval_grad, -nlp.counters.neval_hprod)
