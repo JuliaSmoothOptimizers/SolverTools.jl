@@ -66,14 +66,12 @@ function trunk(nlp :: AbstractNLPModel;
     # H = opHermitian(hess(nlp, x))
     H = LinearOperator(n, Float64, v -> hprod(nlp, x, v))
     q = s -> dot(∇f, s) + 0.5 * dot(s, H * s)
-    # cgtol = max(rtol, min(0.5 * cgtol, sqrt(∇fNorm2)))
     cgtol = max(ϵ, min(0.7 * cgtol, 0.01 * ∇fNorm2))
     (s, cg_stats) = cg(H, -∇f,
                        atol=cgtol, rtol=0.0,
                        radius=get_property(tr, :radius),
                        itmax=max(3 * n, 50),
                        verbose=false)
-    # @printf("\nϵ = %15.7e, cgtol = %15.7e, inner = %d\n", ϵ, cgtol, length(cg_stats.residuals))
 
     # Compute actual vs. predicted reduction.
     sNorm = BLAS.nrm2(n, s, 1)
