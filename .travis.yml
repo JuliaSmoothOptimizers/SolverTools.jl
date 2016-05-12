@@ -27,7 +27,7 @@ before_install:
   - julia -e 'Pkg.clone("https://github.com/dpo/LinearOperators.jl.git")'
   - julia -e 'Pkg.checkout("LinearOperators", "develop")'
   - julia -e 'Pkg.clone("https://github.com/JuliaOptimizers/AmplNLReader.jl.git")'
-  - julia -e 'Pkg.checkout("AmplNLReader", "nlpmodel")'
+  - julia -e 'Pkg.checkout("AmplNLReader", "develop")'
   - julia -e 'Pkg.build("AmplNLReader")'
   - julia -e 'Pkg.clone("https://github.com/JuliaOptimizers/Profiles.jl.git")'
 
