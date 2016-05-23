@@ -16,10 +16,8 @@ before_install:
     tar -xzf cmake-3.2.1-Linux-x86_64.tar.gz;
     sudo cp -fR cmake-3.2.1-Linux-x86_64/* /usr;
     export PATH=`pwd`/cmake-3.2.1-Linux-x86_64/bin:$PATH; fi
-  - which cmake
-  - cmake --version
-  - julia -e 'Pkg.clone("https://github.com/JuliaOptimizers/NLPModels.jl.git")'
-  - julia -e 'Pkg.checkout("NLPModels", "develop")'
+  - julia -E 'Pkg.clone("https://github.com/abelsiqueira/NLPModels.jl")'
+  - julia -E 'Pkg.checkout("NLPModels", "feat/simplenlpmodel")'
   - julia -e 'Pkg.clone("https://github.com/JuliaOptimizers/OptimizationProblems.jl.git")'
   - julia -e 'Pkg.add("DistributedArrays"); Pkg.build("DistributedArrays")'
   - julia -e 'Pkg.clone("https://github.com/optimizers/Krylov.jl.git")'
@@ -30,10 +28,15 @@ before_install:
   - julia -e 'Pkg.checkout("AmplNLReader", "develop")'
   - julia -e 'Pkg.build("AmplNLReader")'
   - julia -e 'Pkg.clone("https://github.com/JuliaOptimizers/Profiles.jl.git")'
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+
+install:
+  - julia -e 'versioninfo()'
+  - julia -E 'Pkg.clone(pwd())'
+  - julia -E 'Pkg.build("Optimize")'
 
 script:
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia -e 'Pkg.clone(pwd()); Pkg.build("Optimize"); Pkg.test("Optimize"; coverage=true)'
+  - julia --check-bounds=yes -E 'Pkg.test("Optimize", coverage=true)'
 
 after_success:
   - julia -e 'cd(Pkg.dir("Optimize")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
