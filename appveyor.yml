@@ -16,18 +16,6 @@ install:
         "C:\projects\julia-binary.exe")
 # Run installer silently, output to C:\projects\julia
   - C:\projects\julia-binary.exe /S /D=C:\projects\julia
-  - C:\projects\julia\bin\julia -e "Pkg.clone(\"https://github.com/JuliaOptimizers/NLPModels.jl.git\")"
-  - C:\projects\julia\bin\julia -e "Pkg.checkout(\"NLPModels\", \"develop\")"
-  - C:\projects\julia\bin\julia -e "Pkg.clone(\"https://github.com/JuliaOptimizers/OptimizationProblems.jl.git\")"
-  - C:\projects\julia\bin\julia -e "Pkg.add(\"DistributedArrays\"); Pkg.build(\"DistributedArrays\")"
-  - C:\projects\julia\bin\julia -e "Pkg.clone(\"https://github.com/optimizers/Krylov.jl.git\")"
-  - C:\projects\julia\bin\julia -e "Pkg.checkout(\"Krylov\", \"develop\")"
-  - C:\projects\julia\bin\julia -e "Pkg.clone(\"https://github.com/dpo/LinearOperators.jl.git\")"
-  - C:\projects\julia\bin\julia -e "Pkg.checkout(\"LinearOperators\", \"develop\")"
-  - C:\projects\julia\bin\julia -e "Pkg.clone(\"https://github.com/JuliaOptimizers/AmplNLReader.jl.git\")"
-  - C:\projects\julia\bin\julia -e "Pkg.checkout(\"AmplNLReader\", \"nlpmodel\")"
-  - C:\projects\julia\bin\julia -e "Pkg.build(\"AmplNLReader\")"
-  - C:\projects\julia\bin\julia -e "Pkg.clone(\"https://github.com/JuliaOptimizers/Profiles.jl.git\")"
 
 build_script:
 # Need to convert from shallow to complete for Pkg.clone to work
