@@ -22,18 +22,6 @@ before_install:
     export PATH=`pwd`/cmake-3.3.2-Linux-x86_64/bin:$PATH; fi
   - which cmake
   - cmake --version
-  - julia -e 'Pkg.clone("https://github.com/JuliaSmoothOptimizers/NLPModels.jl.git")'
-  - julia -e 'Pkg.checkout("NLPModels", "develop")'
-  - julia -e 'Pkg.clone("https://github.com/JuliaSmoothOptimizers/OptimizationProblems.jl.git")'
-  - julia -e 'Pkg.add("DistributedArrays"); Pkg.build("DistributedArrays")'
-  - julia -e 'Pkg.clone("https://github.com/JuliaSmoothOptimizers/Krylov.jl.git")'
-  - julia -e 'Pkg.checkout("Krylov", "develop")'
-  - julia -e 'Pkg.clone("https://github.com/JuliaSmoothOptimizers/LinearOperators.jl.git")'
-  - julia -e 'Pkg.checkout("LinearOperators")'
-  - julia -e 'Pkg.clone("https://github.com/JuliaSmoothOptimizers/AmplNLReader.jl.git")'
-  - julia -e 'Pkg.checkout("AmplNLReader", "develop")'
-  - julia -e 'Pkg.build("AmplNLReader")'
-  - julia -e 'Pkg.clone("https://github.com/JuliaSmoothOptimizers/Profiles.jl.git")'
 
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi

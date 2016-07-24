@@ -5,3 +5,10 @@
 
 
 A framework to build novel optimization algorithms in Julia.
+
+# Installation
+
+```
+Pkg.clone("https://github.com/JuliaSmoothOptimizers/Optimize.jl.git")
+Pkg.build("Optimize")
+```
