@@ -21,7 +21,6 @@ function run_problems(solver :: Symbol, problems :: Vector{Symbol}, dim :: Int; 
       stats[k, :] = [f, g, h]
     catch e
       stats[k, :] = [-1, -1, -1]
-      rethrow(e)
     end
     k = k + 1
   end
