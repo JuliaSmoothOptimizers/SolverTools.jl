@@ -70,7 +70,7 @@ function trunk(nlp :: AbstractNLPModel;
     (s, cg_stats) = cg(H, -∇f,
                        atol=cgtol, rtol=0.0,
                        radius=get_property(tr, :radius),
-                       itmax=max(3 * n, 50),
+                       itmax=max(2 * n, 50),
                        verbose=false)
 
     # Compute actual vs. predicted reduction.
