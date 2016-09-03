@@ -13,6 +13,11 @@
 
 export trunk
 
+"Exception type raised in case of error inside Trunk."
+type TrunkException <: Exception
+  msg  :: ASCIIString
+end
+
 function trunk(nlp :: AbstractNLPModel;
                atol :: Float64=1.0e-8, rtol :: Float64=1.0e-6,
                max_f :: Int=0,
@@ -127,7 +132,7 @@ function trunk(nlp :: AbstractNLPModel;
       # BLAS.scal!(n, get_property(tr, :radius) / sNorm, s, 1)
 
       slope = BLAS.dot(n, s, 1, ∇f, 1)
-      slope < 0.0 || error("not a descent direction: slope = ", slope)
+      slope < 0.0 || throw(TrunkException(@sprintf("not a descent direction: slope = %9.2e, ‖∇f‖ = %7.1e", slope, ∇fNorm2)))
       α = 1.0
       while (bk < bk_max) && (ft > f + β * α * slope)
         bk = bk + 1
