@@ -1,10 +1,13 @@
 const home = "https://github.com/JuliaSmoothOptimizers"
 const deps = Dict{AbstractString, AbstractString}(
-               "NLPModels" => "develop",
-               "OptimizationProblems" => "master",
-               "Krylov" => "develop",
-               "AmplNLReader" => "develop",
-               "Profiles" => "master")
+              "NLPModels" => "develop",
+              "OptimizationProblems" => "master",
+              "Krylov" => "develop",
+              "AmplNLReader" => "develop",
+              "Profiles" => "master")
+
+const unix_deps = Dict{AbstractString, AbstractString}(
+              "CUTEst" => "develop")
 
 function dep_installed(dep)
   try
@@ -15,13 +18,17 @@ function dep_installed(dep)
   end
 end
 
-function dep_install(dep)
+function dep_install(dep, branch)
   dep_installed(dep) || Pkg.clone("$home/$dep.jl.git")
-  Pkg.checkout(dep, deps[dep])
+  Pkg.checkout(dep, branch)
   Pkg.build(dep)
 end
 
-for dep in keys(deps)
-  dep_install(dep)
+function deps_install(deps)
+  for dep in keys(deps)
+    dep_install(dep, deps[dep])
+  end
 end
 
+deps_install(deps)
+@unix_only deps_install(unix_deps)

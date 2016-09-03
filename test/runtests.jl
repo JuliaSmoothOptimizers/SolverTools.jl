@@ -4,6 +4,10 @@ using AmplNLReader
 using OptimizationProblems
 
 models = [AmplModel("dixmaanj.nl"), JuMPNLPModel(dixmaanj())]
+@unix_only begin
+  using CUTEst
+  push!(models, CUTEstModel("DIXMAANJ", "-param", "M=30"))
+end
 solvers = [:trunk, :lbfgs]
 
 for model in models
