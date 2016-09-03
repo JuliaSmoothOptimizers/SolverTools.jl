@@ -9,6 +9,7 @@ end
 "Apply a solver to a set of problems."
 function run_problems(solver :: Symbol, problems :: Vector{Symbol}, dim :: Int; format :: Symbol=:jump, args...)
   format in (:jump, :ampl) || error("format not recognized---use :jump or :ampl")
+  run_problem = eval(symbol("run_" * string(format) * "_problem"))
   display_header()
   nprobs = length(problems)
   verbose = nprobs ≤ 1
@@ -16,7 +17,6 @@ function run_problems(solver :: Symbol, problems :: Vector{Symbol}, dim :: Int; 
   k = 1
   for problem in problems
     try
-      run_problem = eval(symbol("run_" * string(format) * "_problem"))
       (f, g, h) = run_problem(solver, problem, dim, verbose=verbose; args...)
       stats[k, :] = [f, g, h]
     catch e
