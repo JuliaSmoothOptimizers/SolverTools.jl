@@ -9,6 +9,7 @@ end
 "Apply a solver to a set of problems."
 function run_problems(solver :: Symbol, problems :: Vector{Symbol}, dim :: Int; format :: Symbol=:jump, args...)
   format in (:jump, :ampl) || error("format not recognized---use :jump or :ampl")
+  run_problem = eval(symbol("run_" * string(format) * "_problem"))
   display_header()
   nprobs = length(problems)
   verbose = nprobs ≤ 1
@@ -16,12 +17,10 @@ function run_problems(solver :: Symbol, problems :: Vector{Symbol}, dim :: Int; 
   k = 1
   for problem in problems
     try
-      run_problem = eval(symbol("run_" * string(format) * "_problem"))
       (f, g, h) = run_problem(solver, problem, dim, verbose=verbose; args...)
       stats[k, :] = [f, g, h]
     catch e
       stats[k, :] = [-1, -1, -1]
-      rethrow(e)
     end
     k = k + 1
   end
@@ -30,12 +29,10 @@ end
 
 "Apply a solver to a problem as a `JuMPNLPModel`."
 function run_jump_problem(solver :: Symbol, problem :: Symbol, dim :: Int; verbose :: Bool=true, args...)
-  problem_s = string(problem)
   problem_f = eval(problem)
-  nlp = JuMPNLPModel(problem_f(dim))
-  nlp.meta.ncon == 0 || error("problem has constraints")
+  nlp = JuMPNLPModel(problem_f(dim), name=string(problem))
   # scale_obj!(nlp)  # not implemented
-  stats = run_solver(solver, nlp, problem_s, verbose=verbose; args...)
+  stats = run_solver(solver, nlp, verbose=verbose; args...)
   # unscale_obj!(nlp)  # not implemented
   return stats
 end
@@ -44,15 +41,18 @@ end
 function run_ampl_problem(solver :: Symbol, problem :: Symbol, dim :: Int; verbose :: Bool=true, args...)
   problem_s = string(problem)
   nlp = AmplModel("$problem_s.nl")
-  nlp.meta.ncon == 0 || error("problem has constraints")
   # Objective scaling not yet available.
-  run_solver(solver, nlp, problem_s, verbose=verbose; args...)
+  stats = run_solver(solver, nlp, verbose=verbose; args...)
   amplmodel_finalize(nlp)
+  return stats
 end
 
 "Apply a solver to a generic `AbstractNLPModel`."
 function run_solver(solver :: Symbol, nlp :: AbstractNLPModel; verbose :: Bool=true, args...)
   solver_f = eval(solver)
+  args = Dict(args)
+  skip = haskey(args, :skipif) ? pop!(args, :skipif) : x -> false
+  skip(nlp) && return (-1, -1, -1)
   (x, f, gNorm, iter, optimal, tired, status) = solver_f(nlp, verbose=verbose; args...)
   # if nlp.scale_obj
   #   f /= nlp.scale_obj_factor
