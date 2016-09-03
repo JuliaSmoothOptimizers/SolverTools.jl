@@ -77,8 +77,8 @@ function trunk(nlp :: AbstractNLPModel;
     sNorm = BLAS.nrm2(n, s, 1)
     BLAS.blascopy!(n, x, 1, xt, 1)
     BLAS.axpy!(n, 1.0, s, 1, xt, 1)
-    ft = obj(nlp, xt)
     qs = q(s)
+    ft = obj(nlp, xt)
 
     try
       ρ = ratio(f, ft, qs)
