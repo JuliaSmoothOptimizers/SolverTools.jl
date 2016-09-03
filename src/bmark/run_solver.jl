@@ -31,7 +31,6 @@ end
 function run_jump_problem(solver :: Symbol, problem :: Symbol, dim :: Int; verbose :: Bool=true, args...)
   problem_f = eval(problem)
   nlp = JuMPNLPModel(problem_f(dim), name=string(problem))
-  nlp.meta.ncon == 0 || error("problem has constraints")
   # scale_obj!(nlp)  # not implemented
   stats = run_solver(solver, nlp, verbose=verbose; args...)
   # unscale_obj!(nlp)  # not implemented
@@ -42,7 +41,6 @@ end
 function run_ampl_problem(solver :: Symbol, problem :: Symbol, dim :: Int; verbose :: Bool=true, args...)
   problem_s = string(problem)
   nlp = AmplModel("$problem_s.nl")
-  nlp.meta.ncon == 0 || error("problem has constraints")
   # Objective scaling not yet available.
   stats = run_solver(solver, nlp, verbose=verbose; args...)
   amplmodel_finalize(nlp)
@@ -52,6 +50,9 @@ end
 "Apply a solver to a generic `AbstractNLPModel`."
 function run_solver(solver :: Symbol, nlp :: AbstractNLPModel; verbose :: Bool=true, args...)
   solver_f = eval(solver)
+  args = Dict(args)
+  skip = haskey(args, :skipif) ? pop!(args, :skipif) : x -> false
+  skip(nlp) && return (-1, -1, -1)
   (x, f, gNorm, iter, optimal, tired, status) = solver_f(nlp, verbose=verbose; args...)
   # if nlp.scale_obj
   #   f /= nlp.scale_obj_factor
