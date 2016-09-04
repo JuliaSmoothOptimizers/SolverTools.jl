@@ -1,5 +1,7 @@
 # A trust-region type and basic utility functions.
 
+include("steihaug.jl")
+
 "Exception type raised in case of error."
 type TrustRegionException <: Exception
   msg  :: ASCIIString
@@ -31,7 +33,6 @@ type TrustRegion
                decrease_factor, increase_factor)
   end
 end
-
 
 """Compute the actual vs. predicted reduction radio ∆f/Δm, where
 Δf = f_trial - f is the actual reduction is an objective/merit/penalty function,

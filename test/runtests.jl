@@ -1,7 +1,10 @@
 using Optimize
+using FactCheck
 using NLPModels
 using AmplNLReader
 using OptimizationProblems
+
+include("trust-region/steihaug.jl")
 
 dixmaanjfile = joinpath(dirname(@__FILE__), "dixmaanj.nl")
 models = [AmplModel(dixmaanjfile), JuMPNLPModel(dixmaanj())]
