@@ -4,6 +4,7 @@ using NLPModels
 using AmplNLReader
 using OptimizationProblems
 
+include("solvers/tron.jl")
 include("trust-region/steihaug.jl")
 
 dixmaanjfile = joinpath(dirname(@__FILE__), "dixmaanj.nl")
@@ -12,7 +13,7 @@ models = [AmplModel(dixmaanjfile), JuMPNLPModel(dixmaanj())]
   using CUTEst
   push!(models, CUTEstModel("DIXMAANJ", "-param", "M=30"))
 end
-solvers = [:trunk, :lbfgs]
+solvers = [:trunk, :lbfgs, :tron]
 
 for model in models
   for solver in solvers
