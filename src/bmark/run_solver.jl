@@ -1,5 +1,7 @@
 export display_header, run_problems, run_jump_problem, run_ampl_problem, run_solver
 
+type SkipException <: Exception
+end
 
 function display_header()
   @printf("%-15s  %8s  %9s  %7s  %5s  %5s  %6s  %s\n",
@@ -19,10 +21,10 @@ function run_problems(solver :: Symbol, problems :: Vector{Symbol}, dim :: Int; 
     try
       (f, g, h) = run_problem(solver, problem, dim, verbose=verbose; args...)
       stats[k, :] = [f, g, h]
+      k = k + 1
     catch e
-      stats[k, :] = [-1, -1, -1]
+      isa(e, SkipException) || rethrow(e)
     end
-    k = k + 1
   end
   return stats
 end
@@ -52,8 +54,18 @@ function run_solver(solver :: Symbol, nlp :: AbstractNLPModel; verbose :: Bool=t
   solver_f = eval(solver)
   args = Dict(args)
   skip = haskey(args, :skipif) ? pop!(args, :skipif) : x -> false
-  skip(nlp) && return (-1, -1, -1)
-  (x, f, gNorm, iter, optimal, tired, status) = solver_f(nlp, verbose=verbose; args...)
+  skip(nlp) && throw(SkipException())
+
+  # Julia nonsense
+  optimal = false
+  f = 0.0
+  gNorm = 0.0
+  status = "fail"
+  try
+    (x, f, gNorm, iter, optimal, tired, status) = solver_f(nlp, verbose=verbose; args...)
+  catch e
+    status = e.msg
+  end
   # if nlp.scale_obj
   #   f /= nlp.scale_obj_factor
   #   gNorm /= nlp.scale_obj_factor
