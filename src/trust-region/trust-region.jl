@@ -1,5 +1,7 @@
 # A trust-region type and basic utility functions.
 
+global const ϵ = eps(Float64)
+
 "Exception type raised in case of error."
 type TrustRegionException <: Exception
   msg  :: ASCIIString
@@ -38,11 +40,19 @@ end
 Δm = m_trial - m is the reduction predicted by the model m of f.
 We assume that m is being minimized, and therefore that Δm < 0.
 """
-function ratio(f :: Float64, f_trial :: Float64, Δm :: Float64)
-  pred = Δm - max(1.0, abs(f)) * 10.0 * eps(Float64)
+function ratio(nlp :: AbstractNLPModel, f :: Float64, f_trial :: Float64, Δm :: Float64,
+               x_trial :: Vector{Float64}, step :: Vector{Float64}, slope :: Float64)
+  absf = abs(f)
+  pred = Δm - max(1.0, absf) * 10.0 * ϵ
   pred < 0 || throw(TrustRegionException(@sprintf("Nonnegative predicted reduction: pred = %8.1e", pred)))
 
-  ared = f_trial - f + max(1.0, abs(f)) * 10.0 * eps(Float64)
+  ared = f_trial - f + max(1.0, absf) * 10.0 * ϵ
+  if (Δm < 1.0e+4 * ϵ) || (abs(ared) < 1.0e+4 * ϵ * absf)
+    # correct for roundoff error
+    g_trial = grad(nlp, x_trial)
+    slope_trial = dot(g_trial, step)
+    ared = (slope_trial + slope) / 2
+  end
   return ared / pred
 end
 

@@ -82,11 +82,13 @@ function trunk(nlp :: AbstractNLPModel;
     sNorm = BLAS.nrm2(n, s, 1)
     BLAS.blascopy!(n, x, 1, xt, 1)
     BLAS.axpy!(n, 1.0, s, 1, xt, 1)
-    qs = q(s)
+    slope = BLAS.dot(n, s, 1, ∇f, 1)
+    curv = BLAS.dot(n, s, 1, H * s, 1)
+    Δq = slope + 0.5 * curv
     ft = obj(nlp, xt)
 
     try
-      ρ = ratio(f, ft, qs)
+      ρ = ratio(nlp, f, ft, Δq, xt, s, slope)
     catch exc # negative predicted reduction
       status = exc.msg
       stalled = true
@@ -94,7 +96,7 @@ function trunk(nlp :: AbstractNLPModel;
     end
 
     if !monotone
-      ρ_hist = ratio(fref, ft, σref + qs)
+      ρ_hist = ratio(nlp, fref, ft, σref + Δq, xt, s, slope)
       ρ = max(ρ, ρ_hist)
     end
 
