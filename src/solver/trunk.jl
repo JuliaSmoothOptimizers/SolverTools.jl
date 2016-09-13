@@ -21,7 +21,7 @@ end
 function trunk(nlp :: AbstractNLPModel;
                atol :: Float64=1.0e-8, rtol :: Float64=1.0e-6,
                max_f :: Int=0,
-               bk_max :: Int=5,
+               bk_max :: Int=10,
                monotone :: Bool=false,
                nm_itmax :: Int=25,
                verbose :: Bool=true)
