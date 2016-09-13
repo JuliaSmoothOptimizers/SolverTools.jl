@@ -69,7 +69,6 @@ function trunk(nlp :: AbstractNLPModel;
     # minimize g's + 1/2 s'Hs  subject to ‖s‖ ≤ radius
     # H = opHermitian(hess(nlp, x))
     H = LinearOperator(n, Float64, v -> hprod(nlp, x, v))
-    q = s -> dot(∇f, s) + 0.5 * dot(s, H * s)
     cgtol = max(ϵ, min(0.7 * cgtol, 0.01 * ∇fNorm2))
     (s, cg_stats) = cg(H, -∇f,
                        atol=cgtol, rtol=0.0,
@@ -99,40 +98,16 @@ function trunk(nlp :: AbstractNLPModel;
       ρ = max(ρ, ρ_hist)
     end
 
-    bk = 0
-    if acceptable(tr, ρ)
-      # Update non-monotone mode parameters.
-      if !monotone
-        σref = σref + qs
-        σcur = σcur + qs
-        if ft < fmin
-          # New overall best objective value found.
-          fcur = ft
-          fmin = ft
-          σcur = 0.0
-          nm_iter = 0
-        else
-          nm_iter = nm_iter + 1
-        end
-
-        if ft > fcur
-          fcur = ft
-          σcur = 0.0
-        end
-
-        if nm_iter >= nm_itmax
-          fref = fcur
-          σref = σcur
-        end
-      end
-    else
+    if !acceptable(tr, ρ)
       # Perform backtracking linesearch along s
       # Scaling s to the trust-region boundary, as recommended in
       # Algorithm 10.3.2 of the Trust-Region book
       # appears to deteriorate results.
       # BLAS.scal!(n, get_property(tr, :radius) / sNorm, s, 1)
+      # slope *= get_property(tr, :radius) / sNorm
+      # sNorm = get_property(tr, :radius)
 
-      slope = BLAS.dot(n, s, 1, ∇f, 1)
+      bk = 0
       slope < 0.0 || throw(TrunkException(@sprintf("not a descent direction: slope = %9.2e, ‖∇f‖ = %7.1e", slope, ∇fNorm2)))
       α = 1.0
       while (bk < bk_max) && (ft > f + β * α * slope)
@@ -143,17 +118,52 @@ function trunk(nlp :: AbstractNLPModel;
         ft = obj(nlp, xt)
       end
       sNorm *= α
+      BLAS.scal!(n, α, s, 1)
+      slope *= α
+      Δq = slope + 0.5 * α * α * curv
+      ρ = ratio(nlp, f, ft, Δq, xt, s, slope)
+      if !monotone
+        ρ_hist = ratio(nlp, fref, ft, σref + Δq, xt, s, slope)
+        ρ = max(ρ, ρ_hist)
+      end
+    end
+
+    if acceptable(tr, ρ)
+      # Update non-monotone mode parameters.
+      if !monotone
+        σref = σref + Δq
+        σcur = σcur + Δq
+        if ft < fmin
+          # New overall best objective value found.
+          fcur = ft
+          fmin = ft
+          σcur = 0.0
+          nm_iter = 0
+        else
+          nm_iter = nm_iter + 1
+
+          if ft > fcur
+            fcur = ft
+            σcur = 0.0
+          end
+
+          if nm_iter >= nm_itmax
+            fref = fcur
+            σref = σcur
+          end
+        end
+      end
+
+      BLAS.blascopy!(n, xt, 1, x, 1)
+      f = ft
+      ∇f = grad(nlp, x)
+      ∇fNorm2 = BLAS.nrm2(n, ∇f, 1)
     end
 
     verbose && @printf("%8.1e  %5d  %2d  %s\n", ρ, length(cg_stats.residuals), bk, cg_stats.status)
 
     # Move on.
     update!(tr, ρ, sNorm)
-    BLAS.blascopy!(n, xt, 1, x, 1)
-    f = ft
-    ∇f = grad(nlp, x)
-    ∇fNorm2 = BLAS.nrm2(n, ∇f, 1)
-    ∇fNorm = norm(∇f, Inf)
 
     verbose && @printf("%4d  %9.2e  %7.1e  %7.1e  ", iter, f, ∇fNorm2, get_property(tr, :radius))
 
