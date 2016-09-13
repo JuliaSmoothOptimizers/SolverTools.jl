@@ -38,8 +38,7 @@ function trunk(nlp :: AbstractNLPModel;
   f = obj(nlp, x)
   ∇f = grad(nlp, x)
   ∇fNorm2 = BLAS.nrm2(n, ∇f, 1)
-  ∇fNorm = norm(∇f, Inf)
-  ϵ = atol + rtol * ∇fNorm
+  ϵ = atol + rtol * ∇fNorm2
   tr = TrustRegion(min(max(0.1 * ∇fNorm2, 1.0), 100.0))
 
   # Non-monotone mode parameters.
@@ -60,7 +59,7 @@ function trunk(nlp :: AbstractNLPModel;
 
   if verbose
     @printf("%4s  %9s  %7s  %7s  %8s  %5s  %2s  %s\n", "Iter", "f", "‖∇f‖", "Radius", "Ratio", "Inner", "bk", "status")
-    @printf("%4d  %9.2e  %7.1e  %7.1e  ", iter, f, ∇fNorm, get_property(tr, :radius))
+    @printf("%4d  %9.2e  %7.1e  %7.1e  ", iter, f, ∇fNorm2, get_property(tr, :radius))
   end
 
   while !(optimal || tired || stalled)
@@ -166,5 +165,5 @@ function trunk(nlp :: AbstractNLPModel;
   stalled || (status = tired ? "maximum number of evaluations" : "first-order stationary")
 
   # TODO: create a type to hold solver statistics.
-  return (x, f, ∇fNorm, iter, optimal, tired, status)
+  return (x, f, ∇fNorm2, iter, optimal, tired, status)
 end
