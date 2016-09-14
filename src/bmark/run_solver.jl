@@ -61,17 +61,22 @@ function run_solver(solver :: Symbol, nlp :: AbstractNLPModel; verbose :: Bool=t
   f = 0.0
   gNorm = 0.0
   status = "fail"
+ @printf("%-15s", nlp.meta.name)
   try
     (x, f, gNorm, iter, optimal, tired, status) = solver_f(nlp, verbose=verbose; args...)
   catch e
-    status = e.msg
+      try
+          status = e.msg
+      catch
+          status = "unknown failure"
+      end
   end
   # if nlp.scale_obj
   #   f /= nlp.scale_obj_factor
   #   gNorm /= nlp.scale_obj_factor
   # end
-  @printf("%-15s  %8d  %9.2e  %7.1e  %5d  %5d  %6d  %s\n",
-          nlp.meta.name, nlp.meta.nvar, f, gNorm,
+  @printf(" %8d  %9.2e  %7.1e  %5d  %5d  %6d  %s\n",
+          nlp.meta.nvar, f, gNorm,
           nlp.counters.neval_obj, nlp.counters.neval_grad,
           nlp.counters.neval_hprod, status)
   return optimal ? (nlp.counters.neval_obj, nlp.counters.neval_grad, nlp.counters.neval_hprod) : (-nlp.counters.neval_obj, -nlp.counters.neval_grad, -nlp.counters.neval_hprod)
