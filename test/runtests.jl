@@ -18,15 +18,14 @@ for model in models
   end
 end
 
-
 # clean up the test directory
+here = dirname(@__FILE__)
+so_files = filter(x -> (ismatch(r".so$", x) || ismatch(r".dylib$", x)), readdir(here))
 
-path = dirname(@__FILE__)
-list_so_files = filter(x->contains(x,".so"), readdir(path))
-
-for so_file=list_so_files
-    run(`rm $path/$so_file `)
+for so_file in so_files
+	rm(joinpath(here, so_file))
 end
 
-run(`rm $path/AUTOMAT.d`)
-run(`rm $path/OUTSDIF.d`)
+rm(joinpath(here, "AUTOMAT.d"))
+rm(joinpath(here, "OUTSDIF.d"))
+
