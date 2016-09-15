@@ -98,6 +98,7 @@ function trunk(nlp :: AbstractNLPModel;
       ρ = max(ρ, ρ_hist)
     end
 
+    bk = 0
     if !acceptable(tr, ρ)
       # Perform backtracking linesearch along s
       # Scaling s to the trust-region boundary, as recommended in
@@ -107,7 +108,6 @@ function trunk(nlp :: AbstractNLPModel;
       # slope *= get_property(tr, :radius) / sNorm
       # sNorm = get_property(tr, :radius)
 
-      bk = 0
       slope < 0.0 || throw(TrunkException(@sprintf("not a descent direction: slope = %9.2e, ‖∇f‖ = %7.1e", slope, ∇fNorm2)))
       α = 1.0
       while (bk < bk_max) && (ft > f + β * α * slope)
