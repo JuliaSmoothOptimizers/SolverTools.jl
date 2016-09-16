@@ -30,3 +30,8 @@ end
   rm(joinpath(here, "AUTOMAT.d"))
   rm(joinpath(here, "OUTSDIF.d"))
 end
+
+# test benchmark helpers, skip constrained problems (hs7 has constraints)
+run_ampl_problem(:trunk, :dixmaanj, 0, verbose=false)
+probs = [:dixmaane, :dixmaanf, :dixmaang, :dixmaanh, :dixmaani, :dixmaanj, :hs7]
+bmark_and_profile(solvers, probs, 99, skipif=m -> m.meta.ncon > 0)
