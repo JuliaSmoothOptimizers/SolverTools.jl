@@ -20,7 +20,9 @@ function profile_solvers(stats :: Dict{Symbol, Array{Int,2}};
 end
 
 "Run a set of solvers on a set of problems and plot a performance profile."
-function bmark_and_profile(args...; kwargs...)
-  stats = bmark_solvers(args...; kwargs...)
-  profile_solvers(stats)
+function bmark_and_profile(args...;
+                           bmark_args :: Dict{Symbol, Any}=Dict{Symbol,Any}(),
+                           profile_args :: Dict{Symbol, Any}=Dict{Symbol,Any}())
+  stats = bmark_solvers(args...; bmark_args...)
+  profile_solvers(stats; profile_args...)
 end
