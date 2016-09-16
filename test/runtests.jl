@@ -12,7 +12,7 @@ solvers = [:trunk, :lbfgs]
 
 for model in models
   for solver in solvers
-    stats = run_solver(solver, model, verbose=true)
+    stats = run_solver(solver, model, verbose=false)
     assert(all([stats...] .>= 0))
     reset!(model)
   end
@@ -32,6 +32,6 @@ end
 end
 
 # test benchmark helpers, skip constrained problems (hs7 has constraints)
-run_ampl_problem(:trunk, :dixmaanj, 0, verbose=false)
+run_ampl_problem(:trunk, :dixmaanj, 0, verbose=true, monotone=false)
 probs = [:dixmaane, :dixmaanf, :dixmaang, :dixmaanh, :dixmaani, :dixmaanj, :hs7]
 bmark_and_profile(solvers, probs, 99, skipif=m -> m.meta.ncon > 0)
