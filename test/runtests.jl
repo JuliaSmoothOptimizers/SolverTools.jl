@@ -3,7 +3,7 @@ using NLPModels
 using AmplNLReader
 using OptimizationProblems
 
-models = [AmplModel("dixmaanj.nl"), JuMPNLPModel(dixmaanj())]
+models = [AmplModel("dixmaanj.nl"), JuMPNLPModel(dixmaanj(), name="dixmaanj")]
 @unix_only begin
   using CUTEst
   push!(models, CUTEstModel("DIXMAANJ", "-param", "M=30"))
