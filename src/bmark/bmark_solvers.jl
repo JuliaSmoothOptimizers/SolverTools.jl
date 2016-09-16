@@ -1,7 +1,27 @@
 export bmark_solvers, profile_solvers, bmark_and_profile
 
 
-"Run a set of solvers on a set of problems. Return a dict of statistics."
+"""
+    bmark_solvers(solvers :: Vector{Symbol}, probs :: Vector{Symbol}, n :: Int; kwargs...)
+
+Run a set of solvers on a set of problems.
+
+#### Arguments
+* `solvers`: a vector of solvers to which each problem should be passed
+* `probs`: a vector of problem names as symbols
+  (see the `format` keyword argument)
+* `n`: the approximate size in which each problem should be instantiated.
+  The problem size may be adjusted automatically to the nearest smaller size
+  if a particular problem's size is constrained.
+  This argument has no effect on certain problem formats (see `format` below).
+
+#### Keyword arguments
+* `format::Symbol` the problem format. Currently, only `:jump` and `:ampl` are supported
+* any other keyword argument accepted by `run_problems()`
+
+#### Return value
+* a Dict{Symbol, Array{Int,2}} of statistics.
+"""
 function bmark_solvers(solvers :: Vector{Symbol}, probs :: Vector{Symbol}, n :: Int;
                        format :: Symbol=:jump, kwargs...)
   stats = Dict{Symbol, Array{Int,2}}()
@@ -11,7 +31,17 @@ function bmark_solvers(solvers :: Vector{Symbol}, probs :: Vector{Symbol}, n :: 
   return stats
 end
 
-"Plot a performance profile from a dict of statistics such as obtained from `bmark_solvers`."
+"""
+    profile_solvers(stats :: Dict{Symbol, Array{Int,2}}; title :: AbstractString="")
+
+Plot a performance profile from solver statistics.
+
+#### Arguments
+* `stats`: a dict of statistics such as obtained from `bmark_solvers()`
+
+#### Keyword arguments
+* `title`: the plot title.
+"""
 function profile_solvers(stats :: Dict{Symbol, Array{Int,2}};
                          title :: AbstractString="")
   performance_profile(hcat([sum(p, 2) for p in values(stats)]...),
@@ -19,7 +49,20 @@ function profile_solvers(stats :: Dict{Symbol, Array{Int,2}};
                       title=title)
 end
 
-"Run a set of solvers on a set of problems and plot a performance profile."
+"""
+    bmark_and_profile(args...;
+                      bmark_args :: Dict{Symbol, Any}=Dict{Symbol,Any}(),
+                      profile_args :: Dict{Symbol, Any}=Dict{Symbol,Any}())
+
+Run a set of solvers on a set of problems and plot a performance profile.
+
+#### Arguments
+Any argument accepted by `bmark_solvers()`.
+
+#### Keyword arguments
+* `bmark_args`: a dict of keyword arguments accepted by `bmark_solvers()`
+* `profile_args`: a dict of keyword arguments accepted by `profile_solvers()`.
+"""
 function bmark_and_profile(args...;
                            bmark_args :: Dict{Symbol, Any}=Dict{Symbol,Any}(),
                            profile_args :: Dict{Symbol, Any}=Dict{Symbol,Any}())
