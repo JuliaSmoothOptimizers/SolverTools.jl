@@ -11,7 +11,7 @@ ampl_probs = [symbol(split(p, ".")[1]) for p in filter(x -> contains(x, ".nl"), 
 function two_solvers()
   solvers = [:trunk, :lbfgs]
   title = @sprintf("f+g+hprod on %d problems of size about %d", length(jump_probs), n)
-  profiles = bmark_and_profile(solvers, jump_probs, n, format=:jump, title=title, skipif=model -> model.ncon != 0)
+  profiles = bmark_and_profile(solvers, jump_probs, n, format=:jump, title=title, skipif=model -> model.meta.ncon != 0)
 end
 
 # Example 2: benchmark one solver on problems written in two modeling languages
