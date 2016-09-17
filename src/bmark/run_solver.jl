@@ -36,7 +36,7 @@ function run_problems(solver :: Symbol, problems :: Vector{Symbol}, dim :: Int; 
   display_header()
   nprobs = length(problems)
   verbose = nprobs ≤ 1
-  stats = Array(Int, nprobs, 3)
+  stats = -ones(nprobs, 3)
   k = 1
   for problem in problems
     try
