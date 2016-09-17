@@ -30,27 +30,27 @@ function run_problems(solver :: Symbol, problems :: Vector{Symbol}, dim :: Int; 
 end
 
 "Apply a solver to a problem as a `JuMPNLPModel`."
-function run_jump_problem(solver :: Symbol, problem :: Symbol, dim :: Int; verbose :: Bool=true, args...)
+function run_jump_problem(solver :: Symbol, problem :: Symbol, dim :: Int; args...)
   problem_f = eval(problem)
   nlp = JuMPNLPModel(problem_f(dim), name=string(problem))
   # scale_obj!(nlp)  # not implemented
-  stats = run_solver(solver, nlp, verbose=verbose; args...)
+  stats = run_solver(solver, nlp; args...)
   # unscale_obj!(nlp)  # not implemented
   return stats
 end
 
 "Apply a solver to a problem as an `AmplModel`."
-function run_ampl_problem(solver :: Symbol, problem :: Symbol, dim :: Int; verbose :: Bool=true, args...)
+function run_ampl_problem(solver :: Symbol, problem :: Symbol, dim :: Int; args...)
   problem_s = string(problem)
   nlp = AmplModel("$problem_s.nl")
   # Objective scaling not yet available.
-  stats = run_solver(solver, nlp, verbose=verbose; args...)
+  stats = run_solver(solver, nlp; args...)
   amplmodel_finalize(nlp)
   return stats
 end
 
 "Apply a solver to a generic `AbstractNLPModel`."
-function run_solver(solver :: Symbol, nlp :: AbstractNLPModel; verbose :: Bool=true, args...)
+function run_solver(solver :: Symbol, nlp :: AbstractNLPModel; args...)
   solver_f = eval(solver)
   args = Dict(args)
   skip = haskey(args, :skipif) ? pop!(args, :skipif) : x -> false
@@ -62,7 +62,7 @@ function run_solver(solver :: Symbol, nlp :: AbstractNLPModel; verbose :: Bool=t
   gNorm = 0.0
   status = "fail"
   try
-    (x, f, gNorm, iter, optimal, tired, status) = solver_f(nlp, verbose=verbose; args...)
+    (x, f, gNorm, iter, optimal, tired, status) = solver_f(nlp; args...)
   catch e
     status = e.msg
   end
