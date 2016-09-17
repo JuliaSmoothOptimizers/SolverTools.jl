@@ -22,11 +22,10 @@ Run a set of solvers on a set of problems.
 #### Return value
 * a Dict{Symbol, Array{Int,2}} of statistics.
 """
-function bmark_solvers(solvers :: Vector{Symbol}, probs :: Vector{Symbol}, n :: Int;
-                       format :: Symbol=:jump, kwargs...)
+function bmark_solvers(solvers :: Vector{Symbol}, args...; kwargs...)
   stats = Dict{Symbol, Array{Int,2}}()
   for solver in solvers
-    stats[solver] = run_problems(solver, probs, n, format=format; kwargs...)
+    stats[solver] = run_problems(solver, args...; kwargs...)
   end
   return stats
 end
