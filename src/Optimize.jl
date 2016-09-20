@@ -17,6 +17,5 @@ include("solver/solver.jl")
 include("bmark/run_solver.jl")
 include("bmark/bmark_solvers.jl")
 include("bmark/jump_vs_ampl.jl")
-include("bmark/dercheck.jl")
 
 end
