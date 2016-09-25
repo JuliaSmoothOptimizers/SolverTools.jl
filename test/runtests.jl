@@ -2,9 +2,11 @@ using Optimize
 using NLPModels
 using AmplNLReader
 using OptimizationProblems
+using Compat
+import Compat.String
 
-models = [AmplModel("dixmaanj.nl"), JuMPNLPModel(dixmaanj(), name="dixmaanj")]
-@unix_only begin
+models = [AmplModel("dixmaanj.nl"), MathProgNLPModel(dixmaanj(), name="dixmaanj")]
+@static if is_unix()
   using CUTEst
   push!(models, CUTEstModel("DIXMAANJ", "-param", "M=30"))
 end
@@ -19,7 +21,7 @@ for model in models
 end
 
 # clean up the test directory
-@unix_only begin
+@static if is_unix()
   here = dirname(@__FILE__)
   so_files = filter(x -> (ismatch(r".so$", x) || ismatch(r".dylib$", x)), readdir(here))
 

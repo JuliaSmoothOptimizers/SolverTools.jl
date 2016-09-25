@@ -1,12 +1,16 @@
+Pkg.add("Compat")
+using Compat
+import Compat.String
+
 const home = "https://github.com/JuliaSmoothOptimizers"
-const deps = Dict{AbstractString, AbstractString}(
+const deps = Dict{String, String}(
               "NLPModels" => "develop",
               "OptimizationProblems" => "master",
               "Krylov" => "develop",
               "AmplNLReader" => "develop",
               "Profiles" => "master")
 
-const unix_deps = Dict{AbstractString, AbstractString}(
+const unix_deps = Dict{String, String}(
               "CUTEst" => "develop")
 
 function dep_installed(dep)
@@ -31,4 +35,4 @@ function deps_install(deps)
 end
 
 deps_install(deps)
-@unix_only deps_install(unix_deps)
+@static if is_unix() deps_install(unix_deps); end

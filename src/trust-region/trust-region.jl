@@ -4,7 +4,7 @@ global const ϵ = eps(Float64)
 
 "Exception type raised in case of error."
 type TrustRegionException <: Exception
-  msg  :: ASCIIString
+  msg  :: String
 end
 
 type TrustRegion

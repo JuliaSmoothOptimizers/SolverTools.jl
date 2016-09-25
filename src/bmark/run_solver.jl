@@ -1,4 +1,4 @@
-export display_header, run_problems, run_jump_problem, run_ampl_problem, run_solver
+export display_header, run_problems, run_mpb_problem, run_ampl_problem, run_solver
 
 type SkipException <: Exception
 end
@@ -23,16 +23,16 @@ Apply a solver to a set of problems.
   This argument has no effect on certain problem formats (see `format` below).
 
 #### Keyword arguments
-* `format` the problem format. Currently, only `:jump` and `:ampl` are supported
+* `format` the problem format. Currently, only `:mpb` and `:ampl` are supported
 * any other keyword argument accepted by `run_problem()`
 
 #### Return value
 * an `Array(Int, nprobs, 3)` where `nprobs` is the number of problems in the problem.
   See the documentation of `run_solver()` for the form of each entry.
 """
-function run_problems(solver :: Symbol, problems :: Vector{Symbol}, dim :: Int; format :: Symbol=:jump, args...)
-  format in (:jump, :ampl) || error("format not recognized---use :jump or :ampl")
-  run_problem = eval(symbol("run_" * string(format) * "_problem"))
+function run_problems(solver :: Symbol, problems :: Vector{Symbol}, dim :: Int; format :: Symbol=:mpb, args...)
+  format in (:mpb, :ampl) || error("format not recognized---use :mpb or :ampl")
+  run_problem = eval(Symbol("run_" * string(format) * "_problem"))
   display_header()
   nprobs = length(problems)
   verbose = nprobs ≤ 1
@@ -52,9 +52,9 @@ end
 
 
 """
-    run_jump_problem(solver :: Symbol, problem :: Symbol, dim :: Int; kwargs...)
+    run_mpb_problem(solver :: Symbol, problem :: Symbol, dim :: Int; kwargs...)
 
-Apply a solver to a problem as a `JuMPNLPModel`.
+Apply a solver to a problem as a `MathProgNLPModel`.
 
 #### Arguments
 See the documentation of `run_problems()`.
@@ -65,9 +65,9 @@ Any keyword argument accepted by `run_solver()`.
 #### Return value
 See the documentation of `run_solver()`.
 """
-function run_jump_problem(solver :: Symbol, problem :: Symbol, dim :: Int; args...)
+function run_mpb_problem(solver :: Symbol, problem :: Symbol, dim :: Int; args...)
   problem_f = eval(problem)
-  nlp = JuMPNLPModel(problem_f(dim), name=string(problem))
+  nlp = MathProgNLPModel(problem_f(dim), name=string(problem))
   # scale_obj!(nlp)  # not implemented
   stats = run_solver(solver, nlp; args...)
   # unscale_obj!(nlp)  # not implemented

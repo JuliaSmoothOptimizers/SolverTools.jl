@@ -3,7 +3,7 @@ using NLPModels
 using Optimize
 using OptimizationProblems
 
-nlp = JuMPNLPModel(chainwoo());
+nlp = MathProgNLPModel(chainwoo());
 stuff = trunk(nlp, verbose=false);
 @profile stuff = trunk(nlp, verbose=false);
 ProfileView.view()
