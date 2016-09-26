@@ -25,7 +25,7 @@ function bmark_solvers(solvers :: Vector{Symbol}, args...; kwargs...)
 end
 
 """
-    profile_solvers(stats :: Dict{Symbol, Array{Int,2}}; title :: AbstractString="")
+    profile_solvers(stats :: Dict{Symbol, Array{Int,2}}; title :: String="")
 
 Plot a performance profile from solver statistics.
 
@@ -37,7 +37,7 @@ Any keyword argument accepted by `Profiles.performance_profile()`.
 """
 function profile_solvers(stats :: Dict{Symbol, Array{Int,2}}; kwargs...)
   performance_profile(hcat([sum(p, 2) for p in values(stats)]...),
-                      collect(AbstractString, [string(s) for s in keys(stats)]); kwargs...)
+                      collect(String, [string(s) for s in keys(stats)]); kwargs...)
 end
 
 """

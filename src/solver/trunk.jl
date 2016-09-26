@@ -15,7 +15,7 @@ export trunk
 
 "Exception type raised in case of error inside Trunk."
 type TrunkException <: Exception
-  msg  :: ASCIIString
+  msg  :: String
 end
 
 function trunk(nlp :: AbstractNLPModel;

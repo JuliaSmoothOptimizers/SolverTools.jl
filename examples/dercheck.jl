@@ -8,7 +8,7 @@ n = 5
 
 for prob in probs
   @printf("Checking %s: ", string(prob))
-  nlp = JuMPNLPModel(eval(prob)(n));
+  nlp = MathProgNLPModel(eval(prob)(n));
   @printf("%d variables and %d constraints\n", nlp.meta.nvar, nlp.meta.ncon)
 
   g_errs = gradient_check(nlp)
