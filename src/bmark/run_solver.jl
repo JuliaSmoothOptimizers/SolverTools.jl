@@ -91,7 +91,7 @@ See the documentation of `run_solver()`.
 """
 function run_ampl_problem(solver :: Symbol, problem :: Symbol, dim :: Int; args...)
   problem_s = string(problem)
-  nlp = AmplModel("$problem_s.nl")
+  nlp = AmplModel("$problem_s.nl", safe=true)
   # Objective scaling not yet available.
   stats = run_solver(solver, nlp; args...)
   amplmodel_finalize(nlp)
