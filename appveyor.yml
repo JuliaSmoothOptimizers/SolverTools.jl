@@ -9,6 +9,10 @@ notifications:
     on_build_failure: false
     on_build_status_changed: false
 
+branches:
+  only:
+    - master
+
 install:
 # Download most recent Julia Windows binary
   - ps: (new-object net.webclient).DownloadFile(
