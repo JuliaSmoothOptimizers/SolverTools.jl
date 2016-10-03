@@ -19,6 +19,7 @@ A Dict{Symbol, Array{Int,2}} of statistics.
 function bmark_solvers(solvers :: Vector{Symbol}, args...; kwargs...)
   stats = Dict{Symbol, Array{Int,2}}()
   for solver in solvers
+    @printf("\n%-15s   %s\n\n", " running ",string(solver))
     stats[solver] = run_problems(solver, args...; kwargs...)
   end
   return stats
@@ -58,5 +59,6 @@ function bmark_and_profile(args...;
                            bmark_args :: Dict{Symbol, Any}=Dict{Symbol,Any}(),
                            profile_args :: Dict{Symbol, Any}=Dict{Symbol,Any}())
   stats = bmark_solvers(args...; bmark_args...)
-  profile_solvers(stats; profile_args...)
+  profile = profile_solvers(stats; profile_args...)
+  return stats, profile
 end
