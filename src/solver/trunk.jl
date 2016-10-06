@@ -68,7 +68,7 @@ function trunk(nlp :: AbstractNLPModel;
     # Compute inexact solution to trust-region subproblem
     # minimize g's + 1/2 s'Hs  subject to ‖s‖ ≤ radius
     # H = opHermitian(hess(nlp, x))
-    H = LinearOperator(n, Float64, v -> hprod(nlp, x, v))
+    H = hess_op(nlp, x)
     cgtol = max(ϵ, min(0.7 * cgtol, 0.01 * ∇fNorm2))
     (s, cg_stats) = cg(H, -∇f,
                        atol=cgtol, rtol=0.0,
