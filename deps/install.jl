@@ -8,7 +8,7 @@ const deps = Dict{String, String}(
               "OptimizationProblems" => "master",
               "Krylov" => "develop",
               "AmplNLReader" => "develop",
-              "Profiles" => "master")
+              "BenchmarkProfiles" => "master")
 
 const unix_deps = Dict{String, String}(
               "CUTEst" => "develop")
