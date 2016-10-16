@@ -1,7 +1,3 @@
-JuMP
-NLPModels
+JuMP 0.14.1
 AmplNLReader
 OptimizationProblems
-LinearOperators
-DistributedArrays
-Krylov
