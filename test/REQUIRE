@@ -5,5 +5,3 @@ OptimizationProblems
 LinearOperators
 DistributedArrays
 Krylov
-Profiles
-UnicodePlots

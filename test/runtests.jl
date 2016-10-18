@@ -36,4 +36,4 @@ end
 # test benchmark helpers, skip constrained problems (hs7 has constraints)
 run_ampl_problem(:trunk, :dixmaanj, 0, verbose=true, monotone=false)
 probs = [:dixmaane, :dixmaanf, :dixmaang, :dixmaanh, :dixmaani, :dixmaanj, :hs7]
-bmark_and_profile(solvers, probs, 99, bmark_args=Dict{Symbol, Any}(:skipif => m -> m.meta.ncon > 0))
+bmark_solvers(solvers, probs, 99, skipif=m -> m.meta.ncon > 0)

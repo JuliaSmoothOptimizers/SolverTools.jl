@@ -47,7 +47,7 @@ function ratio(nlp :: AbstractNLPModel, f :: Float64, f_trial :: Float64, Δm ::
   pred < 0 || throw(TrustRegionException(@sprintf("Nonnegative predicted reduction: pred = %8.1e", pred)))
 
   ared = f_trial - f + max(1.0, absf) * 10.0 * ϵ
-  if (Δm < 1.0e+4 * ϵ) || (abs(ared) < 1.0e+4 * ϵ * absf)
+  if (abs(Δm) < 1.0e+4 * ϵ) || (abs(ared) < 1.0e+4 * ϵ * absf)
     # correct for roundoff error
     g_trial = grad(nlp, x_trial)
     slope_trial = dot(g_trial, step)

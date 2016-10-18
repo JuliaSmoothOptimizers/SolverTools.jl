@@ -4,19 +4,20 @@ import Compat.String
 
 const home = "https://github.com/JuliaSmoothOptimizers"
 const deps = Dict{String, String}(
-              "NLPModels" => "develop",
+              "NLPModels" => "master",
               "OptimizationProblems" => "master",
               "Krylov" => "develop",
-              "AmplNLReader" => "develop",
-              "Profiles" => "master")
+              "AmplNLReader" => "master",
+              "BenchmarkProfiles" => "master")
 
 const unix_deps = Dict{String, String}(
               "CUTEst" => "develop")
 
 function dep_installed(dep)
   try
-    Pkg.installed(dep)  # throws an error instead of returning false
-    return true
+    # throws an error or returns nothing
+    # (https://github.com/JuliaLang/julia/issues/16300)
+    return Pkg.installed(dep) != nothing
   catch
     return false
   end

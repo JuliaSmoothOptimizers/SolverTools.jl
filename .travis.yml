@@ -9,6 +9,11 @@ julia:
   - release
   - nightly
 
+addons:
+  apt_packages:
+    - gfortran
+    - libgsl0-dev
+
 branches:
   only:
     - master
@@ -17,21 +22,14 @@ notifications:
   email: false
 
 before_install:
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-    wget --no-check-certificate http://www.cmake.org/files/v3.3/cmake-3.3.2-Darwin-x86_64.tar.gz;
-    tar -xzf cmake-3.3.2-Darwin-x86_64.tar.gz;
-    export PATH=`pwd`/cmake-3.3.2-Darwin-x86_64/CMake.app/Contents/bin:$PATH; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install gcc; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then
     wget --no-check-certificate http://www.cmake.org/files/v3.3/cmake-3.3.2-Linux-x86_64.tar.gz;
     tar -xzf cmake-3.3.2-Linux-x86_64.tar.gz;
     sudo cp -fR cmake-3.3.2-Linux-x86_64/* /usr;
     export PATH=`pwd`/cmake-3.3.2-Linux-x86_64/bin:$PATH;
     unset DYLD_LIBRARY_PATH;
-    sudo apt-get update -qq;
-    sudo apt-get install -y gfortran libgsl0-dev;
     sudo ln -s /usr/lib/gcc/x86_64-linux-gnu/$(gfortran -dumpversion | cut -f1,2 -d.)/libgfortran.so /usr/local/lib; fi
-  - which cmake
-  - cmake --version
 
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi

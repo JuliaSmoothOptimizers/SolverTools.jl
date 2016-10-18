@@ -34,7 +34,7 @@ Plot a performance profile from solver statistics.
 * `stats`: a dict of statistics such as obtained from `bmark_solvers()`
 
 #### Keyword arguments
-Any keyword argument accepted by `Profiles.performance_profile()`.
+Any keyword argument accepted by `BenchmarkProfiles.performance_profile()`.
 """
 function profile_solvers(stats :: Dict{Symbol, Array{Int,2}}; kwargs...)
   performance_profile(hcat([sum(p, 2) for p in values(stats)]...),
@@ -53,7 +53,7 @@ Any positional argument accepted by `bmark_solvers()`.
 
 #### Keyword arguments
 * `bmark_args`: a dict of keyword arguments accepted by `bmark_solvers()`
-* `profile_args`: a dict of keyword arguments accepted by `Profiles.performance_profile()`.
+* `profile_args`: a dict of keyword arguments accepted by `BenchmarkProfiles.performance_profile()`.
 """
 function bmark_and_profile(args...;
                            bmark_args :: Dict{Symbol, Any}=Dict{Symbol,Any}(),
