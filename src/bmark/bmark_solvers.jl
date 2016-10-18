@@ -25,6 +25,8 @@ function bmark_solvers(solvers :: Vector{Symbol}, args...; kwargs...)
 end
 
 if Pkg.installed("BenchmarkProfiles") != nothing
+  using BenchmarkProfiles
+
   """
       profile_solvers(stats :: Dict{Symbol, Array{Int,2}}; title :: String="")
 
