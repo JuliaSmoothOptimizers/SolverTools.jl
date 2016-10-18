@@ -15,8 +15,9 @@ const unix_deps = Dict{String, String}(
 
 function dep_installed(dep)
   try
-    Pkg.installed(dep)  # throws an error instead of returning false
-    return true
+    # throws an error or returns nothing
+    # (https://github.com/JuliaLang/julia/issues/16300)
+    return Pkg.installed(dep) != nothing
   catch
     return false
   end
