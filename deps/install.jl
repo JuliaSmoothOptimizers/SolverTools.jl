@@ -3,10 +3,19 @@ using Compat
 import Compat.String
 
 const home = "https://github.com/JuliaSmoothOptimizers"
-const deps = Dict{String, String}(
-              "OptimizationProblems" => "master",
-              "Krylov" => "develop",
-              "AmplNLReader" => "master")
+
+if VERSION ≥ v"0.5"
+  const deps = Dict{String, String}(
+                "OptimizationProblems" => "master",
+                "Krylov" => "develop",
+                "AmplNLReader" => "master",
+                "BenchmarkProfiles" => "master")
+else
+  const deps = Dict{String, String}(
+                "OptimizationProblems" => "master",
+                "Krylov" => "develop",
+                "AmplNLReader" => "master")
+end
 
 const unix_deps = Dict{String, String}(
               "CUTEst" => "develop")
