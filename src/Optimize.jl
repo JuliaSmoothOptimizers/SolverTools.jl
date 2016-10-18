@@ -5,7 +5,6 @@ using AmplNLReader
 using OptimizationProblems
 using LinearOperators
 using Krylov
-using BenchmarkProfiles
 using Compat
 import Compat.String
 

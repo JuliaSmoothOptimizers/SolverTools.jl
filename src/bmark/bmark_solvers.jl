@@ -24,39 +24,41 @@ function bmark_solvers(solvers :: Vector{Symbol}, args...; kwargs...)
   return stats
 end
 
-"""
-    profile_solvers(stats :: Dict{Symbol, Array{Int,2}}; title :: String="")
+if Pkg.installed("BenchmarkProfiles") != nothing
+  """
+      profile_solvers(stats :: Dict{Symbol, Array{Int,2}}; title :: String="")
 
-Plot a performance profile from solver statistics.
+  Plot a performance profile from solver statistics.
 
-#### Arguments
-* `stats`: a dict of statistics such as obtained from `bmark_solvers()`
+  #### Arguments
+  * `stats`: a dict of statistics such as obtained from `bmark_solvers()`
 
-#### Keyword arguments
-Any keyword argument accepted by `BenchmarkProfiles.performance_profile()`.
-"""
-function profile_solvers(stats :: Dict{Symbol, Array{Int,2}}; kwargs...)
-  performance_profile(hcat([sum(p, 2) for p in values(stats)]...),
-                      collect(String, [string(s) for s in keys(stats)]); kwargs...)
-end
+  #### Keyword arguments
+  Any keyword argument accepted by `BenchmarkProfiles.performance_profile()`.
+  """
+  function profile_solvers(stats :: Dict{Symbol, Array{Int,2}}; kwargs...)
+    performance_profile(hcat([sum(p, 2) for p in values(stats)]...),
+                        collect(String, [string(s) for s in keys(stats)]); kwargs...)
+  end
 
-"""
-    bmark_and_profile(args...;
-                      bmark_args :: Dict{Symbol, Any}=Dict{Symbol,Any}(),
-                      profile_args :: Dict{Symbol, Any}=Dict{Symbol,Any}())
+  """
+      bmark_and_profile(args...;
+                        bmark_args :: Dict{Symbol, Any}=Dict{Symbol,Any}(),
+                        profile_args :: Dict{Symbol, Any}=Dict{Symbol,Any}())
 
-Run a set of solvers on a set of problems and plot a performance profile.
+  Run a set of solvers on a set of problems and plot a performance profile.
 
-#### Arguments
-Any positional argument accepted by `bmark_solvers()`.
+  #### Arguments
+  Any positional argument accepted by `bmark_solvers()`.
 
-#### Keyword arguments
-* `bmark_args`: a dict of keyword arguments accepted by `bmark_solvers()`
-* `profile_args`: a dict of keyword arguments accepted by `BenchmarkProfiles.performance_profile()`.
-"""
-function bmark_and_profile(args...;
-                           bmark_args :: Dict{Symbol, Any}=Dict{Symbol,Any}(),
-                           profile_args :: Dict{Symbol, Any}=Dict{Symbol,Any}())
-  stats = bmark_solvers(args...; bmark_args...)
-  profile_solvers(stats; profile_args...)
+  #### Keyword arguments
+  * `bmark_args`: a dict of keyword arguments accepted by `bmark_solvers()`
+  * `profile_args`: a dict of keyword arguments accepted by `BenchmarkProfiles.performance_profile()`.
+  """
+  function bmark_and_profile(args...;
+                             bmark_args :: Dict{Symbol, Any}=Dict{Symbol,Any}(),
+                             profile_args :: Dict{Symbol, Any}=Dict{Symbol,Any}())
+    stats = bmark_solvers(args...; bmark_args...)
+    profile_solvers(stats; profile_args...)
+  end
 end
