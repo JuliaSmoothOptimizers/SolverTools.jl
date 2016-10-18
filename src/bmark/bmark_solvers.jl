@@ -16,8 +16,8 @@ Any keyword argument accepted by `run_problems()`
 #### Return value
 A Dict{Symbol, Array{Int,2}} of statistics.
 """
-function bmark_solvers(solvers :: Vector{Symbol}, args...; kwargs...)
-  stats = Dict{Symbol, Array{Int,2}}()
+function bmark_solvers(solvers :: Vector{Function}, args...; kwargs...)
+  stats = Dict{Function, Array{Int,2}}()
   for solver in solvers
     @printf("\n%-15s   %s\n\n", " running ",string(solver))
     stats[solver] = run_problems(solver, args...; kwargs...)
@@ -36,7 +36,7 @@ Plot a performance profile from solver statistics.
 #### Keyword arguments
 Any keyword argument accepted by `BenchmarkProfiles.performance_profile()`.
 """
-function profile_solvers(stats :: Dict{Symbol, Array{Int,2}}; kwargs...)
+function profile_solvers(stats :: Dict{Function, Array{Int,2}}; kwargs...)
   performance_profile(hcat([sum(p, 2) for p in values(stats)]...),
                       collect(String, [string(s) for s in keys(stats)]); kwargs...)
 end

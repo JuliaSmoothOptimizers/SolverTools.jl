@@ -30,7 +30,7 @@ Apply a solver to a set of problems.
 * an `Array(Int, nprobs, 3)` where `nprobs` is the number of problems in the problem.
   See the documentation of `run_solver()` for the form of each entry.
 """
-function run_problems(solver :: Symbol, problems :: Vector{Symbol}, dim :: Int; format :: Symbol=:mpb, args...)
+function run_problems(solver :: Function, problems :: Vector{Symbol}, dim :: Int; format :: Symbol=:mpb, args...)
   format in (:mpb, :ampl) || error("format not recognized---use :mpb or :ampl")
   run_problem = eval(Symbol("run_" * string(format) * "_problem"))
   display_header()
@@ -65,7 +65,7 @@ Any keyword argument accepted by `run_solver()`.
 #### Return value
 See the documentation of `run_solver()`.
 """
-function run_mpb_problem(solver :: Symbol, problem :: Symbol, dim :: Int; args...)
+function run_mpb_problem(solver :: Function, problem :: Symbol, dim :: Int; args...)
   problem_f = eval(problem)
   nlp = MathProgNLPModel(problem_f(dim), name=string(problem))
   # scale_obj!(nlp)  # not implemented
@@ -89,7 +89,7 @@ See the documentation of `run_problems()`.
 #### Return value
 See the documentation of `run_solver()`.
 """
-function run_ampl_problem(solver :: Symbol, problem :: Symbol, dim :: Int; args...)
+function run_ampl_problem(solver :: Function, problem :: Symbol, dim :: Int; args...)
   problem_s = string(problem)
   nlp = AmplModel("$problem_s.nl", safe=true)
   # Objective scaling not yet available.
@@ -117,8 +117,8 @@ Any keyword argument accepted by the solver.
   `nlp` with `solver`.
   Negative values are used to represent failures.
 """
-function run_solver(solver :: Symbol, nlp :: AbstractNLPModel; args...)
-  solver_f = eval(solver)
+function run_solver(solver_f :: Function, nlp :: AbstractNLPModel; args...)
+  #solver_f = eval(solver)
   args = Dict(args)
   skip = haskey(args, :skipif) ? pop!(args, :skipif) : x -> false
   skip(nlp) && throw(SkipException())
