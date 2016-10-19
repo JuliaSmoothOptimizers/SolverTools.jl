@@ -1,8 +1,6 @@
 module Optimize
 
 using NLPModels
-using AmplNLReader
-using OptimizationProblems
 using LinearOperators
 using Krylov
 using Compat
