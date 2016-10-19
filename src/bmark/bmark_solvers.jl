@@ -2,7 +2,7 @@ export bmark_solvers, profile_solvers, bmark_and_profile
 
 
 """
-    bmark_solvers(solvers :: Vector{Symbol}, probs :: Vector{Symbol}, n :: Int; kwargs...)
+    bmark_solvers(solvers :: Vector{Function}, args...; kwargs...)
 
 Run a set of solvers on a set of problems.
 
@@ -16,10 +16,10 @@ Any keyword argument accepted by `run_problems()`
 #### Return value
 A Dict{Symbol, Array{Int,2}} of statistics.
 """
-function bmark_solvers(solvers :: Vector{Symbol}, args...; kwargs...)
+function bmark_solvers(solvers :: Vector{Function}, args...; kwargs...)
   stats = Dict{Symbol, Array{Int,2}}()
   for solver in solvers
-    stats[solver] = run_problems(solver, args...; kwargs...)
+    stats[Symbol(solver)] = run_problems(solver, args...; kwargs...)
   end
   return stats
 end

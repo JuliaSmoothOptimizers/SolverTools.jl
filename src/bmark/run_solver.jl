@@ -10,12 +10,12 @@ end
 
 
 """
-    run_problems(solver :: Symbol, problems :: Vector{Symbol}, dim :: Int; kwargs...)
+    run_problems(solver :: Function, problems :: Any; kwargs...)
 
 Apply a solver to a set of problems.
 
 #### Arguments
-* `solver`: the function name of a solver, as a symbol
+* `solver`: the function name of a solver
 * `problems`: the set of problems to pass to the solver, as a list of symbols
 * `dim`: the approximate size in which each problem should be instantiated.
   The problem size may be adjusted automatically to the nearest smaller size
@@ -30,9 +30,7 @@ Apply a solver to a set of problems.
 * an `Array(Int, nprobs, 3)` where `nprobs` is the number of problems in the problem.
   See the documentation of `run_solver()` for the form of each entry.
 """
-function run_problems(solver :: Symbol, problems :: Vector{Symbol}, dim :: Int; format :: Symbol=:mpb, args...)
-  format in (:mpb, :ampl) || error("format not recognized---use :mpb or :ampl")
-  run_problem = eval(Symbol("run_" * string(format) * "_problem"))
+function run_problems(solver :: Function, problems :: Any; kwargs...)
   display_header()
   nprobs = length(problems)
   verbose = nprobs ≤ 1
@@ -40,7 +38,7 @@ function run_problems(solver :: Symbol, problems :: Vector{Symbol}, dim :: Int; 
   k = 1
   for problem in problems
     try
-      (f, g, h) = run_problem(solver, problem, dim, verbose=verbose; args...)
+      (f, g, h) = run_solver(solver, problem, verbose=verbose; kwargs...)
       stats[k, :] = [f, g, h]
       k = k + 1
     catch e
@@ -52,55 +50,7 @@ end
 
 
 """
-    run_mpb_problem(solver :: Symbol, problem :: Symbol, dim :: Int; kwargs...)
-
-Apply a solver to a problem as a `MathProgNLPModel`.
-
-#### Arguments
-See the documentation of `run_problems()`.
-
-#### Keyword arguments
-Any keyword argument accepted by `run_solver()`.
-
-#### Return value
-See the documentation of `run_solver()`.
-"""
-function run_mpb_problem(solver :: Symbol, problem :: Symbol, dim :: Int; args...)
-  problem_f = eval(problem)
-  nlp = MathProgNLPModel(problem_f(dim), name=string(problem))
-  # scale_obj!(nlp)  # not implemented
-  stats = run_solver(solver, nlp; args...)
-  # unscale_obj!(nlp)  # not implemented
-  return stats
-end
-
-
-"""
-    run_ampl_problem(solver :: Symbol, problem :: Symbol, dim :: Int; kwargs...)
-
-Apply a solver to a problem as an `AmplModel`.
-
-#### Arguments
-See the documentation of `run_problems()`.
-
-#### Keyword arguments
-* any keyword argument accepted by `run_solver()`
-
-#### Return value
-See the documentation of `run_solver()`.
-"""
-function run_ampl_problem(solver :: Symbol, problem :: Symbol, dim :: Int; args...)
-  problem_s = string(problem)
-  nlp = AmplModel("$problem_s.nl", safe=true)
-  # Objective scaling not yet available.
-  stats = run_solver(solver, nlp; args...)
-  amplmodel_finalize(nlp)
-  return stats
-end
-
-
-"""
-    run_solver(solver :: Symbol, nlp :: AbstractNLPModel; kwargs...)
+    run_solver(solver :: Function, nlp :: AbstractNLPModel; kwargs...)
 
 Apply a solver to a generic `AbstractNLPModel`.
 
@@ -117,9 +67,8 @@ Any keyword argument accepted by the solver.
   `nlp` with `solver`.
   Negative values are used to represent failures.
 """
-function run_solver(solver :: Symbol, nlp :: AbstractNLPModel; args...)
-  solver_f = eval(solver)
-  args = Dict(args)
+function run_solver(solver :: Function, nlp :: AbstractNLPModel; kwargs...)
+  args = Dict(kwargs)
   skip = haskey(args, :skipif) ? pop!(args, :skipif) : x -> false
   skip(nlp) && throw(SkipException())
 
@@ -129,8 +78,9 @@ function run_solver(solver :: Symbol, nlp :: AbstractNLPModel; args...)
   gNorm = 0.0
   status = "fail"
   try
-    (x, f, gNorm, iter, optimal, tired, status) = solver_f(nlp; args...)
+    (x, f, gNorm, iter, optimal, tired, status) = solver(nlp; args...)
   catch e
+    println(e)
     status = e.msg
   end
   # if nlp.scale_obj

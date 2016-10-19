@@ -1,19 +1,28 @@
 # Benchmark two solvers on a set of small problems and profile.
 using Optimize
+using OptimizationProblems
+using NLPModels
+using AmplNLReader
+
+# In the benchmark examples, the problem lists are generator expressions
+# (note the parentheses); # the problems are not generated until needed.
+# Don't use Arrays to avoid holding all problems in memory simultaneously.
 
 # Common setup
 n = 100
 mpb_probs = filter(name -> name != :OptimizationProblems && name != :sbrybnd, names(OptimizationProblems))
 ampl_prob_dir = "../problems"
-ampl_probs = [symbol(split(p, ".")[1]) for p in filter(x -> contains(x, ".nl"), readdir(ampl_prob_dir))]
+ampl_probs = filter(x -> contains(x, ".nl"), readdir(ampl_prob_dir))
 
 # Example 1: benchmark two solvers on a set of problems
 function two_solvers()
-  solvers = [:trunk, :lbfgs]
+  solvers = [trunk, lbfgs]
   title = @sprintf("f+g+hprod on %d problems of size about %d", length(mpb_probs), n)
-  bmark_args = Dict{Symbol, Any}(:format => :mpb, :skipif => model -> model.meta.ncon > 0)
+  bmark_args = Dict{Symbol, Any}(:skipif => model -> model.meta.ncon > 0)
   profile_args = Dict{Symbol, Any}(:title => title)
-  profiles = bmark_and_profile(solvers, mpb_probs, n, bmark_args=bmark_args, profile_args=profile_args)
+  profiles = bmark_and_profile(solvers,
+                               (MathProgNLPModel(eval(p)(n), name=string(p)) for p in mpb_probs),
+                               bmark_args=bmark_args, profile_args=profile_args)
 end
 
 # Example 2: benchmark one solver on problems written in two modeling languages
@@ -21,8 +30,12 @@ function two_languages()
   probs = ampl_probs ∩ mpb_probs
   title = @sprintf("f+g+hprod on %d problems of size about %d", length(probs), n)
   stats = Dict{Symbol, Array{Int,2}}()
-  stats[:trunk_ampl] = run_problems(:trunk, probs, n, format=:ampl, skipif=model -> model.meta.ncon != 0)
-  stats[:trunk_mpb] = run_problems(:trunk, probs, n, format=:mpb, skipif=model -> model.meta.ncon != 0)
+  stats[:trunk_ampl] = solve_problems(trunk,
+                                      (AmplModel(p) for p in ampl_probs),
+                                      skipif=model -> model.meta.ncon != 0)
+  stats[:trunk_mpb] = solve_problems(trunk,
+                                     (MathProgNLPModel(eval(p)(n), name=string(p)) for p in mpb_probs),
+                                     skipif=model -> model.meta.ncon != 0)
   profile_solvers(stats, title=title)
 end
 
@@ -30,7 +43,8 @@ end
 function solver_options()
   title = @sprintf("f+g+hprod on %d problems of size about %d", length(mpb_probs), n)
   stats = Dict{Symbol, Array{Int,2}}()
-  stats[:trunk] = run_problems(:trunk, mpb_probs, n, format=:mpb, skipif=model -> model.meta.ncon != 0, nm_itmax=5)
-  stats[:trunk_monotone] = run_problems(:trunk, mpb_probs, n, format=:mpb, skipif=model -> model.meta.ncon != 0, monotone=true)
+  probs = (MathProgNLPModel(eval(p)(n), name=string(p)) for p in mpb_probs)
+  stats[:trunk] = solve_problems(trunk, probs, skipif=model -> model.meta.ncon != 0, nm_itmax=5)
+  stats[:trunk_monotone] = solve_problems(trunk, skipif=model -> model.meta.ncon != 0, monotone=true)
   profile_solvers(stats, title=title)
 end
