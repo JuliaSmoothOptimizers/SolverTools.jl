@@ -10,7 +10,7 @@ models = [AmplModel("dixmaanj.nl"), MathProgNLPModel(dixmaanj(), name="dixmaanj"
   using CUTEst
   push!(models, CUTEstModel("DIXMAANJ", "-param", "M=30"))
 end
-solvers = [:trunk, :lbfgs]
+solvers = [trunk, lbfgs]
 
 for model in models
   for solver in solvers
@@ -34,6 +34,7 @@ end
 end
 
 # test benchmark helpers, skip constrained problems (hs7 has constraints)
-run_ampl_problem(:trunk, :dixmaanj, 0, verbose=true, monotone=false)
-probs = [:dixmaane, :dixmaanf, :dixmaang, :dixmaanh, :dixmaani, :dixmaanj, :hs7]
-bmark_solvers(solvers, probs, 99, skipif=m -> m.meta.ncon > 0)
+run_solver(trunk, AmplModel("dixmaanj"), verbose=true, monotone=false)
+probs = [dixmaane, dixmaanf, dixmaang, dixmaanh, dixmaani, dixmaanj, hs7]
+models = (MathProgNLPModel(p(99), name=string(p)) for p in probs)
+bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0)
