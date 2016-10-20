@@ -39,8 +39,12 @@ if Pkg.installed("BenchmarkProfiles") != nothing
   Any keyword argument accepted by `BenchmarkProfiles.performance_profile()`.
   """
   function profile_solvers(stats :: Dict{Symbol, Array{Int,2}}; kwargs...)
+    args = Dict(kwargs)
+    if haskey(args, :title)
+      args[:title] *= @sprintf(" (%d problems)", size(stats[first(keys(stats))], 1))
+    end
     performance_profile(hcat([sum(p, 2) for p in values(stats)]...),
-                        collect(String, [string(s) for s in keys(stats)]); kwargs...)
+                        collect(String, [string(s) for s in keys(stats)]); args...)
   end
 
   """

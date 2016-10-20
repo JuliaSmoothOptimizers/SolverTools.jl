@@ -17,9 +17,8 @@ ampl_probs = filter(x -> contains(x, ".nl"), readdir(ampl_prob_dir))
 # Example 1: benchmark two solvers on a set of problems
 function two_solvers()
   solvers = [trunk, lbfgs]
-  title = @sprintf("f+g+hprod on %d problems of size about %d", length(mpb_probs), n)
   bmark_args = Dict{Symbol, Any}(:skipif => model -> model.meta.ncon > 0)
-  profile_args = Dict{Symbol, Any}(:title => title)
+  profile_args = Dict{Symbol, Any}(:title => "f+g+hprod")
   profiles = bmark_and_profile(solvers,
                                (MathProgNLPModel(eval(p)(n), name=string(p)) for p in mpb_probs),
                                bmark_args=bmark_args, profile_args=profile_args)
@@ -28,7 +27,6 @@ end
 # Example 2: benchmark one solver on problems written in two modeling languages
 function two_languages()
   probs = ampl_probs ∩ mpb_probs
-  title = @sprintf("f+g+hprod on %d problems of size about %d", length(probs), n)
   stats = Dict{Symbol, Array{Int,2}}()
   stats[:trunk_ampl] = solve_problems(trunk,
                                       (AmplModel(p) for p in ampl_probs),
@@ -36,15 +34,14 @@ function two_languages()
   stats[:trunk_mpb] = solve_problems(trunk,
                                      (MathProgNLPModel(eval(p)(n), name=string(p)) for p in mpb_probs),
                                      skipif=model -> model.meta.ncon != 0)
-  profile_solvers(stats, title=title)
+  profile_solvers(stats, title="f+g+hprod")
 end
 
 # Example 3: benchmark one solver with different options on a set of problems
 function solver_options()
-  title = @sprintf("f+g+hprod on %d problems of size about %d", length(mpb_probs), n)
   stats = Dict{Symbol, Array{Int,2}}()
   probs = (MathProgNLPModel(eval(p)(n), name=string(p)) for p in mpb_probs)
   stats[:trunk] = solve_problems(trunk, probs, skipif=model -> model.meta.ncon != 0, nm_itmax=5)
   stats[:trunk_monotone] = solve_problems(trunk, skipif=model -> model.meta.ncon != 0, monotone=true)
-  profile_solvers(stats, title=title)
+  profile_solvers(stats, title="f+g+hprod")
 end

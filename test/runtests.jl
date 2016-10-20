@@ -37,4 +37,10 @@ end
 solve_problem(trunk, AmplModel("dixmaanj"), verbose=true, monotone=false)
 probs = [dixmaane, dixmaanf, dixmaang, dixmaanh, dixmaani, dixmaanj, hs7]
 models = (MathProgNLPModel(p(99), name=string(p)) for p in probs)
-bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0)
+stats = bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0)
+println(stats)
+println(size(stats[Symbol(solvers[1])], 1))
+println(length(probs))
+assert(size(stats[Symbol(solvers[1])], 1) == length(probs) - 1)
+stats = bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0, prune=false)
+assert(size(stats[Symbol(solvers[1])], 1) == length(probs))
