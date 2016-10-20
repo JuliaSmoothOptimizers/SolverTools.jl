@@ -36,7 +36,10 @@ end
 # test benchmark helpers, skip constrained problems (hs7 has constraints)
 solve_problem(trunk, AmplModel("dixmaanj"), verbose=true, monotone=false)
 probs = [dixmaane, dixmaanf, dixmaang, dixmaanh, dixmaani, dixmaanj, hs7]
-models = (MathProgNLPModel(p(99), name=string(p)) for p in probs)
+
+# here we use array comprehension to pass on julia 0.4
+# a generator should be used on julia ≥ 0.5
+models = [MathProgNLPModel(p(99), name=string(p)) for p in probs]
 stats = bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0)
 println(stats)
 println(size(stats[Symbol(solvers[1])], 1))
