@@ -1,4 +1,4 @@
-export display_header, run_problems, run_mpb_problem, run_ampl_problem, run_solver
+export display_header, solve_problems, solve_problem
 
 type SkipException <: Exception
 end
@@ -10,27 +10,23 @@ end
 
 
 """
-    run_problems(solver :: Function, problems :: Any; kwargs...)
+    solve_problems(solver :: Function, problems :: Any; kwargs...)
 
 Apply a solver to a set of problems.
 
 #### Arguments
 * `solver`: the function name of a solver
-* `problems`: the set of problems to pass to the solver, as a list of symbols
-* `dim`: the approximate size in which each problem should be instantiated.
-  The problem size may be adjusted automatically to the nearest smaller size
-  if a particular problem's size is constrained.
-  This argument has no effect on certain problem formats (see `format` below).
+* `problems`: the set of problems to pass to the solver, as an iterable of `AbstractNLPModel`
+  (it is recommended to use a generator expression)
 
 #### Keyword arguments
-* `format` the problem format. Currently, only `:mpb` and `:ampl` are supported
 * any other keyword argument accepted by `run_problem()`
 
 #### Return value
 * an `Array(Int, nprobs, 3)` where `nprobs` is the number of problems in the problem.
-  See the documentation of `run_solver()` for the form of each entry.
+  See the documentation of `solve_problem()` for the form of each entry.
 """
-function run_problems(solver :: Function, problems :: Any; kwargs...)
+function solve_problems(solver :: Function, problems :: Any; kwargs...)
   display_header()
   nprobs = length(problems)
   verbose = nprobs ≤ 1
@@ -38,7 +34,7 @@ function run_problems(solver :: Function, problems :: Any; kwargs...)
   k = 1
   for problem in problems
     try
-      (f, g, h) = run_solver(solver, problem, verbose=verbose; kwargs...)
+      (f, g, h) = solve_problem(solver, problem, verbose=verbose; kwargs...)
       stats[k, :] = [f, g, h]
       k = k + 1
     catch e
@@ -50,7 +46,7 @@ end
 
 
 """
-    run_solver(solver :: Function, nlp :: AbstractNLPModel; kwargs...)
+    solve_problem(solver :: Function, nlp :: AbstractNLPModel; kwargs...)
 
 Apply a solver to a generic `AbstractNLPModel`.
 
@@ -67,7 +63,7 @@ Any keyword argument accepted by the solver.
   `nlp` with `solver`.
   Negative values are used to represent failures.
 """
-function run_solver(solver :: Function, nlp :: AbstractNLPModel; kwargs...)
+function solve_problem(solver :: Function, nlp :: AbstractNLPModel; kwargs...)
   args = Dict(kwargs)
   skip = haskey(args, :skipif) ? pop!(args, :skipif) : x -> false
   skip(nlp) && throw(SkipException())
