@@ -14,7 +14,7 @@ solvers = [trunk, lbfgs]
 
 for model in models
   for solver in solvers
-    stats = run_solver(solver, model, verbose=false)
+    stats = solve_problem(solver, model, verbose=false)
     assert(all([stats...] .>= 0))
     reset!(model)
   end
@@ -34,7 +34,7 @@ end
 end
 
 # test benchmark helpers, skip constrained problems (hs7 has constraints)
-run_solver(trunk, AmplModel("dixmaanj"), verbose=true, monotone=false)
+solve_problem(trunk, AmplModel("dixmaanj"), verbose=true, monotone=false)
 probs = [dixmaane, dixmaanf, dixmaang, dixmaanh, dixmaani, dixmaanj, hs7]
 models = (MathProgNLPModel(p(99), name=string(p)) for p in probs)
 bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0)

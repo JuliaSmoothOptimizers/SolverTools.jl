@@ -8,10 +8,10 @@ Run a set of solvers on a set of problems.
 
 #### Arguments
 * `solvers`: a vector of solvers to which each problem should be passed
-* other positional arguments accepted by `run_problems()`, except for a solver name
+* other positional arguments accepted by `solve_problems()`, except for a solver name
 
 #### Keyword arguments
-Any keyword argument accepted by `run_problems()`
+Any keyword argument accepted by `solve_problems()`
 
 #### Return value
 A Dict{Symbol, Array{Int,2}} of statistics.
@@ -19,7 +19,7 @@ A Dict{Symbol, Array{Int,2}} of statistics.
 function bmark_solvers(solvers :: Vector{Function}, args...; kwargs...)
   stats = Dict{Symbol, Array{Int,2}}()
   for solver in solvers
-    stats[Symbol(solver)] = run_problems(solver, args...; kwargs...)
+    stats[Symbol(solver)] = solve_problems(solver, args...; kwargs...)
   end
   return stats
 end
