@@ -20,28 +20,29 @@ Apply a solver to a set of problems.
   (it is recommended to use a generator expression)
 
 #### Keyword arguments
+* `prune`: do not include skipped problems in the final statistics (default: `true`)
 * any other keyword argument accepted by `run_problem()`
 
 #### Return value
 * an `Array(Int, nprobs, 3)` where `nprobs` is the number of problems in the problem.
   See the documentation of `solve_problem()` for the form of each entry.
 """
-function solve_problems(solver :: Function, problems :: Any; kwargs...)
+function solve_problems(solver :: Function, problems :: Any; prune :: Bool=true, kwargs...)
   display_header()
   nprobs = length(problems)
   verbose = nprobs ≤ 1
   stats = -ones(nprobs, 3)
-  k = 1
+  k = 0
   for problem in problems
     try
       (f, g, h) = solve_problem(solver, problem, verbose=verbose; kwargs...)
-      stats[k, :] = [f, g, h]
       k = k + 1
+      stats[k, :] = [f, g, h]
     catch e
       isa(e, SkipException) || rethrow(e)
     end
   end
-  return stats
+  return prune ? stats[1:k, :] : stats
 end
 
 
