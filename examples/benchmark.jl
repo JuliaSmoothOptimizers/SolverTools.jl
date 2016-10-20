@@ -19,9 +19,9 @@ function two_solvers()
   solvers = [trunk, lbfgs]
   bmark_args = Dict{Symbol, Any}(:skipif => model -> model.meta.ncon > 0)
   profile_args = Dict{Symbol, Any}(:title => "f+g+hprod")
-  profiles = bmark_and_profile(solvers,
-                               (MathProgNLPModel(eval(p)(n), name=string(p)) for p in mpb_probs),
-                               bmark_args=bmark_args, profile_args=profile_args)
+  bmark_and_profile(solvers,
+                    (MathProgNLPModel(eval(p)(n), name=string(p)) for p in mpb_probs),
+                    bmark_args=bmark_args, profile_args=profile_args)
 end
 
 # Example 2: benchmark one solver on problems written in two modeling languages

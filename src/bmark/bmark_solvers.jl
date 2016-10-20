@@ -37,6 +37,9 @@ if Pkg.installed("BenchmarkProfiles") != nothing
 
   #### Keyword arguments
   Any keyword argument accepted by `BenchmarkProfiles.performance_profile()`.
+
+  #### Return value
+  A profile as returned by `performance_profile()`.
   """
   function profile_solvers(stats :: Dict{Symbol, Array{Int,2}}; kwargs...)
     args = Dict(kwargs)
@@ -60,11 +63,16 @@ if Pkg.installed("BenchmarkProfiles") != nothing
   #### Keyword arguments
   * `bmark_args`: a dict of keyword arguments accepted by `bmark_solvers()`
   * `profile_args`: a dict of keyword arguments accepted by `BenchmarkProfiles.performance_profile()`.
+
+  #### Return value
+  * A Dict{Symbol, Array{Int,2}} of statistics
+  * a profile as returned by `performance_profile()`.
   """
   function bmark_and_profile(args...;
                              bmark_args :: Dict{Symbol, Any}=Dict{Symbol,Any}(),
                              profile_args :: Dict{Symbol, Any}=Dict{Symbol,Any}())
     stats = bmark_solvers(args...; bmark_args...)
-    profile_solvers(stats; profile_args...)
+    profile = profile_solvers(stats; profile_args...)
+    return stats, profiles
   end
 end
