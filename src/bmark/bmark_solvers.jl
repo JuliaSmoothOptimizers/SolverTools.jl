@@ -72,7 +72,7 @@ if Pkg.installed("BenchmarkProfiles") != nothing
                              bmark_args :: Dict{Symbol, Any}=Dict{Symbol,Any}(),
                              profile_args :: Dict{Symbol, Any}=Dict{Symbol,Any}())
     stats = bmark_solvers(args...; bmark_args...)
-    profile = profile_solvers(stats; profile_args...)
+    profiles = profile_solvers(stats; profile_args...)
     return stats, profiles
   end
 end
