@@ -11,7 +11,7 @@ using AmplNLReader
 # Common setup
 n = 100
 mpb_probs = filter(name -> name != :OptimizationProblems && name != :sbrybnd, names(OptimizationProblems))
-ampl_prob_dir = "../problems"
+ampl_prob_dir = joinpath(dirname(@__FILE__), "ampl")
 ampl_probs = filter(x -> contains(x, ".nl"), readdir(ampl_prob_dir))
 
 # Example 1: benchmark two solvers on a set of problems
