@@ -17,7 +17,7 @@ ampl_probs = filter(x -> contains(x, ".nl"), readdir(ampl_prob_dir))
 # Example 1: benchmark two solvers on a set of problems
 function two_solvers()
   solvers = [trunk, lbfgs]
-  bmark_args = Dict{Symbol, Any}(:skipif => model -> model.meta.ncon > 0)
+  bmark_args = Dict{Symbol, Any}(:skipif => model -> !unconstrained(model))
   profile_args = Dict{Symbol, Any}(:title => "f+g+hprod")
   bmark_and_profile(solvers,
                     (MathProgNLPModel(eval(p)(n), name=string(p)) for p in mpb_probs),
@@ -30,10 +30,10 @@ function two_languages()
   stats = Dict{Symbol, Array{Int,2}}()
   stats[:trunk_ampl] = solve_problems(trunk,
                                       (AmplModel(p) for p in ampl_probs),
-                                      skipif=model -> model.meta.ncon != 0)
+                                      skipif=model -> !unconstrained(model))
   stats[:trunk_mpb] = solve_problems(trunk,
                                      (MathProgNLPModel(eval(p)(n), name=string(p)) for p in mpb_probs),
-                                     skipif=model -> model.meta.ncon != 0)
+                                     skipif=model -> !unconstrained(model))
   profile_solvers(stats, title="f+g+hprod")
 end
 
@@ -41,7 +41,7 @@ end
 function solver_options()
   stats = Dict{Symbol, Array{Int,2}}()
   probs = (MathProgNLPModel(eval(p)(n), name=string(p)) for p in mpb_probs)
-  stats[:trunk] = solve_problems(trunk, probs, skipif=model -> model.meta.ncon != 0, nm_itmax=5)
-  stats[:trunk_monotone] = solve_problems(trunk, skipif=model -> model.meta.ncon != 0, monotone=true)
+  stats[:trunk] = solve_problems(trunk, probs, skipif=model -> !unconstrained(model), nm_itmax=5)
+  stats[:trunk_monotone] = solve_problems(trunk, skipif=model -> !unconstrained(model), monotone=true)
   profile_solvers(stats, title="f+g+hprod")
 end
