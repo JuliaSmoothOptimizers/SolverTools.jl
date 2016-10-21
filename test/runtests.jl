@@ -1,5 +1,9 @@
 using Base.Test, Compat, NLPModels, OptimizationProblems, Optimize
 import Compat.String
+using FactCheck
+
+include("solvers/lagaug.jl")
+FactCheck.exitstatus()
 
 include("simple_dixmaanj.jl")
 
