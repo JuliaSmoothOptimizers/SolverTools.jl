@@ -52,6 +52,7 @@ function trunk(nlp :: AbstractNLPModel;
 
   # Preallocate xt.
   xt = Array(Float64, n)
+  temp = Array(Float64, n)
 
   optimal = ∇fNorm2 <= ϵ
   tired = nlp.counters.neval_obj > max_f
@@ -66,8 +67,9 @@ function trunk(nlp :: AbstractNLPModel;
     iter = iter + 1
 
     # Compute inexact solution to trust-region subproblem
-    # minimize g's + 1/2 s'Hs  subject to ‖s‖ ≤ radius
-    H = hess_op(nlp, x)
+    # minimize g's + 1/2 s'Hs  subject to ‖s‖ ≤ radius.
+    # In this particular case, we may use an operator with preallocation.
+    H = hess_op!(nlp, x, temp)
     cgtol = max(ϵ, min(0.7 * cgtol, 0.01 * ∇fNorm2))
     (s, cg_stats) = cg(H, -∇f,
                        atol=cgtol, rtol=0.0,
