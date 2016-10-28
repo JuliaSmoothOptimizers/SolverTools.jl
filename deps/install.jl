@@ -8,12 +8,14 @@ if VERSION ≥ v"0.5"
   const deps = Dict{String, String}(
                 "OptimizationProblems" => "master",
                 "Krylov" => "develop",
+                "NLPModels" => "master",
                 "AmplNLReader" => "master",
                 "BenchmarkProfiles" => "master")
 else
   const deps = Dict{String, String}(
                 "OptimizationProblems" => "master",
                 "Krylov" => "develop",
+                "NLPModels" => "master",
                 "AmplNLReader" => "master")
 end
 
