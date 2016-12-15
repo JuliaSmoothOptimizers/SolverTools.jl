@@ -1,8 +1,8 @@
 export lagaug
 
 function lagaug(nlp :: AbstractNLPModel;
-               atol :: Float64=1.0e-8, rtol :: Float64=1.0e-6,
-               itmax :: Real=1000, timemax::Real=60.0,
+               atol :: Real=1.0e-8, rtol :: Real=1.0e-6,
+               itmax :: Real=1000, timemax :: Real=60.0,
                verbose :: Bool=false)
 
   if length(nlp.meta.ifree) < nlp.meta.nvar
