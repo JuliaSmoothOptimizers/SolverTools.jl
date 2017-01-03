@@ -18,19 +18,7 @@ for model in models
     assert(all([stats...] .>= 0))
     reset!(model)
   end
-end
-
-# clean up the test directory
-@static if is_unix()
-  here = dirname(@__FILE__)
-  so_files = filter(x -> (ismatch(r".so$", x) || ismatch(r".dylib$", x)), readdir(here))
-
-  for so_file in so_files
-    rm(joinpath(here, so_file))
-  end
-
-  rm(joinpath(here, "AUTOMAT.d"))
-  rm(joinpath(here, "OUTSDIF.d"))
+  finalize(model)
 end
 
 # test benchmark helpers, skip constrained problems (hs7 has constraints)
