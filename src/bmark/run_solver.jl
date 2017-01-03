@@ -38,6 +38,7 @@ function solve_problems(solver :: Function, problems :: Any; prune :: Bool=true,
       (f, g, h) = solve_problem(solver, problem, verbose=verbose; kwargs...)
       k = k + 1
       stats[k, :] = [f, g, h]
+      finalize(problem)
     catch e
       isa(e, SkipException) || rethrow(e)
     end

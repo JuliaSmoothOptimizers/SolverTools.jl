@@ -33,3 +33,10 @@ println(length(probs))
 assert(size(stats[Symbol(solvers[1])], 1) == length(probs) - 1)
 stats = bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0, prune=false)
 assert(size(stats[Symbol(solvers[1])], 1) == length(probs))
+
+# test bmark_solvers with CUTEst
+@static if is_unix()
+  models = (isa(p, String) ? CUTEstModel(p) : CUTEstModel(p...) for p in ["ROSENBR", ("DIXMAANJ", "-param", "M=30")])
+  stats = bmark_solvers(solvers, models)
+  println(stats)
+end
