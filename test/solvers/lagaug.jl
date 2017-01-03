@@ -100,3 +100,28 @@ context("Simple tests") do
   end
 
 end
+
+context("Larger problems") do
+  facts("Quadratic with linear constraints") do
+    for n = 10.^(2:5)
+      for D in [ ones(n), linspace(1e-2, 100, n)]
+        for x0 in Any[ zeros(n), ones(n), -collect(linspace(1, n, n)) ]
+          nlp = SimpleNLPModel(x->dot(x,D.*x)/2, x0,
+                               g = x->D.*x,
+                               Hp = (x,v;y=[],obj_weight=1.0)->obj_weight*D.*v,
+                               c=x->[sum(x)-1], lcon=[0], ucon=[0],
+                               Jp = (x,v)->[sum(v)],
+                               Jtp = (x,v)->ones(n)*v[1])
+
+          λ = -1/sum(1./D)
+          x, fx, gpx, cx, iter, optimal, tired, status = lagaug(nlp, verbose=false, rtol=0.0)
+          @fact x --> roughly(-λ./D, 1e-4)
+          @fact fx --> roughly(-λ/2, 1e-5)
+          @fact gpx --> roughly(0.0, 1e-4)
+          @fact cx --> roughly(0.0, 1e-4)
+          @fact optimal --> true
+        end
+      end
+    end
+  end
+end
