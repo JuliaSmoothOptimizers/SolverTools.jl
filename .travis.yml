@@ -12,7 +12,6 @@ julia:
 addons:
   apt_packages:
     - gfortran
-    - libgsl0-dev
 
 branches:
   only:
