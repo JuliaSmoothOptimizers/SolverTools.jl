@@ -20,7 +20,7 @@ else
 end
 
 const unix_deps = Dict{String, String}(
-              "CUTEst" => "develop")
+              "CUTEst" => "master")
 
 function dep_installed(dep)
   try
