@@ -4,20 +4,11 @@ import Compat.String
 
 const home = "https://github.com/JuliaSmoothOptimizers"
 
-if VERSION ≥ v"0.5"
-  const deps = Dict{String, String}(
-                "OptimizationProblems" => "master",
-                "Krylov" => "develop",
-                "NLPModels" => "master",
-                "AmplNLReader" => "master",
-                "BenchmarkProfiles" => "master")
-else
-  const deps = Dict{String, String}(
-                "OptimizationProblems" => "master",
-                "Krylov" => "develop",
-                "NLPModels" => "master",
-                "AmplNLReader" => "master")
-end
+const deps = Dict{String, String}(
+              "OptimizationProblems" => "master",
+              "Krylov" => "develop",
+              "AmplNLReader" => "master",
+              "BenchmarkProfiles" => "master")
 
 const unix_deps = Dict{String, String}(
               "CUTEst" => "master")

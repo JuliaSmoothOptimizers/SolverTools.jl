@@ -5,9 +5,12 @@ os:
   - osx
 
 julia:
-  - 0.4
   - 0.5
   - nightly
+
+matrix:
+  allow_failures:
+    - julia: nightly
 
 addons:
   apt_packages:
