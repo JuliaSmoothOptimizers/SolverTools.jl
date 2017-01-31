@@ -10,9 +10,6 @@ const deps = Dict{String, String}(
               "AmplNLReader" => "master",
               "BenchmarkProfiles" => "master")
 
-const unix_deps = Dict{String, String}(
-              "CUTEst" => "master")
-
 function dep_installed(dep)
   try
     # throws an error or returns nothing
@@ -36,4 +33,3 @@ function deps_install(deps)
 end
 
 deps_install(deps)
-@static if is_unix() deps_install(unix_deps); end
