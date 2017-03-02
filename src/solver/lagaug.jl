@@ -2,7 +2,8 @@ export lagaug
 
 function lagaug(nlp :: AbstractNLPModel;
                atol :: Real=1.0e-8, rtol :: Real=1.0e-6,
-               itmax :: Real=1000, timemax :: Real=60.0,
+               max_time :: Real=60.0,
+               max_f :: Int=0,
                verbose :: Bool=false)
 
   if length(nlp.meta.ifree) < nlp.meta.nvar
@@ -10,6 +11,8 @@ function lagaug(nlp :: AbstractNLPModel;
   elseif nlp.meta.ncon == 0
     return trunk(nlp, atol=atol, rtol=rtol)
   end
+
+  if max_f == 0; max_f = max(min(100, 2nlp.meta.nvar), 5000); end
 
   # Let's do no bounds first
   x = nlp.meta.x0
@@ -27,9 +30,8 @@ function lagaug(nlp :: AbstractNLPModel;
   ϵ = atol + rtol * gpxNorm2
   optimal = gpxNorm2 <= ϵ && cNorm2 <= ϵ
   iter = 0
-  eltime, start_time = 0.0, time()
-  tired = iter >= itmax || eltime >= timemax
-  stalled = false
+  elapsed_time, start_time = 0.0, time()
+  tired = neval_obj(nlp) > max_f || elapsed_time >= max_time
 
   subtol = 1.0
 
@@ -40,7 +42,7 @@ function lagaug(nlp :: AbstractNLPModel;
   end
 
   iters_since_change = 0
-  while !(optimal || tired || stalled)
+  while !(optimal || tired)
     iter = iter + 1
 
     # Compute inexact solution to subproblem
@@ -48,7 +50,8 @@ function lagaug(nlp :: AbstractNLPModel;
     subnlp = subproblem(nlp, x, λ, μ)
 
     subtol = max(ϵ, min(0.7 * subtol, 0.01 * gpxNorm2))
-    x, fx, subπ, iter_sub = trunk(subnlp, rtol=subtol, verbose=false)
+    stats = trunk(subnlp, rtol=subtol, verbose=false)
+    x .= stats.solution
 
     ∇fx = grad(nlp, x)
     cx = cons(nlp, x)
@@ -61,27 +64,37 @@ function lagaug(nlp :: AbstractNLPModel;
       μ *= 2
       iters_since_change = 0
     end
+    fx = obj(nlp, x)
     gpx = ∇fx + jtprod(nlp, x, λ)
 
     gpxNorm2 = norm(gpx)
     optimal = gpxNorm2 <= ϵ && cNorm2 <= ϵ
-    eltime = time() - start_time
-    tired = iter >= itmax || eltime >= timemax
+    elapsed_time = time() - start_time
+    tired = neval_obj(nlp) > max_f || elapsed_time >= max_time
     verbose && @printf("%4d  %9.2e  %7.1e  %7.1e  %7.1e  %7.1e  %7.1e\n", iter,
                        fx, gpxNorm2, cNorm2, μ, norm(λ), subtol)
   end
   verbose && @printf("\n")
 
-  stalled || (status = tired ? "maximum number of evaluations" : "first-order stationary")
+  if optimal
+    status = :first_order
+  elseif tired
+    if neval_obj(nlp) > max_f
+      status = :max_eval
+    elseif elapsed_time > max_time
+      status = :max_time
+    end
+  end
 
-  # TODO: create a type to hold solver statistics.
-  return (x, fx, gpxNorm2, cNorm2, iter, optimal, tired, status, eltime)
+  return ExecutionStats(status, solved=optimal, tired=tired, x=x, f=fx,
+                        opt_norm=gpxNorm2, feas_norm=cNorm2, iter=iter, time=elapsed_time,
+                        eval=deepcopy(counters(nlp)))
 end
 
 """
 subproblem
 
-  minₓ  Lₐ(x) = f(x) + λᵀc(x) + 0.5μ‖c(x)‖^2
+  minₓ  Lₐ(x) = f(x) + λᵀc(x) + 0.5μ‖c(x)‖²
 """
 function subproblem(nlp::AbstractNLPModel, x::Vector, λ::Vector, μ::Real)
   f(x) = begin
@@ -89,7 +102,7 @@ function subproblem(nlp::AbstractNLPModel, x::Vector, λ::Vector, μ::Real)
     return obj(nlp, x) + dot(λ + 0.5*μ*cx,cx)
   end
   g(x) = grad(nlp, x) + jtprod(nlp, x, λ + μ*cons(nlp, x))
-  Hp(x,v;y=[],obj_weight=1.0) = hprod(nlp, x, v, y=λ+μ*cons(nlp, x), obj_weight=obj_weight) +
+  Hp!(x,v,Hv;y=[],obj_weight=1.0) = hprod!(nlp, x, v, Hv, y=λ+μ*cons(nlp, x), obj_weight=obj_weight) +
                                         μ*jtprod(nlp, x, jprod(nlp, x, v))
-  return SimpleNLPModel(f, x, g=g, Hp=Hp)
+  return SimpleNLPModel(f, x, g=g, Hp! =Hp!)
 end
