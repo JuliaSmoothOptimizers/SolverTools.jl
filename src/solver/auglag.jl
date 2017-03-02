@@ -1,6 +1,6 @@
-export lagaug
+export auglag
 
-function lagaug(nlp :: AbstractNLPModel;
+function auglag(nlp :: AbstractNLPModel;
                atol :: Real=1.0e-8, rtol :: Real=1.0e-6,
                max_time :: Real=60.0,
                max_f :: Int=0,

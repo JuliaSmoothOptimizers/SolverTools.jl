@@ -4,4 +4,4 @@ include("tron.jl")
 include("trunk.jl")
 
 # Constrained methods
-include("lagaug.jl")
+include("auglag.jl")

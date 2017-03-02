@@ -3,7 +3,7 @@ import Compat.String
 using Base.Test
 
 @testset "Augmented Lagrangian" begin
-  include("solvers/lagaug.jl")
+  include("solvers/auglag.jl")
 end
 
 include("simple_dixmaanj.jl")
@@ -27,6 +27,7 @@ end
 
 # test benchmark helpers, skip constrained problems (hs7 has constraints)
 solve_problem(trunk, simple_dixmaanj(), verbose=true, monotone=false, colstats=uncstats)
+solve_problem(auglag, MathProgNLPModel(bt1()), verbose=true)
 probs = [dixmaane, dixmaanf, dixmaang, dixmaanh, dixmaani, dixmaanj, hs7]
 
 models = (MathProgNLPModel(p(99), name=string(p)) for p in probs)
