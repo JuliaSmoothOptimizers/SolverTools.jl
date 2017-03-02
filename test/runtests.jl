@@ -1,9 +1,10 @@
 using Base.Test, Compat, NLPModels, OptimizationProblems, Optimize
 import Compat.String
-using FactCheck
+using Base.Test
 
-include("solvers/lagaug.jl")
-FactCheck.exitstatus()
+@testset "Augmented Lagrangian" begin
+  include("solvers/lagaug.jl")
+end
 
 include("simple_dixmaanj.jl")
 

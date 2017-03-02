@@ -1,7 +1,7 @@
 using OptimizationProblems
 
-context("Simple tests") do
-  facts("Quadratic with linear constraints") do
+@testset "Simple tests" begin
+  @testset "Quadratic with linear constraints" begin
     for D in [ ones(2), linspace(1e-2, 100, 2), linspace(1e-2, 1e2, 10), linspace(1e-4, 1e4, 10) ]
       n = length(D)
       for x0 in Any[ zeros(n), ones(n), -collect(linspace(1, n, n)) ]
@@ -11,105 +11,97 @@ context("Simple tests") do
         λ = -1/sum(1./D)
         stats = lagaug(nlp, verbose=false, rtol=0.0)
         x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
-        println(stats)
-        @fact x --> roughly(-λ./D, 1e-4)
-        @fact fx --> roughly(-λ, 1e-5)
-        @fact gpx --> roughly(0.0, 1e-4)
-        @fact cx --> roughly(0.0, 1e-4)
+        @test isapprox(x, -λ./D, atol=1e-4)
+        @test isapprox(fx, -λ, atol=1e-5)
+        @test isapprox(gpx, 0.0, atol=1e-4)
+        @test isapprox(cx, 0.0, atol=1e-4)
       end
     end
   end
 
-  facts("HS6") do
+  @testset "HS6" begin
     nlp = MathProgNLPModel(hs6())
 
     stats = lagaug(nlp, verbose=false, rtol=0.0)
     x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
-    println(stats)
-    @fact x --> roughly(ones(2), 1e-4)
-    @fact fx --> roughly(0.0, 1e-5)
-    @fact gpx --> roughly(0.0, 1e-4)
-    @fact cx --> roughly(0.0, 1e-4)
+    @test isapprox(x, ones(2), atol=1e-4)
+    @test isapprox(fx, 0.0, atol=1e-5)
+    @test isapprox(gpx, 0.0, atol=1e-4)
+    @test isapprox(cx, 0.0, atol=1e-4)
   end
 
-  facts("HS7") do
+  @testset "HS7" begin
     nlp = MathProgNLPModel(hs7())
 
     stats = lagaug(nlp, verbose=false, rtol=0.0)
     x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
-    println(stats)
-    @fact x --> roughly([0.0; sqrt(3)], 1e-4)
-    @fact fx --> roughly(-sqrt(3), 1e-5)
-    @fact gpx --> roughly(0.0, 1e-4)
-    @fact cx --> roughly(0.0, 1e-4)
+    @test isapprox(x, [0.0; sqrt(3)], atol=1e-4)
+    @test isapprox(fx, -sqrt(3), atol=1e-5)
+    @test isapprox(gpx, 0.0, atol=1e-4)
+    @test isapprox(cx, 0.0, atol=1e-4)
   end
 
-  facts("HS8") do
+  @testset "HS8" begin
     nlp = MathProgNLPModel(hs8())
 
     stats = lagaug(nlp, verbose=false, rtol=0.0)
     x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
-    println(stats)
     sol = sqrt( (25 + sqrt(301)*[1;-1])/2 )
-    @fact abs(x) --> roughly(sol, 1e-4)
-    @fact fx --> roughly(-1.0, 1e-5)
-    @fact gpx --> roughly(0.0, 1e-4)
-    @fact cx --> roughly(0.0, 1e-4)
+    @test isapprox(abs(x), sol, atol=1e-4)
+    @test isapprox(fx, -1.0, atol=1e-5)
+    @test isapprox(gpx, 0.0, atol=1e-4)
+    @test isapprox(cx, 0.0, atol=1e-4)
   end
 
-  facts("HS9") do
+  @testset "HS9" begin
     nlp = MathProgNLPModel(hs9())
 
     stats = lagaug(nlp, verbose=false, rtol=0.0)
     x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
-    println(stats)
-    @fact (x + [3;4]) .% [12; 16] --> roughly(zeros(2), 1e-4)
-    @fact fx --> roughly(-0.5, 1e-5)
-    @fact gpx --> roughly(0.0, 1e-4)
-    @fact cx --> roughly(0.0, 1e-4)
+    @test isapprox((x + [3;4]) .% [12; 16], zeros(2), atol=1e-4)
+    @test isapprox(fx, -0.5, atol=1e-5)
+    @test isapprox(gpx, 0.0, atol=1e-4)
+    @test isapprox(cx, 0.0, atol=1e-4)
   end
 
-  facts("HS26") do
+  @testset "HS26" begin
     nlp = MathProgNLPModel(hs26())
 
     stats = lagaug(nlp, verbose=false, rtol=0.0)
     x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
-    println(stats)
-    @fact fx --> roughly(0.0, 1e-5)
-    @fact gpx --> roughly(0.0, 1e-4)
-    @fact cx --> roughly(0.0, 1e-4)
+    @test isapprox(fx, 0.0, atol=1e-5)
+    @test isapprox(gpx, 0.0, atol=1e-4)
+    @test isapprox(cx, 0.0, atol=1e-4)
   end
 
-  facts("HS27") do
+  @testset "HS27" begin
     nlp = MathProgNLPModel(hs27())
 
     stats = lagaug(nlp, verbose=false, rtol=0.0)
     x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
-    println(stats)
-    @fact x --> roughly([-1.0; 1.0; 0.0], 1e-4)
-    @fact fx --> roughly(0.04, 1e-5)
-    @fact gpx --> roughly(0.0, 1e-4)
-    @fact cx --> roughly(0.0, 1e-4)
+    @test isapprox(x, [-1.0; 1.0; 0.0], atol=1e-4)
+    @test isapprox(fx, 0.04, atol=1e-5)
+    @test isapprox(gpx, 0.0, atol=1e-4)
+    @test isapprox(cx, 0.0, atol=1e-4)
   end
 
 end
 
-context("Troublesome problems") do
-  facts("No Lagrangian multiplier") do
+@testset "Troublesome problems" begin
+  @testset "No Lagrangian multiplier" begin
     nlp = ADNLPModel(x->x[1], [1.0], c=x->[x[1]^2], lcon=[0.0], ucon=[0.0])
 
     stats = lagaug(nlp, verbose=false, rtol=0.0)
     x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
-    println(stats)
-    @fact x --> roughly([0.0], 1e-4)
-    @fact fx --> roughly(0.0, 1e-4)
-    @fact gpx --> roughly(0.0, 1e-4)
-    @fact cx --> roughly(0.0, 1e-4)
+    @test isapprox(x, [0.0], atol=1e-4)
+    @test isapprox(fx, 0.0, atol=1e-4)
+    @test isapprox(gpx, 0.0, atol=1e-4)
+    @test isapprox(cx, 0.0, atol=1e-4)
   end
 end
 
-context("Larger problems") do
-  facts("Quadratic with linear constraints") do
+@testset "Larger problems" begin
+  @testset "Quadratic with linear constraints" begin
     for n = 10.^(2:4)
       for D in [ ones(n), linspace(1e-2, 100, n)]
         for x0 in Any[ zeros(n), ones(n), -collect(linspace(1, n, n)) ]
@@ -123,10 +115,10 @@ context("Larger problems") do
           λ = -1/sum(1./D)
           stats = lagaug(nlp, verbose=false, rtol=0.0)
           x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
-          @fact x --> roughly(-λ./D, 1e-4)
-          @fact fx --> roughly(-λ/2, 1e-5)
-          @fact gpx --> roughly(0.0, 1e-4)
-          @fact cx --> roughly(0.0, 1e-4)
+          @test isapprox(x, -λ./D, atol=1e-4)
+          @test isapprox(fx, -λ/2, atol=1e-5)
+          @test isapprox(gpx, 0.0, atol=1e-4)
+          @test isapprox(cx, 0.0, atol=1e-4)
         end
       end
     end
