@@ -2,7 +2,7 @@ using OptimizationProblems
 
 context("Simple tests") do
   facts("Quadratic with linear constraints") do
-    for D in [ ones(2), linspace(1e-2, 100, 2), linspace(1e-2, 1e2, 10), linspace(1e-4, 1e4, 10), linspace(1e-4, 1e4, 30) ]
+    for D in [ ones(2), linspace(1e-2, 100, 2), linspace(1e-2, 1e2, 10), linspace(1e-4, 1e4, 10) ]
       n = length(D)
       for x0 in Any[ zeros(n), ones(n), -collect(linspace(1, n, n)) ]
         nlp = ADNLPModel(x->dot(x,D.*x), x0,
@@ -94,9 +94,23 @@ context("Simple tests") do
 
 end
 
+context("Troublesome problems") do
+  facts("No Lagrangian multiplier") do
+    nlp = ADNLPModel(x->x[1], [1.0], c=x->[x[1]^2], lcon=[0.0], ucon=[0.0])
+
+    stats = lagaug(nlp, verbose=false, rtol=0.0)
+    x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
+    println(stats)
+    @fact x --> roughly([0.0], 1e-4)
+    @fact fx --> roughly(0.0, 1e-4)
+    @fact gpx --> roughly(0.0, 1e-4)
+    @fact cx --> roughly(0.0, 1e-4)
+  end
+end
+
 context("Larger problems") do
   facts("Quadratic with linear constraints") do
-    for n = 10.^(2:5)
+    for n = 10.^(2:4)
       for D in [ ones(n), linspace(1e-2, 100, n)]
         for x0 in Any[ zeros(n), ones(n), -collect(linspace(1, n, n)) ]
           nlp = SimpleNLPModel(x->dot(x,D.*x)/2, x0,
