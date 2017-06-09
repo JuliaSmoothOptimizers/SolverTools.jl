@@ -69,14 +69,14 @@ function lbfgs(nlp :: AbstractNLPModel;
   end
   verbose && @printf("\n")
 
-  if tired
+  if optimal
+    status = :first_order
+  elseif tired
     if neval_obj(nlp) > max_f
       status = :max_eval
     elseif elapsed_time > max_time
       status = :max_time
     end
-  else
-    status = :first_order
   end
 
   return ExecutionStats(status, solved=optimal, tired=tired, x=x, f=f,
