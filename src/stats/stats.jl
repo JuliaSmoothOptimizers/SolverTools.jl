@@ -49,25 +49,51 @@ function ExecutionStats{T}(status :: Symbol; solved :: Bool=false, tired :: Bool
   return ExecutionStats(status, solved, tired, stalled, x, f, normg, c, iter, deepcopy(eval), t, solver_specific)
 end
 
-import Base.show
+import Base.show, Base.print, Base.println
 
 function show(io :: IO, stats :: ExecutionStats)
+  show(io, "Execution stats: $(getStatus(stats))")
+end
+
+# TODO: Expose NLPModels dsp in nlp_types.jl function print
+function disp_vector(io :: IO, x :: Vector)
+  if length(x) == 0
+    @printf(io, "∅")
+  elseif length(x) <= 5
+    Base.show_delim_array(io, x, "", " ", "", false)
+  else
+    Base.show_delim_array(io, x[1:4], "", " ", "", false)
+    @printf(io, " ⋯ %s", x[end])
+  end
+end
+
+function print(io :: IO, stats :: ExecutionStats; showvec :: Function=disp_vector)
   # TODO: Show evaluations
-  println("Execution stats")
-  println("  status: $(getStatus(stats))")
-  println("  solved: $(stats.solved)")
-  println("  objective value: $(stats.obj)")
-  println("  optimality measure: $(stats.opt_norm)")
-  println("  feasibility measure: $(stats.feas_norm)")
-  println("  iterations: $(stats.iter)")
-  println("  elapsed time: $(stats.elapsed_time)")
+  @printf(io, "Execution stats\n")
+  @printf(io, "  status: "); show(io, getStatus(stats)); @printf(io, "\n")
+  @printf(io, "  solved: "); show(io, stats.solved); @printf(io, "\n")
+  @printf(io, "  objective value: "); show(io, stats.obj); @printf(io, "\n")
+  @printf(io, "  optimality measure: "); show(io, stats.opt_norm); @printf(io, "\n")
+  @printf(io, "  feasibility measure: "); show(io, stats.feas_norm); @printf(io, "\n")
+  @printf(io, "  solution: "); showvec(io, stats.solution); @printf(io, "\n")
+  @printf(io, "  iterations: "); show(io, stats.iter); @printf(io, "\n")
+  @printf(io, "  elapsed time: "); show(io, stats.elapsed_time); @printf(io, "\n")
   if length(stats.solver_specific) > 0
-    println("  solver specifics:")
+    @printf(io, "  solver specifics:\n")
     for (k,v) in stats.solver_specific
-      println("    $k: $v")
+      @printf(io, "    %s: ", k)
+      if isa(v, Vector)
+        showvec(io, v)
+      else
+        show(io, v)
+      end
+      @printf(io, "\n")
     end
   end
 end
+print(stats :: ExecutionStats; showvec :: Function=disp_vector) = print(STDOUT, stats, showvec=showvec)
+println(io :: IO, stats :: ExecutionStats; showvec :: Function=disp_vector) = print(io, stats, showvec=showvec)
+println(stats :: ExecutionStats; showvec :: Function=disp_vector) = print(STDOUT, stats, showvec=showvec)
 
 const headsym = Dict(:solved  => "  Solved",
                      :tired   => "   Tired",
