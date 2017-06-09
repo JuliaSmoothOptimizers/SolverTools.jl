@@ -49,3 +49,7 @@ end
 # Test TRON
 include("solvers/tron.jl")
 
+# Test ExecutionStats
+stats = ExecutionStats(:first_order, obj=1.0, opt=1e-12,
+                       solver_specific=Dict(:matvec=>10, :dot=>25, :axpy=>20))
+println(stats)
