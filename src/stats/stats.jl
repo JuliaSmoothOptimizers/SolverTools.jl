@@ -20,12 +20,15 @@ type ExecutionStats
   iter :: Int
   eval :: NLPModels.Counters
   elapsed_time :: Float64
+  solver_specific :: Dict{Symbol,Any}
 end
 
-function ExecutionStats(status :: Symbol; solved :: Bool=false, tired :: Bool=false, stalled :: Bool=false,
+function ExecutionStats{T}(status :: Symbol; solved :: Bool=false, tired :: Bool=false, stalled :: Bool=false,
                         x :: Vector=Float64[], f :: Float64=Inf, normg :: Float64=Inf,
                         c :: Float64=0.0, iter :: Int=-1, t :: Float64=Inf,
-                        eval :: NLPModels.Counters=Counters(), kwargs...)
+                        eval :: NLPModels.Counters=Counters(),
+                        solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}(),
+                        kwargs...)
   if !(status in keys(STATUS))
     s = join(keys(STATUS, ", "))
     error("$status is not a valid status. Use one of the following: $s")
@@ -43,7 +46,7 @@ function ExecutionStats(status :: Symbol; solved :: Bool=false, tired :: Bool=fa
       t = v
     end
   end
-  return ExecutionStats(status, solved, tired, stalled, x, f, normg, c, iter, deepcopy(eval), t)
+  return ExecutionStats(status, solved, tired, stalled, x, f, normg, c, iter, deepcopy(eval), t, solver_specific)
 end
 
 import Base.show
@@ -58,6 +61,12 @@ function show(io :: IO, stats :: ExecutionStats)
   println("  feasibility measure: $(stats.feas_norm)")
   println("  iterations: $(stats.iter)")
   println("  elapsed time: $(stats.elapsed_time)")
+  if length(stats.solver_specific) > 0
+    println("  solver specifics:")
+    for (k,v) in stats.solver_specific
+      println("    $k: $v")
+    end
+  end
 end
 
 const headsym = Dict(:solved  => "  Solved",
