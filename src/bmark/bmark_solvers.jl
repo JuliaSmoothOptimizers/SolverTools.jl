@@ -1,4 +1,5 @@
-export bmark_solvers, profile_solvers, bmark_and_profile
+export bmark_solvers, profile_solvers, profile_solvers_by_evaluations,
+       bmark_and_profile, bmark_and_profile_by_evaluations
 
 
 """
@@ -14,10 +15,10 @@ Run a set of solvers on a set of problems.
 Any keyword argument accepted by `solve_problems()`
 
 #### Return value
-A Dict{Symbol, Array{Int,2}} of statistics.
+A Dict{Symbol, ExecutionStats} of statistics.
 """
 function bmark_solvers(solvers :: Vector{Function}, args...; kwargs...)
-  stats = Dict{Symbol, Array{Int,2}}()
+  stats = Dict{Symbol, Array{ExecutionStats,1}}()
   for solver in solvers
     @printf("running %s\n", string(solver))
     stats[Symbol(solver)] = solve_problems(solver, args...; kwargs...)
@@ -37,19 +38,27 @@ if Pkg.installed("BenchmarkProfiles") != nothing
   * `stats`: a dict of statistics such as obtained from `bmark_solvers()`
 
   #### Keyword arguments
-  Any keyword argument accepted by `BenchmarkProfiles.performance_profile()`.
+  * `cost`: a function `cost(::ExecutionStats)` returning a positive cost value. Usually, time or number of function evaluations.
+  * Any keyword argument accepted by `BenchmarkProfiles.performance_profile()`.
 
   #### Return value
   A profile as returned by `performance_profile()`.
   """
-  function profile_solvers{T,n}(stats :: Dict{Symbol, Array{T,n}}; kwargs...)
+  function profile_solvers(stats :: Dict{Symbol, Array{ExecutionStats,1}};
+                           cost :: Function = stat->stat.elapsed_time,
+                           kwargs...)
     args = Dict(kwargs)
     if haskey(args, :title)
       args[:title] *= @sprintf(" (%d problems)", size(stats[first(keys(stats))], 1))
     end
-    performance_profile(hcat([sum(p, 2) for p in values(stats)]...),
-                        collect(String, [string(s) for s in keys(stats)]); args...)
+    solvers = keys(stats)
+    np, ns = length(stats[first(solvers)]), length(solvers)
+    P = [stats[s][p].solved ? cost(stats[s][p]) : -1 for p = 1:np, s in solvers]
+    performance_profile(P, map(string, solvers); args...)
   end
+
+  profile_solvers_by_evaluations(stats :: Dict{Symbol, Array{ExecutionStats,1}}; kwargs...) =
+      profile_solvers(stats, cost=stat->sum_counters(stat.eval); kwargs...)
 
   """
       bmark_and_profile(args...;
@@ -69,11 +78,17 @@ if Pkg.installed("BenchmarkProfiles") != nothing
   * A Dict{Symbol, Array{Int,2}} of statistics
   * a profile as returned by `performance_profile()`.
   """
-  function bmark_and_profile(args...;
+  function bmark_and_profile(args...; cost :: Function = stat->stat.elapsed_time,
                              bmark_args :: Dict{Symbol, Any}=Dict{Symbol,Any}(),
                              profile_args :: Dict{Symbol, Any}=Dict{Symbol,Any}())
     stats = bmark_solvers(args...; bmark_args...)
-    profiles = profile_solvers(stats; profile_args...)
+    profiles = profile_solvers(stats, cost=cost; profile_args...)
     return stats, profiles
   end
+
+  bmark_and_profile_by_evaluations(args...;
+                            bmark_args :: Dict{Symbol, Any}=Dict{Symbol,Any}(),
+                            profile_args :: Dict{Symbol, Any}=Dict{Symbol,Any}()) =
+    bmark_and_profile(args..., cost=stat->sum_counters(stat.eval);
+      bmark_args=bmark_args, profile_args=profile_args)
 end

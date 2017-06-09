@@ -3,9 +3,11 @@ export display_header, solve_problems, solve_problem
 type SkipException <: Exception
 end
 
+const uncstats = [:obj, :opt_norm, :neval_obj, :neval_grad, :neval_hprod, :iter, :elapsed_time, :status]
+
 function display_header()
-  @printf("%-15s  %8s  %9s  %7s  %5s  %5s  %6s  %s\n",
-          "Name", "nvar", "f", "‖∇f‖", "#obj", "#grad", "#hprod", "status")
+  s = statshead(uncstats)
+  @printf("%-15s  %8s  %s\n", "Name", "nvar", s)
 end
 
 
@@ -24,26 +26,27 @@ Apply a solver to a set of problems.
 * any other keyword argument accepted by `run_problem()`
 
 #### Return value
-* an `Array{Int}(nprobs, 3)` where `nprobs` is the number of problems in the problem.
-  See the documentation of `solve_problem()` for the form of each entry.
+* an `Array(ExecutionStats, nprobs)` where `nprobs` is the number of problems
+  in `problems` minus the skipped ones if `prune` is true.
 """
 function solve_problems(solver :: Function, problems :: Any; prune :: Bool=true, kwargs...)
   display_header()
   nprobs = length(problems)
   verbose = nprobs ≤ 1
-  stats = -ones(nprobs, 3)
+  stats = []
   k = 0
   for problem in problems
     try
-      (f, g, h) = solve_problem(solver, problem, verbose=verbose; kwargs...)
-      k = k + 1
-      stats[k, :] = [f, g, h]
-      finalize(problem)
+      s = solve_problem(solver, problem, verbose=verbose; kwargs...)
+      push!(stats, s)
     catch e
       isa(e, SkipException) || rethrow(e)
+      prune || push!(stats, ExecutionStats(:unknown))
+    finally
+      finalize(problem)
     end
   end
-  return prune ? stats[1:k, :] : stats
+  return stats
 end
 
 
@@ -70,24 +73,18 @@ function solve_problem(solver :: Function, nlp :: AbstractNLPModel; kwargs...)
   skip = haskey(args, :skipif) ? pop!(args, :skipif) : x -> false
   skip(nlp) && throw(SkipException())
 
-  # Julia nonsense
-  optimal = false
-  f = 0.0
-  gNorm = 0.0
-  status = "fail"
+  stats = ExecutionStats(:exception)
   try
-    (x, f, gNorm, iter, optimal, tired, status) = solver(nlp; args...)
+    stats = solver(nlp; args...)
+    # if nlp.scale_obj
+    #   f /= nlp.scale_obj_factor
+    #   gNorm /= nlp.scale_obj_factor
+    # end
   catch e
     println(e)
-    status = e.msg
   end
-  # if nlp.scale_obj
-  #   f /= nlp.scale_obj_factor
-  #   gNorm /= nlp.scale_obj_factor
-  # end
-  @printf("%-15s  %8d  %9.2e  %7.1e  %5d  %5d  %6d  %s\n",
-          nlp.meta.name, nlp.meta.nvar, f, gNorm,
-          nlp.counters.neval_obj, nlp.counters.neval_grad,
-          nlp.counters.neval_hprod, status)
-  return optimal ? (nlp.counters.neval_obj, nlp.counters.neval_grad, nlp.counters.neval_hprod) : (-nlp.counters.neval_obj, -nlp.counters.neval_grad, -nlp.counters.neval_hprod)
+
+  s = statsline(stats, uncstats)
+  @printf("%-15s  %8d  %s\n", nlp.meta.name, nlp.meta.nvar, s)
+  return stats
 end
