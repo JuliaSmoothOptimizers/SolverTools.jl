@@ -179,7 +179,7 @@ function trunk(nlp :: AbstractNLPModel;
   end
   verbose && @printf("\n")
 
-  if !stalled && !tired
+  if optimal
     status = :first_order
   elseif tired
     if neval_obj(nlp) > max_f
