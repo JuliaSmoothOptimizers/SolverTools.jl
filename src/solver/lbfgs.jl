@@ -9,8 +9,8 @@ function lbfgs(nlp :: AbstractNLPModel;
   x = copy(nlp.meta.x0)
   n = nlp.meta.nvar
 
-  xt = Array(Float64, n)
-  ∇ft = Array(Float64, n)
+  xt = Array{Float64}(n)
+  ∇ft = Array{Float64}(n)
 
   f = obj(nlp, x)
   ∇f = grad(nlp, x)

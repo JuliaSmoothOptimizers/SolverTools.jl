@@ -51,8 +51,8 @@ function trunk(nlp :: AbstractNLPModel;
   nm_iter = 0
 
   # Preallocate xt.
-  xt = Array(Float64, n)
-  temp = Array(Float64, n)
+  xt = Array{Float64}(n)
+  temp = Array{Float64}(n)
 
   optimal = ∇fNorm2 <= ϵ
   tired = nlp.counters.neval_obj > max_f
