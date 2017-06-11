@@ -14,9 +14,10 @@ type ExecutionStats
   tired :: Bool
   stalled :: Bool
   solution :: Vector # x
+  dual_vector :: Vector # λ
   obj :: Float64 # f(x)
-  opt_norm :: Float64 # ‖∇f(x)‖ for unc, ‖P[x - ∇f(x)] - x‖ for bnd, etc.
-  feas_norm :: Float64 # ‖c(x)‖
+  dual_feas :: Float64 # ‖∇f(x)‖ for unc, ‖P[x - ∇f(x)] - x‖ for bnd, etc.
+  primal_feas :: Float64 # ‖c(x)‖
   iter :: Int
   eval :: NLPModels.Counters
   elapsed_time :: Float64
@@ -24,11 +25,11 @@ type ExecutionStats
 end
 
 function ExecutionStats{T}(status :: Symbol; solved :: Bool=false, tired :: Bool=false, stalled :: Bool=false,
-                        x :: Vector=Float64[], f :: Float64=Inf, normg :: Float64=Inf,
-                        c :: Float64=0.0, iter :: Int=-1, t :: Float64=Inf,
-                        eval :: NLPModels.Counters=Counters(),
-                        solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}(),
-                        kwargs...)
+                           x :: Vector=Float64[], λ :: Vector=Float64[], f :: Float64=Inf,
+                           normg :: Float64=Inf, c :: Float64=0.0, iter :: Int=-1,
+                           t :: Float64=Inf, eval :: NLPModels.Counters=Counters(),
+                           solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}(),
+                           kwargs...)
   if !(status in keys(STATUS))
     s = join(keys(STATUS, ", "))
     error("$status is not a valid status. Use one of the following: $s")
@@ -36,17 +37,19 @@ function ExecutionStats{T}(status :: Symbol; solved :: Bool=false, tired :: Bool
   for (k,v) in kwargs
     if k == :solution || k == :sol
       x = v
+    elseif k == :dual_vector
+      λ = v
     elseif k == :objective || k == :obj
       f = v
-    elseif k == :opt_norm || k == :opt
+    elseif k == :dual_feas || k == :opt
       normg = v
-    elseif k == :feas_norm || k == :feas
+    elseif k == :primal_feas || k == :feas
       c = v
     elseif k == :elapsed_time || k == :time
       t = v
     end
   end
-  return ExecutionStats(status, solved, tired, stalled, x, f, normg, c, iter, deepcopy(eval), t, solver_specific)
+  return ExecutionStats(status, solved, tired, stalled, x, λ, f, normg, c, iter, deepcopy(eval), t, solver_specific)
 end
 
 import Base.show, Base.print, Base.println
@@ -73,8 +76,8 @@ function print(io :: IO, stats :: ExecutionStats; showvec :: Function=disp_vecto
   @printf(io, "  status: "); show(io, getStatus(stats)); @printf(io, "\n")
   @printf(io, "  solved: "); show(io, stats.solved); @printf(io, "\n")
   @printf(io, "  objective value: "); show(io, stats.obj); @printf(io, "\n")
-  @printf(io, "  optimality measure: "); show(io, stats.opt_norm); @printf(io, "\n")
-  @printf(io, "  feasibility measure: "); show(io, stats.feas_norm); @printf(io, "\n")
+  @printf(io, "  dual feasibility: "); show(io, stats.dual_feas); @printf(io, "\n")
+  @printf(io, "  primal feasibility: "); show(io, stats.primal_feas); @printf(io, "\n")
   @printf(io, "  solution: "); showvec(io, stats.solution); @printf(io, "\n")
   @printf(io, "  iterations: "); show(io, stats.iter); @printf(io, "\n")
   @printf(io, "  elapsed time: "); show(io, stats.elapsed_time); @printf(io, "\n")
@@ -112,8 +115,8 @@ const headsym = Dict(:solved  => "  Solved",
                      :neval_hprod  => " #hprod",
                      :neval_jhprod => "#jhprod",
                      :obj          => "              f",
-                     :opt_norm     => "           ‖∇f‖",
-                     :feas_norm    => "            ‖c‖",
+                     :dual_feas    => "           ‖∇f‖",
+                     :primal_feas  => "            ‖c‖",
                      :elapsed_time => "  Elaspsed time")
 
 function statsgetfield(stats :: ExecutionStats, name :: Symbol)

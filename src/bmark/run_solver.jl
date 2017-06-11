@@ -3,7 +3,7 @@ export display_header, solve_problems, solve_problem
 type SkipException <: Exception
 end
 
-const uncstats = [:obj, :opt_norm, :neval_obj, :neval_grad, :neval_hprod, :iter, :elapsed_time, :status]
+const uncstats = [:obj, :dual_feas, :neval_obj, :neval_grad, :neval_hprod, :iter, :elapsed_time, :status]
 
 function display_header()
   s = statshead(uncstats)
