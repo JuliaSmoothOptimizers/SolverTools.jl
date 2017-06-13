@@ -1,6 +1,6 @@
 export armijo_wolfe
 
-function armijo_wolfe(h :: C1LineFunction,
+function armijo_wolfe(h :: LineFunction,
                       h₀ :: Float64,
                       slope :: Float64,
                       g :: Array{Float64,1};

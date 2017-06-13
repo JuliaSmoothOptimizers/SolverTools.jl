@@ -1,34 +1,31 @@
-export C1LineFunction, C2LineFunction
-export obj, grad, grad!, hess
+importall NLPModels
 
-# Import methods that we extend.
-import NLPModels.obj, NLPModels.grad, NLPModels.grad!, NLPModels.hess
+export LineFunction
+export obj, grad, derivative, grad!, derivative!, hess
 
-
-"""A type to represent the restriction of a C1 function to a direction.
+"""A type to represent the restriction of a function to a direction.
 Given f : R → Rⁿ, x ∈ Rⁿ and a nonzero direction d ∈ Rⁿ,
 
-    ϕ = C1LineFunction(f, x, d)
+    ϕ = LineFunction(nlp, x, d)
 
 represents the function ϕ : R → R defined by
 
     ϕ(t) := f(x + td).
 """
-type C1LineFunction
+type LineFunction <: AbstractNLPModel
   nlp :: AbstractNLPModel
   x :: Vector
   d :: Vector
 end
 
-
-"""`obj(f, t)` evaluates the objective of the `C1LineFunction`
+"""`obj(f, t)` evaluates the objective of the `LineFunction`
 
     ϕ(t) := f(x + td).
 """
-obj(f :: C1LineFunction, t :: Float64) = obj(f.nlp, f.x + t * f.d)
+obj(f :: LineFunction, t :: Float64) = obj(f.nlp, f.x + t * f.d)
 
 
-"""`grad(f, t)` evaluates the first derivative of the `C1LineFunction`
+"""`grad(f, t)` evaluates the first derivative of the `LineFunction`
 
     ϕ(t) := f(x + td),
 
@@ -36,10 +33,10 @@ i.e.,
 
     ϕ'(t) = ∇f(x + td)ᵀd.
 """
-grad(f :: C1LineFunction, t :: Float64) = dot(grad(f.nlp, f.x + t * f.d), f.d)
+grad(f :: LineFunction, t :: Float64) = dot(grad(f.nlp, f.x + t * f.d), f.d)
+derivative(f :: LineFunction, t :: Float64) = grad(f, t)
 
-
-"""`grad!(f, t, g)` evaluates the first derivative of the `C1LineFunction`
+"""`grad!(f, t, g)` evaluates the first derivative of the `LineFunction`
 
     ϕ(t) := f(x + td),
 
@@ -49,57 +46,10 @@ i.e.,
 
 The gradient ∇f(x + td) is stored in `g`.
 """
-grad!(f :: C1LineFunction, t :: Float64, g :: Vector{Float64}) = dot(grad!(f.nlp, f.x + t * f.d, g), f.d)
+grad!(f :: LineFunction, t :: Float64, g :: Vector{Float64}) = dot(grad!(f.nlp, f.x + t * f.d, g), f.d)
+derivative!(f :: LineFunction, t :: Float64, g :: Vector{Float64}) = grad!(f, t, g)
 
-
-"""A type to represent the restriction of a C2 function to a direction.
-Given f : R → Rⁿ, x ∈ Rⁿ and a nonzero direction d ∈ Rⁿ,
-
-    ϕ = C2LineFunction(f, x, d)
-
-represents the function ϕ : R → R defined by
-
-    ϕ(t) := f(x + td).
-"""
-type C2LineFunction
-  nlp :: AbstractNLPModel
-  x :: Vector
-  d :: Vector
-end
-
-
-"""`obj(f, t)` evaluates the objective of the `C2LineFunction`
-
-    ϕ(t) := f(x + td).
-"""
-obj(f :: C2LineFunction, t :: Float64) = obj(f.nlp, f.x + t * f.d)
-
-
-"""`grad(f, t)` evaluates the first derivative of the `C2LineFunction`
-
-    ϕ(t) := f(x + td),
-
-i.e.,
-
-    ϕ'(t) = ∇f(x + td)ᵀd.
-"""
-grad(f :: C2LineFunction, t :: Float64) = dot(grad(f.nlp, f.x + t * f.d), f.d)
-
-
-"""`grad!(f, t, g)` evaluates the first derivative of the `C2LineFunction`
-
-    ϕ(t) := f(x + td),
-
-i.e.,
-
-    ϕ'(t) = ∇f(x + td)ᵀd.
-
-The gradient ∇f(x + td) is stored in `g`.
-"""
-grad!(f :: C2LineFunction, t :: Float64, g :: Vector{Float64}) = dot(grad!(f.nlp, f.x + t * f.d, g), f.d)
-
-
-"""Evaluate the second derivative of the `C2LineFunction`
+"""Evaluate the second derivative of the `LineFunction`
 
     ϕ(t) := f(x + td),
 
@@ -107,4 +57,4 @@ i.e.,
 
     ϕ"(t) = dᵀ∇²f(x + td)d.
 """
-hess(f :: C2LineFunction, t :: Float64) = dot(f.d, hprod(f.nlp, f.x + t * f.d, f.d))
+hess(f :: LineFunction, t :: Float64) = dot(f.d, hprod(f.nlp, f.x + t * f.d, f.d))

@@ -35,7 +35,7 @@ function lbfgs(nlp :: AbstractNLPModel;
     verbose && @printf("  %8.1e", slope)
 
     # Perform improved Armijo linesearch.
-    h = C1LineFunction(nlp, x, d)
+    h = LineFunction(nlp, x, d)
     t, good_grad, ft, nbk, nbW = armijo_wolfe(h, f, slope, ∇ft, τ₁=0.9999, bk_max=25, verbose=false)
 
     verbose && @printf("  %4d\n", nbk)
