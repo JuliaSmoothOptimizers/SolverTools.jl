@@ -1,2 +1,2 @@
-include("line_functions.jl")
+include("line_model.jl")
 include("armijo_wolfe.jl")
