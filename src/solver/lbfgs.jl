@@ -27,6 +27,8 @@ function lbfgs(nlp :: AbstractNLPModel;
   optimal = ∇fNorm <= ϵ
   tired = nlp.counters.neval_obj > max_f
 
+  h = LineFunction(nlp, x, ∇f)
+
   while !(optimal || tired)
     d = - H * ∇f
     slope = BLAS.dot(n, d, 1, ∇f, 1)
@@ -34,8 +36,8 @@ function lbfgs(nlp :: AbstractNLPModel;
 
     verbose && @printf("  %8.1e", slope)
 
+    redirect!(h, x, d)
     # Perform improved Armijo linesearch.
-    h = LineFunction(nlp, x, d)
     t, good_grad, ft, nbk, nbW = armijo_wolfe(h, f, slope, ∇ft, τ₁=0.9999, bk_max=25, verbose=false)
 
     verbose && @printf("  %4d\n", nbk)
