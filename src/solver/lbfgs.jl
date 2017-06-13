@@ -27,7 +27,7 @@ function lbfgs(nlp :: AbstractNLPModel;
   optimal = ∇fNorm <= ϵ
   tired = nlp.counters.neval_obj > max_f
 
-  h = LineFunction(nlp, x, ∇f)
+  h = LineModel(nlp, x, ∇f)
 
   while !(optimal || tired)
     d = - H * ∇f
