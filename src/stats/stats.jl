@@ -47,6 +47,8 @@ function ExecutionStats{T}(status :: Symbol; solved :: Bool=false, tired :: Bool
       c = v
     elseif k == :elapsed_time || k == :time
       t = v
+    else
+      throw(UndefVarError(k))
     end
   end
   return ExecutionStats(status, solved, tired, stalled, x, λ, f, normg, c, iter, deepcopy(eval), t, solver_specific)
