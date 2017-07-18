@@ -9,7 +9,7 @@ models = [simple_dixmaanj(),
   using CUTEst
   push!(models, CUTEstModel("DIXMAANJ", "-param", "M=30"))
 end
-solvers = [trunk, lbfgs]
+solvers = [trunk, lbfgs, tron]
 
 for model in models
   for solver in solvers
@@ -39,3 +39,7 @@ assert(size(stats[Symbol(solvers[1])], 1) == length(probs))
   stats = bmark_solvers(solvers, models)
   println(stats)
 end
+
+# Test TRON
+include("solvers/tron.jl")
+
