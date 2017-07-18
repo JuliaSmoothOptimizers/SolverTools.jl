@@ -3,11 +3,14 @@ export display_header, solve_problems, solve_problem
 type SkipException <: Exception
 end
 
-const uncstats = [:obj, :dual_feas, :neval_obj, :neval_grad, :neval_hprod, :iter, :elapsed_time, :status]
+const uncstats = [:obj, :dual_feas, :neval_obj, :neval_grad, :neval_hess, :neval_hprod, :iter, :elapsed_time, :status]
+const constats = [:obj, :dual_feas, :primal_feas, :neval_obj, :neval_grad, :neval_hess, :neval_hprod, :neval_cons, :neval_jac, :neval_jprod, :neval_jtprod, :iter, :elapsed_time, :status]
 
-function display_header()
-  s = statshead(uncstats)
-  @printf("%-15s  %8s  %s\n", "Name", "nvar", s)
+"""`
+"""
+function display_header(;colstats::Array{Symbol} = constats)
+  s = statshead(colstats)
+  @printf("%-15s  %8s  %8s  %s\n", "Name", "nvar", "ncon", s)
 end
 
 
@@ -68,7 +71,7 @@ Any keyword argument accepted by the solver.
   `nlp` with `solver`.
   Negative values are used to represent failures.
 """
-function solve_problem(solver :: Function, nlp :: AbstractNLPModel; kwargs...)
+function solve_problem(solver :: Function, nlp :: AbstractNLPModel; colstats::Array{Symbol} = constats, kwargs...)
   args = Dict(kwargs)
   skip = haskey(args, :skipif) ? pop!(args, :skipif) : x -> false
   skip(nlp) && throw(SkipException())
@@ -84,7 +87,10 @@ function solve_problem(solver :: Function, nlp :: AbstractNLPModel; kwargs...)
     println(e)
   end
 
-  s = statsline(stats, uncstats)
-  @printf("%-15s  %8d  %s\n", nlp.meta.name, nlp.meta.nvar, s)
+  # Remove prefix.name -> name
+  name = split(nlp.meta.name, ".")[end]
+
+  s = statsline(stats, colstats)
+  @printf("%-15s  %8d  %8s  %s\n", name, nlp.meta.nvar, nlp.meta.ncon, s)
   return stats
 end
