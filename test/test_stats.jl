@@ -12,6 +12,10 @@ function test_stats()
   open("teststats.out", "a") do f
     println(f, stats, showvec=(io,x)->print(io,x))
   end
+
+  @testset "Invalid variables" begin
+    @test_throws UndefVarError ExecutionStats(:unknown, fakevar = 1)
+  end
 end
 
 test_stats()
