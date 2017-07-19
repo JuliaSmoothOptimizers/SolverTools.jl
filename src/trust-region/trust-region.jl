@@ -1,4 +1,5 @@
 # A trust-region type and basic utility functions.
+export TrustRegionException, acceptable, get_property, ratio, ratio!, reset!, update!
 
 global const ϵ = eps(Float64)
 
@@ -7,38 +8,28 @@ type TrustRegionException <: Exception
   msg  :: String
 end
 
-type TrustRegion
-  initial_radius :: Float64
-  radius :: Float64
-  max_radius :: Float64
-  acceptance_threshold :: Float64
-  increase_threshold :: Float64
-  decrease_factor :: Float64
-  increase_factor :: Float64
+"""`AbstractTrustRegion`
 
-  function TrustRegion(initial_radius :: Float64;
-                       max_radius :: Float64=1.0/sqrt(eps(Float64)),
-                       acceptance_threshold :: Float64=1.0e-4,
-                       increase_threshold :: Float64=0.95,
-                       decrease_factor :: Float64=1./3,
-                       increase_factor :: Float64=1.5)
+An abstract trust region type so that specific trust regions define update
+rules differently. Child types must have at least the following fields:
 
-    initial_radius > 0 || (initial_radius = 1.0)
-    max_radius > initial_radius || throw(TrustRegionException("Invalid initial radius"))
-    (0.0 < acceptance_threshold < increase_threshold < 1.0) || throw(TrustRegionException("Invalid thresholds"))
-    (0.0 < decrease_factor < 1.0 < increase_factor) || throw(TrustRegionException("Invalid decrease/increase factors"))
+- `acceptance_threshold :: Float64`
+- `initial_radius :: Float64`
+- `radius :: Float64`
+- `ratio :: Float64`
 
-    return new(initial_radius, initial_radius, max_radius,
-               acceptance_threshold, increase_threshold,
-               decrease_factor, increase_factor)
-  end
-end
+and the following function:
 
+- `update!(tr, step_norm)`
+"""
+@compat abstract type AbstractTrustRegion end
 
-"""Compute the actual vs. predicted reduction radio ∆f/Δm, where
-Δf = f_trial - f is the actual reduction is an objective/merit/penalty function,
-Δm = m_trial - m is the reduction predicted by the model m of f.
-We assume that m is being minimized, and therefore that Δm < 0.
+"""`ρ = ratio(nlp, f, f_trial, Δm, x_trial, step, slope)`
+
+Compute the actual vs. predicted reduction radio `∆f/Δm`, where
+`Δf = f_trial - f` is the actual reduction is an objective/merit/penalty function,
+`Δm = m_trial - m` is the reduction predicted by the model `m` of `f`.
+We assume that `m` is being minimized, and therefore that `Δm < 0`.
 """
 function ratio(nlp :: AbstractNLPModel, f :: Float64, f_trial :: Float64, Δm :: Float64,
                x_trial :: Vector{Float64}, step :: Vector{Float64}, slope :: Float64)
@@ -56,48 +47,66 @@ function ratio(nlp :: AbstractNLPModel, f :: Float64, f_trial :: Float64, Δm ::
   return ared / pred
 end
 
+"""`tr = ratio!(tr, nlp, f, f_trial, Δm, x_trial, step, slope)`
 
-"Return `true` if a step is acceptable"
-function acceptable(tr :: TrustRegion, ratio :: Float64)
-  return ratio >= tr.acceptance_threshold
-end
-
-
-"""Update the trust-region radius based on the ratio of actual vs. predicted
-reduction and the step norm. In order to exclude an unsuccessful step, the
-update rule is
-
-    radius = decrease_threshold * step_norm                if ratio < acceptance_threshold
-    radius = min(max_radius,
-                 max(radius, increase_factor * step_norm)  if ratio ≥ increase_threshold
-    radius unchanged otherwise.
+Compute the actual vs. predicted reduction radio `∆f/Δm`, where
+`Δf = f_trial - f` is the actual reduction is an objective/merit/penalty function,
+`Δm = m_trial - m` is the reduction predicted by the model `m` of `f`.
+We assume that `m` is being minimized, and therefore that `Δm < 0`.
+`tr` is updated inplace.
 """
-function update!(tr :: TrustRegion, ratio :: Float64, step_norm :: Float64)
-  if ratio < tr.acceptance_threshold
-    tr.radius = tr.decrease_factor * step_norm
-  elseif ratio >= tr.increase_threshold
-    tr.radius = min(tr.max_radius,
-                    max(tr.radius, tr.increase_factor * step_norm))
-  end
+function ratio!(tr :: AbstractTrustRegion, nlp :: AbstractNLPModel, f :: Float64,
+                f_trial :: Float64, Δm :: Float64, x_trial :: Vector{Float64},
+                step :: Vector{Float64}, slope :: Float64)
+  tr.ratio = ratio(nlp, f, f_trial, Δm, x_trial, step, slope)
   return tr
 end
 
+"""`acceptable(tr)`
 
-"Reset the trust-region radius to its initial value"
-function reset!(tr :: TrustRegion)
+Return `true` if a step is acceptable
+"""
+function acceptable(tr :: AbstractTrustRegion)
+  return tr.ratio >= tr.acceptance_threshold
+end
+
+"""`reset!(tr)`
+
+Reset the trust-region radius to its initial value
+"""
+function reset!(tr :: AbstractTrustRegion)
   tr.radius = tr.initial_radius
   return tr
 end
 
 
-"""A basic getter for `TrustRegion` instances.
+"""A basic getter for `AbstractTrustRegion` instances.
 Should be overhauled when it's possible to overload `getfield()`
 and `setfield!()`. See
 https://github.com/JuliaLang/julia/issues/1974
 """
-function get_property(tr :: TrustRegion, prop :: Symbol)
+function get_property{T <: AbstractTrustRegion}(tr :: T, prop :: Symbol)
   # All fields are gettable.
-  gettable = fieldnames(TrustRegion)
+  gettable = fieldnames(T)
   prop in gettable || throw(TrustRegionException("Unknown property: $prop"))
   getfield(tr, prop)
 end
+
+"""A basic setter for `AbstractTrustRegion` instances.
+"""
+function set_property!{T <: AbstractTrustRegion}(tr :: T, prop :: Symbol, value :: Any)
+  gettable = fieldnames(T)
+  prop in gettable || throw(TrustRegionException("Unknown property: $prop"))
+  setfield!(tr, prop, value)
+end
+
+"""`update!(tr, step_norm)`
+
+Update the trust-region radius based on the ratio of actual vs. predicted reduction
+and the step norm.
+"""
+function update!(tr :: AbstractTrustRegion, ratio :: Float64, step_norm :: Float64)
+  throw(NotImplementedError("`update!` not implemented for this TrustRegion type"))
+end
+
+include("basic-trust-region.jl")
