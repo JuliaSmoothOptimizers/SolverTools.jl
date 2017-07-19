@@ -87,7 +87,7 @@ function trunk(nlp :: AbstractNLPModel;
     ft = obj(nlp, xt)
 
     try
-      ρ = ratio(nlp, f, ft, Δq, xt, s, slope)
+      ratio!(tr, nlp, f, ft, Δq, xt, s, slope)
     catch exc # negative predicted reduction
       status = exc.msg
       stalled = true
@@ -96,11 +96,11 @@ function trunk(nlp :: AbstractNLPModel;
 
     if !monotone
       ρ_hist = ratio(nlp, fref, ft, σref + Δq, xt, s, slope)
-      ρ = max(ρ, ρ_hist)
+      set_property!(tr, :ratio, max(get_property(tr, :ratio), ρ_hist))
     end
 
     bk = 0
-    if !acceptable(tr, ρ)
+    if !acceptable(tr)
       # Perform backtracking linesearch along s
       # Scaling s to the trust-region boundary, as recommended in
       # Algorithm 10.3.2 of the Trust-Region book
@@ -122,14 +122,14 @@ function trunk(nlp :: AbstractNLPModel;
       BLAS.scal!(n, α, s, 1)
       slope *= α
       Δq = slope + 0.5 * α * α * curv
-      ρ = ratio(nlp, f, ft, Δq, xt, s, slope)
+      ratio!(tr, nlp, f, ft, Δq, xt, s, slope)
       if !monotone
         ρ_hist = ratio(nlp, fref, ft, σref + Δq, xt, s, slope)
-        ρ = max(ρ, ρ_hist)
+        set_property!(tr, :ratio, max(get_property(tr, :ratio), ρ_hist))
       end
     end
 
-    if acceptable(tr, ρ)
+    if acceptable(tr)
       # Update non-monotone mode parameters.
       if !monotone
         σref = σref + Δq
@@ -161,10 +161,10 @@ function trunk(nlp :: AbstractNLPModel;
       ∇fNorm2 = BLAS.nrm2(n, ∇f, 1)
     end
 
-    verbose && @printf("%8.1e  %5d  %2d  %s\n", ρ, length(cg_stats.residuals), bk, cg_stats.status)
+    verbose && @printf("%8.1e  %5d  %2d  %s\n", get_property(tr, :ratio), length(cg_stats.residuals), bk, cg_stats.status)
 
     # Move on.
-    update!(tr, ρ, sNorm)
+    update!(tr, sNorm)
 
     verbose && @printf("%4d  %9.2e  %7.1e  %7.1e  ", iter, f, ∇fNorm2, get_property(tr, :radius))
 
