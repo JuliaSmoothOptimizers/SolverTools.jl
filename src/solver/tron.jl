@@ -1,4 +1,4 @@
-# Some parts of this code were adapted from
+#  Some parts of this code were adapted from
 # https://github.com/PythonOptimizers/NLP.py/blob/develop/nlp/optimize/tron.py
 
 using LinearOperators, NLPModels
@@ -30,14 +30,7 @@ function tron(nlp :: AbstractNLPModel;
               atol :: Real=1e-8,
               rtol :: Real=1e-6,
               fatol :: Real=0.0,
-              frtol :: Real=1e-12,
-              σ₁ :: Real=0.25,
-              σ₂ :: Real=0.5,
-              σ₃ :: Real=4.0,
-              η₀ :: Real=1e-4,
-              η₁ :: Real=0.25,
-              η₂ :: Real=0.75,
-              Δmax :: Real=1e6
+              frtol :: Real=1e-12
              )
   ℓ = nlp.meta.lvar
   u = nlp.meta.uvar
@@ -53,7 +46,6 @@ function tron(nlp :: AbstractNLPModel;
   temp = zeros(n)
   gpx = zeros(n)
   xc = zeros(n)
-  gc = zeros(n)
   Hs = zeros(n)
 
   x = max.(ℓ, min.(nlp.meta.x0, u))
@@ -69,52 +61,46 @@ function tron(nlp :: AbstractNLPModel;
   tired = iter >= itmax || el_time > timemax
   unbounded = fx < fmin
   stalled = false
+  status = ""
 
   αC = 1.0
-  Δ = min(max(1.0, 0.1 * norm(πx)), 100)
+  tr = TRONTrustRegion(min(max(1.0, 0.1 * norm(πx)), 100))
   if verbose
     @printf("%4s  %9s  %7s  %7s  %7s  %s\n", "Iter", "f", "π", "Radius", "Ratio", "CG-status")
-    @printf("%4d  %9.2e  %7.1e  %7.1e\n", iter, fx, πx, Δ)
+    @printf("%4d  %9.2e  %7.1e  %7.1e\n", iter, fx, πx, get_property(tr, :radius))
   end
   while !(optimal || tired || stalled)
     # Current iteration
     xc .= x
     fc = fx
-    gc .= gx
+    Δ = get_property(tr, :radius)
 
     # Model
-    H = hess_op!(nlp, x, temp)
+    H = hess_op!(nlp, xc, temp)
 
     # Cauchy starts here
     αC, s = cauchy(x, H, gx, Δ, αC, ℓ, u, μ₀=μ₀, μ₁=μ₁, σ=σ)
 
     s, cgits, cginfo = projected_newton!(x, H, gx, Δ, cgtol, s, ℓ, u, max_cgiter=max_cgiter)
     slope, qs = compute_Hs_slope_qs!(Hs, H, s, gx)
-    Pred = -qs
-
     fx = f(x)
-    Ared = fc - fx
+
+    try
+      ratio!(tr, nlp, fc, fx, qs, x, s, slope)
+    catch exc
+      status = exc.msg
+      stalled = true
+      continue
+    end
+
     if num_success_iters == 0
-      Δ = min(Δ, norm(s))
+      tr.radius = min(Δ, norm(s))
     end
 
     # Update the trust region
-    γ = fx - fc - slope
-    α = γ <= 0.0 ? σ₃ : max(σ₁, -0.5 * slope / γ)
+    update!(tr, norm(s))
 
-    success = Ared >= η₀ * Pred
-
-    if Ared < η₀ * Pred
-      Δ = min(max(α, σ₁) * norm(s), σ₂ * Δ)
-    elseif Ared < η₁ * Pred
-      Δ = max(σ₁ * Δ, min(α * norm(s), σ₂ * Δ))
-    elseif Ared < η₂ * Pred
-      Δ = max(σ₁ * Δ, min(α * norm(s), σ₃ * Δ))
-    else
-      Δ = max(Δ, min(α * norm(s), σ₃ * Δ))
-    end
-
-    if success
+    if acceptable(tr)
       num_success_iters += 1
       gx = g(x)
       project_step!(gpx, x, -gx, ℓ, u)
@@ -123,7 +109,7 @@ function tron(nlp :: AbstractNLPModel;
 
     # No post-iteration
 
-    if !success
+    if !acceptable(tr)
       fx = fc
       x .= xc
     end
@@ -142,6 +128,8 @@ function tron(nlp :: AbstractNLPModel;
     "first-order stationary"
   elseif fx == -Inf
     "objective function is unbounded from below"
+  elseif status != ""
+    status
   elseif stalled
     "stalled"
   else
@@ -191,7 +179,7 @@ Computes
 """
 function compute_Hs_slope_qs!(Hs::Vector, H::Union{AbstractMatrix,AbstractLinearOperator},
                               s::Vector, g::Vector)
-  Hs = H * s
+  Hs .= H * s
   slope = dot(g,s)
   qs = 0.5 * dot(s, Hs) + slope
   return slope, qs
@@ -268,6 +256,8 @@ function projected_line_search!(x::Vector, H::Union{AbstractMatrix,AbstractLinea
   end
   if α < 1.0 && α < brkmin
     α = brkmin
+    project_step!(s, x, α * d, ℓ, u)
+    slope, qs = compute_Hs_slope_qs!(Hs, H, s, g)
   end
 
   αd = α * d
@@ -364,6 +354,9 @@ function projected_newton!(x::Vector, H::Union{AbstractMatrix,AbstractLinearOper
                           max_cgiter::Int = max(50,length(x)))
   n = length(x)
   status = ""
+
+  Hs = H * s
+
   # Projected Newton Step
   exit_optimal = false
   exit_pcg = false
@@ -377,7 +370,6 @@ function projected_newton!(x::Vector, H::Union{AbstractMatrix,AbstractLinearOper
       continue
     end
     Z = opExtension(ifree, n)
-    Hs = H * s
     @views wa = g[ifree]
     @views gfree = Hs[ifree] + wa
     gfnorm = norm(wa)
@@ -390,11 +382,14 @@ function projected_newton!(x::Vector, H::Union{AbstractMatrix,AbstractLinearOper
 
     # Projected line search
     # TODO: Don't create new arrays here
-    xfree, w = projected_line_search!(x[ifree], ZHZ, gfree, st, ℓ[ifree], u[ifree])
+    xfree = x[ifree]
+    xfree, w = projected_line_search!(xfree, ZHZ, gfree, st, ℓ[ifree], u[ifree])
     x[ifree] = xfree
     @views s[ifree] += w
 
-    @views gfree = Hs[ifree] + g[ifree]
+    slope, qs = compute_Hs_slope_qs!(Hs, H, s, g)
+
+    @views gfree .= Hs[ifree] .+ g[ifree]
     if norm(gfree) <= cgtol * gfnorm
       exit_optimal = true
     elseif status == "on trust-region boundary"

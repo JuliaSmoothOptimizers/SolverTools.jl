@@ -110,3 +110,4 @@ function update!(tr :: AbstractTrustRegion, ratio :: Float64, step_norm :: Float
 end
 
 include("basic-trust-region.jl")
+include("tron-trust-region.jl")

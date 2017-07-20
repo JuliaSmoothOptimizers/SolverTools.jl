@@ -199,7 +199,7 @@ end
   end
 end
 
-@testset "Problems" begin
+@testset "Non-first-order exits" begin
   n = 10
   x0 = 10*ones(n)
   f(x) = 1e7*sum(exp.(x))
