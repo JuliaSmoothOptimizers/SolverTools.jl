@@ -334,7 +334,6 @@ function cauchy(x::Vector, H::Union{AbstractMatrix,AbstractLinearOperator}, g::V
     # Recover the last successful step
     α = αs
     s = project_step!(s, x, -α * g, ℓ, u)
-    slope, qs = compute_Hs_slope_qs!(Hs, H, s, g)
   end
   return α, s
 end
@@ -387,7 +386,7 @@ function projected_newton!(x::Vector, H::Union{AbstractMatrix,AbstractLinearOper
     x[ifree] = xfree
     @views s[ifree] += w
 
-    slope, qs = compute_Hs_slope_qs!(Hs, H, s, g)
+    Hs .= H * s
 
     @views gfree .= Hs[ifree] .+ g[ifree]
     if norm(gfree) <= cgtol * gfnorm
