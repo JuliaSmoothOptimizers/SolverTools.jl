@@ -1,11 +1,10 @@
-using Optimize
-using NLPModels
-using AmplNLReader
-using OptimizationProblems
-using Compat
+using Compat, NLPModels, OptimizationProblems, Optimize
 import Compat.String
 
-models = [AmplModel("dixmaanj.nl"), MathProgNLPModel(dixmaanj(), name="dixmaanj")]
+include("simple_dixmaanj.jl")
+
+models = [simple_dixmaanj(),
+          MathProgNLPModel(dixmaanj(), name="dixmaanj")]
 @static if is_unix()
   using CUTEst
   push!(models, CUTEstModel("DIXMAANJ", "-param", "M=30"))
@@ -22,7 +21,7 @@ for model in models
 end
 
 # test benchmark helpers, skip constrained problems (hs7 has constraints)
-solve_problem(trunk, AmplModel("dixmaanj"), verbose=true, monotone=false)
+solve_problem(trunk, simple_dixmaanj(), verbose=true, monotone=false)
 probs = [dixmaane, dixmaanf, dixmaang, dixmaanh, dixmaani, dixmaanj, hs7]
 
 models = (MathProgNLPModel(p(99), name=string(p)) for p in probs)
