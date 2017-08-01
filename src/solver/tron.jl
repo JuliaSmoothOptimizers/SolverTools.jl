@@ -81,8 +81,9 @@ function tron(nlp :: AbstractNLPModel;
     # Cauchy starts here
     αC, s = cauchy(x, H, gx, Δ, αC, ℓ, u, μ₀=μ₀, μ₁=μ₁, σ=σ)
 
-    s, cgits, cginfo = projected_newton!(x, H, gx, Δ, cgtol, s, ℓ, u, max_cgiter=max_cgiter)
-    slope, qs = compute_Hs_slope_qs!(Hs, H, s, gx)
+    s, Hs, cgits, cginfo = projected_newton!(x, H, gx, Δ, cgtol, s, ℓ, u, max_cgiter=max_cgiter)
+    slope = dot(gx,s)
+    qs = 0.5 * dot(s, Hs) + slope
     fx = f(x)
 
     try
@@ -398,5 +399,5 @@ function projected_newton!(x::Vector, H::Union{AbstractMatrix,AbstractLinearOper
     end
   end
 
-  return s, iters, status
+  return s, Hs, iters, status
 end
