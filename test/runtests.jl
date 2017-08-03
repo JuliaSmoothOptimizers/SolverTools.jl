@@ -27,14 +27,14 @@ probs = [dixmaane, dixmaanf, dixmaang, dixmaanh, dixmaani, dixmaanj, hs7]
 models = (MathProgNLPModel(p(99), name=string(p)) for p in probs)
 stats = bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0)
 p = profile_solvers(stats)
-stats, p = bmark_and_profile(solvers, models, bmark_args=Dict{Symbol,Any}(:skipif=>m -> m.meta.ncon > 0))
+stats, p = bmark_and_profile(solvers, models, bmark_args=Dict(:skipif=>m -> m.meta.ncon > 0))
 println(stats)
 println(size(stats[Symbol(solvers[1])], 1))
 println(length(probs))
 assert(size(stats[Symbol(solvers[1])], 1) == length(probs) - 1)
 stats = bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0, prune=false)
 p = profile_solvers(stats)
-stats, p = bmark_and_profile(solvers, models, bmark_args=Dict{Symbol,Any}(:skipif=>m -> m.meta.ncon > 0, :prune=>false))
+stats, p = bmark_and_profile(solvers, models, bmark_args=Dict(:skipif=>m -> m.meta.ncon > 0, :prune=>false))
 assert(size(stats[Symbol(solvers[1])], 1) == length(probs))
 
 # test bmark_solvers with CUTEst

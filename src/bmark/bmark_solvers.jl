@@ -62,8 +62,8 @@ if Pkg.installed("BenchmarkProfiles") != nothing
 
   """
       bmark_and_profile(args...;
-                        bmark_args :: Dict{Symbol, Any}=Dict{Symbol,Any}(),
-                        profile_args :: Dict{Symbol, Any}=Dict{Symbol,Any}())
+                        bmark_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}(),
+                        profile_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}())
 
   Run a set of solvers on a set of problems and plot a performance profile.
 
@@ -79,16 +79,16 @@ if Pkg.installed("BenchmarkProfiles") != nothing
   * a profile as returned by `performance_profile()`.
   """
   function bmark_and_profile(args...; cost :: Function = stat->stat.elapsed_time,
-                             bmark_args :: Dict{Symbol, Any}=Dict{Symbol,Any}(),
-                             profile_args :: Dict{Symbol, Any}=Dict{Symbol,Any}())
+                             bmark_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}(),
+                             profile_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}())
     stats = bmark_solvers(args...; bmark_args...)
     profiles = profile_solvers(stats, cost=cost; profile_args...)
     return stats, profiles
   end
 
   bmark_and_profile_by_evaluations(args...;
-                            bmark_args :: Dict{Symbol, Any}=Dict{Symbol,Any}(),
-                            profile_args :: Dict{Symbol, Any}=Dict{Symbol,Any}()) =
+                            bmark_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}(),
+                            profile_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}()) =
     bmark_and_profile(args..., cost=stat->sum_counters(stat.eval);
       bmark_args=bmark_args, profile_args=profile_args)
 end
