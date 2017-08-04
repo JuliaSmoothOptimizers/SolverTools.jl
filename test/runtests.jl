@@ -1,4 +1,4 @@
-using Compat, NLPModels, OptimizationProblems, Optimize
+using Base.Test, Compat, NLPModels, OptimizationProblems, Optimize
 import Compat.String
 
 include("simple_dixmaanj.jl")
