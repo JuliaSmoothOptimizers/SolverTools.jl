@@ -7,7 +7,7 @@ export active, breakpoints, compute_Hs_slope_qs, project!, project_step!
 Computes the active bounds at x, using tolerance `min(rtol * (uᵢ-ℓᵢ), atol)`.
 If ℓᵢ or uᵢ is not finite, only `atol` is used.
 """
-function active(x::Vector, ℓ::Vector, u::Vector; rtol::Real = 1e-8, atol::Real = 1e-8)
+function active(x::Vector, ℓ::Vector, u::Vector; rtol::Real = sqrt(eps(eltype(x))), atol::Real = sqrt(eps(eltype(x))))
   A = Int[]
   n = length(x)
   for i = 1:n
@@ -31,12 +31,11 @@ boundary. `x` is assumed to be feasible. `nbrk` is the number of breakpoints
 from `x` in the direction `d`.
 """
 function breakpoints(x::Vector, d::Vector, ℓ::Vector, u::Vector)
-  n = length(x)
   pos = find( (d .> 0) .& (x .< u) )
   neg = find( (d .< 0) .& (x .> ℓ) )
 
   nbrk = length(pos) + length(neg)
-  nbrk == 0 && return 0, 0.0, 0.0
+  nbrk == 0 && return 0, zero(x), zero(x)
 
   brkmin = Inf
   brkmax = 0.0
