@@ -6,6 +6,9 @@ using Krylov
 using Compat
 import Compat.String
 
+# Auxiliary.
+include("auxiliary/bounds.jl")
+
 # Algorithmic components.
 include("linesearch/linesearch.jl")
 include("trust-region/trust-region.jl")
