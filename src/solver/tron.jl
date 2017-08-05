@@ -25,7 +25,6 @@ function tron(nlp :: AbstractNLPModel;
               itmax :: Int=10_000 * nlp.meta.nvar,
               max_cgiter :: Int=nlp.meta.nvar,
               cgtol :: Real=0.1,
-              fmin :: Real=-1e32,
               timemax :: Real=60.0,
               atol :: Real=1e-8,
               rtol :: Real=1e-6,
@@ -57,6 +56,7 @@ function tron(nlp :: AbstractNLPModel;
   project_step!(gpx, x, -gx, ℓ, u)
   πx = norm(gpx)
   ϵ = atol + rtol * πx
+  fmin = -min(1.0, abs(fx)) / eps(eltype(x))
   optimal = πx <= ϵ
   tired = iter >= itmax || el_time > timemax
   unbounded = fx < fmin
@@ -69,20 +69,17 @@ function tron(nlp :: AbstractNLPModel;
     @printf("%4s  %9s  %7s  %7s  %7s  %s\n", "Iter", "f", "π", "Radius", "Ratio", "CG-status")
     @printf("%4d  %9.2e  %7.1e  %7.1e\n", iter, fx, πx, get_property(tr, :radius))
   end
-  while !(optimal || tired || stalled)
+  while !(optimal || tired || stalled || unbounded)
     # Current iteration
     xc .= x
     fc = fx
     Δ = get_property(tr, :radius)
-
-    # Model
     H = hess_op!(nlp, xc, temp)
 
-    # Cauchy starts here
     αC, s = cauchy(x, H, gx, Δ, αC, ℓ, u, μ₀=μ₀, μ₁=μ₁, σ=σ)
 
     s, Hs, cgits, cginfo = projected_newton!(x, H, gx, Δ, cgtol, s, ℓ, u, max_cgiter=max_cgiter)
-    slope = dot(gx,s)
+    slope = dot(gx, s)
     qs = 0.5 * dot(s, Hs) + slope
     fx = f(x)
 
@@ -94,12 +91,13 @@ function tron(nlp :: AbstractNLPModel;
       continue
     end
 
+    s_norm = norm(s)
     if num_success_iters == 0
-      tr.radius = min(Δ, norm(s))
+      tr.radius = min(Δ, s_norm)
     end
 
     # Update the trust region
-    update!(tr, norm(s))
+    update!(tr, s_norm)
 
     if acceptable(tr)
       num_success_iters += 1
@@ -118,16 +116,17 @@ function tron(nlp :: AbstractNLPModel;
     iter += 1
     el_time = time() - start_time
     tired = iter >= itmax ||  el_time > timemax
-    optimal = πx <= ϵ || fx == -Inf
+    optimal = πx <= ϵ
+    unbounded = fx < fmin
 
     verbose && @printf("%4d  %9.2e  %7.1e  %7.1e  %7.1e  %s\n", iter, fx, πx, Δ, Ared / Pred, cginfo)
   end
 
   status = if tired
     iter >= itmax ? "maximum number of iterations" : "maximum elapsed time"
-  elseif πx <= ϵ
+  elseif optimal
     "first-order stationary"
-  elseif fx == -Inf
+  elseif unbounded
     "objective function is unbounded from below"
   elseif status != ""
     status
@@ -265,7 +264,7 @@ projected on the active bounds.
 function projected_newton!(x::Vector, H::Union{AbstractMatrix,AbstractLinearOperator},
                           g::Vector, Δ::Real, cgtol::Real, s::Vector,
                           ℓ::Vector, u::Vector;
-                          max_cgiter::Int = max(50,length(x)))
+                          max_cgiter::Int = max(50, length(x)))
   n = length(x)
   status = ""
 
