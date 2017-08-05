@@ -148,8 +148,13 @@ Performs a projected line search, searching for a step size `t` such that
 where `s = P(x + t * d) - x`, while remaining on the same face as `x + d`.
 Backtracking is performed from t = 1.0. `x` is updated in place.
 """
-function projected_line_search!(x::Vector, H::Union{AbstractMatrix,AbstractLinearOperator}, g::Vector, d::Vector, ℓ::Vector, u::Vector; μ₀::Real = 1e-2)
-  α = 1.0
+function projected_line_search!{T <: Real}(x::AbstractVector{T},
+                                           H::Union{AbstractMatrix,AbstractLinearOperator},
+                                           g::AbstractVector{T},
+                                           d::AbstractVector{T},
+                                           ℓ::AbstractVector{T},
+                                           u::AbstractVector{T}; μ₀::Real = 1e-2)
+  α = one(T)
   _, brkmin, _ = breakpoints(x, d, ℓ, u)
   nsteps = 0
   n = length(x)
@@ -165,7 +170,7 @@ function projected_line_search!(x::Vector, H::Union{AbstractMatrix,AbstractLinea
     if qs <= μ₀ * slope
       search = false
     else
-      α *= 0.5
+      α /= 2
     end
   end
   if α < 1.0 && α < brkmin
@@ -191,9 +196,11 @@ with the sufficient decrease condition
 
     q(s) ≦ μ₀sᵀg.
 """
-function cauchy(x::Vector, H::Union{AbstractMatrix,AbstractLinearOperator}, g::Vector,
-                Δ::Real, α::Real, ℓ::Vector, u::Vector;
-                μ₀::Real = 1e-2, μ₁::Real = 1.0, σ::Real = 10.0)
+function cauchy{T <: Real}(x::AbstractVector{T},
+                           H::Union{AbstractMatrix,AbstractLinearOperator},
+                           g::AbstractVector{T},
+                           Δ::Real, α::Real, ℓ::AbstractVector{T}, u::AbstractVector{T};
+                           μ₀::Real = 1e-2, μ₁::Real = 1.0, σ::Real = 10.0)
   # TODO: Use brkmin to care for g direction
   _, _, brkmax = breakpoints(x, -g, ℓ, u)
   n = length(x)
@@ -256,15 +263,15 @@ end
 
 Compute an approximate solution `d` for
 
-    min q(d) = ¹/₂dᵀHs + dᵀg    s.t.    ℓ ≦ x + d ≦ u,  ‖d‖ ≦ Δ
+min q(d) = ¹/₂dᵀHs + dᵀg    s.t.    ℓ ≦ x + d ≦ u,  ‖d‖ ≦ Δ
 
 starting from `s`.  The steps are computed using the conjugate gradient method
 projected on the active bounds.
 """
-function projected_newton!(x::Vector, H::Union{AbstractMatrix,AbstractLinearOperator},
-                          g::Vector, Δ::Real, cgtol::Real, s::Vector,
-                          ℓ::Vector, u::Vector;
-                          max_cgiter::Int = max(50, length(x)))
+function projected_newton!{T <: Real}(x::AbstractVector{T}, H::Union{AbstractMatrix,AbstractLinearOperator},
+                                      g::AbstractVector{T}, Δ::Real, cgtol::Real, s::AbstractVector{T},
+                                      ℓ::AbstractVector{T}, u::AbstractVector{T};
+                                      max_cgiter::Int = max(50, length(x)))
   n = length(x)
   status = ""
 
