@@ -318,6 +318,14 @@ function projected_newton!{T <: Real}(x::AbstractVector{T}, H::Union{AbstractMat
       exit_itmax = true
     end
   end
+  status = if exit_optimal
+    "stationary point found"
+  elseif exit_itmax
+    "maximum number of iterations"
+  else
+    status # on trust-region
+  end
+
 
   return s, Hs, iters, status
 end
