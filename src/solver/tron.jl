@@ -53,7 +53,7 @@ function tron(nlp :: AbstractNLPModel;
   num_success_iters = 0
 
   # Optimality measure
-  project_step!(gpx, x, -gx, ℓ, u)
+  project_step!(gpx, x, gx, ℓ, u, -1.0)
   πx = norm(gpx)
   ϵ = atol + rtol * πx
   fmin = -min(1.0, abs(fx)) / eps(eltype(x))
@@ -102,7 +102,7 @@ function tron(nlp :: AbstractNLPModel;
     if acceptable(tr)
       num_success_iters += 1
       gx = g(x)
-      project_step!(gpx, x, -gx, ℓ, u)
+      project_step!(gpx, x, gx, ℓ, u, -1.0)
       πx = norm(gpx)
     end
 
@@ -165,7 +165,7 @@ function projected_line_search!{T <: Real}(x::AbstractVector{T},
   search = true
   while search && α > brkmin
     nsteps += 1
-    project_step!(s, x, α * d, ℓ, u)
+    project_step!(s, x, d, ℓ, u, α)
     slope, qs = compute_Hs_slope_qs!(Hs, H, s, g)
     if qs <= μ₀ * slope
       search = false
@@ -175,13 +175,12 @@ function projected_line_search!{T <: Real}(x::AbstractVector{T},
   end
   if α < 1.0 && α < brkmin
     α = brkmin
-    project_step!(s, x, α * d, ℓ, u)
+    project_step!(s, x, d, ℓ, u, α)
     slope, qs = compute_Hs_slope_qs!(Hs, H, s, g)
   end
 
-  αd = α * d
-  project_step!(s, x, αd, ℓ, u)
-  project!(x, x .+ αd, ℓ, u)
+  project_step!(s, x, d, ℓ, u, α)
+  project!(x, x .+ s, ℓ, u)
 
   return x, s
 end
@@ -207,7 +206,7 @@ function cauchy{T <: Real}(x::AbstractVector{T},
   s = zeros(n)
   Hs = zeros(n)
 
-  project_step!(s, x, -α * g, ℓ, u)
+  project_step!(s, x, g, ℓ, u, -α)
 
   # Interpolate or extrapolate
   s_norm = norm(s)
@@ -222,7 +221,7 @@ function cauchy{T <: Real}(x::AbstractVector{T},
     search = true
     while search
       α /= σ
-      project_step!(s, x, -α * g, ℓ, u)
+      project_step!(s, x, g, ℓ, u, -α)
       s_norm = norm(s)
       if s_norm <= μ₁ * Δ
         slope, qs = compute_Hs_slope_qs!(Hs, H, s, g)
@@ -241,7 +240,7 @@ function cauchy{T <: Real}(x::AbstractVector{T},
     αs = α
     while search && α <= brkmax
       α *= σ
-      project_step!(s, x, -α * g, ℓ, u)
+      project_step!(s, x, g, ℓ, u, -α)
       s_norm = norm(s)
       if s_norm <= μ₁ * Δ
         slope, qs = compute_Hs_slope_qs!(Hs, H, s, g)
@@ -254,7 +253,7 @@ function cauchy{T <: Real}(x::AbstractVector{T},
     end
     # Recover the last successful step
     α = αs
-    s = project_step!(s, x, -α * g, ℓ, u)
+    s = project_step!(s, x, g, ℓ, u, -α)
   end
   return α, s
 end

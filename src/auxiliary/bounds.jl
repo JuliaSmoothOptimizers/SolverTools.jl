@@ -81,14 +81,14 @@ function project!{T <: Real}(y :: AbstractVector{T}, x :: AbstractVector{T},
   y .= max.(ℓ, min.(x, u))
 end
 
-"""`project_step!(y, x, d, ℓ, u)`
+"""`project_step!(y, x, d, ℓ, u, α = 1.0)`
 
-Computes the projected direction `y = P(x + d) - x`.
+Computes the projected direction `y = P(x + α * d) - x`.
 """
 function project_step!{T <: Real}(y::AbstractVector{T}, x::AbstractVector{T},
                                   d::AbstractVector{T}, ℓ::AbstractVector{T},
-                                  u::AbstractVector{T})
-  y .= x .+ d
+                                  u::AbstractVector{T}, α::Real = 1.0)
+  y .= x .+ α .* d
   project!(y, y, ℓ, u)
   y .-= x
 end
