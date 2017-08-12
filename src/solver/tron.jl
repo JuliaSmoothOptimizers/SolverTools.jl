@@ -228,7 +228,7 @@ function cauchy{T <: Real}(x::AbstractVector{T},
         search = qs >= μ₀ * slope
       end
       # TODO: Correctly assess why this fails
-      if α < 1e-200
+      if α < sqrt(nextfloat(zero(α)))
         throw("α too small (qs = $qs, slope = $slope)")
         #stalled = true
         #status = "α too small"
