@@ -3,6 +3,7 @@ export lbfgs
 function lbfgs(nlp :: AbstractNLPModel;
                atol :: Float64=1.0e-8, rtol :: Float64=1.0e-6,
                max_f :: Int=0,
+               max_time :: Real=60.0,
                verbose :: Bool=true,
                mem :: Int=5)
 
@@ -24,8 +25,10 @@ function lbfgs(nlp :: AbstractNLPModel;
   verbose && @printf("%4s  %8s  %7s  %8s  %4s\n", "iter", "f", "‖∇f‖", "∇f'd", "bk")
   verbose && @printf("%4d  %8.1e  %7.1e", iter, f, ∇fNorm)
 
+  start_time = time()
+  el_time = 0.0
   optimal = ∇fNorm <= ϵ
-  tired = nlp.counters.neval_obj > max_f
+  tired = nlp.counters.neval_obj > max_f || el_time > max_time
 
   h = LineModel(nlp, x, ∇f)
 
@@ -60,10 +63,20 @@ function lbfgs(nlp :: AbstractNLPModel;
     verbose && @printf("%4d  %8.1e  %7.1e", iter, f, ∇fNorm)
 
     optimal = ∇fNorm <= ϵ
-    tired = nlp.counters.neval_obj > max_f
+    el_time = time() - start_time
+    tired = nlp.counters.neval_obj > max_f || el_time > max_time
   end
   verbose && @printf("\n")
 
-  status = tired ? "maximum number of evaluations" : "first-order stationary"
-  return (x, f, ∇fNorm, iter, optimal, tired, status)
+  status = if tired
+    if el_time > max_time
+      "maximum elapsed time"
+    else
+      "maximum number of function evaluations"
+    end
+  else # optimal
+    "first-order stationary"
+  end
+
+  return x, f, ∇fNorm, iter, optimal, tired, status, el_time
 end

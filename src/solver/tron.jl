@@ -25,7 +25,8 @@ function tron(nlp :: AbstractNLPModel;
               itmax :: Int=10_000 * nlp.meta.nvar,
               max_cgiter :: Int=nlp.meta.nvar,
               cgtol :: Real=0.1,
-              timemax :: Real=60.0,
+              max_f :: Real=0,
+              max_time :: Real=60.0,
               atol :: Real=1e-8,
               rtol :: Real=1e-6,
               fatol :: Real=0.0,
@@ -36,6 +37,7 @@ function tron(nlp :: AbstractNLPModel;
   f(x) = obj(nlp, x)
   g(x) = grad(nlp, x)
   n = nlp.meta.nvar
+  max_f == 0 && (max_f = max(min(100, 2 * n), 5000))
 
   iter = 0
   start_time = time()
@@ -58,7 +60,7 @@ function tron(nlp :: AbstractNLPModel;
   ϵ = atol + rtol * πx
   fmin = min(-1.0, fx) / eps(eltype(x))
   optimal = πx <= ϵ
-  tired = iter >= itmax || el_time > timemax
+  tired = iter >= itmax || el_time > max_time || neval_obj(nlp) > max_f
   unbounded = fx < fmin
   stalled = false
   status = ""
@@ -115,7 +117,7 @@ function tron(nlp :: AbstractNLPModel;
 
     iter += 1
     el_time = time() - start_time
-    tired = iter >= itmax ||  el_time > timemax
+    tired = iter >= itmax ||  el_time > max_time || neval_obj(nlp) > max_f
     optimal = πx <= ϵ
     unbounded = fx < fmin
 
@@ -123,7 +125,13 @@ function tron(nlp :: AbstractNLPModel;
   end
 
   status = if tired
-    iter >= itmax ? "maximum number of iterations" : "maximum elapsed time"
+    if iter >= itmax
+      "maximum number of iterations"
+    elseif el_time > max_time
+      "maximum elapsed time"
+    else
+      "maximum number of function evaluations"
+    end
   elseif optimal
     "first-order stationary"
   elseif unbounded
@@ -131,7 +139,7 @@ function tron(nlp :: AbstractNLPModel;
   elseif status != ""
     status
   elseif stalled
-    "stalled"
+    "stalled: $status"
   else
     "unknown"
   end

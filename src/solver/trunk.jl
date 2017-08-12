@@ -21,6 +21,7 @@ end
 function trunk(nlp :: AbstractNLPModel;
                atol :: Float64=1.0e-8, rtol :: Float64=1.0e-6,
                max_f :: Int=0,
+               max_time :: Real=60.0,
                bk_max :: Int=10,
                monotone :: Bool=false,
                nm_itmax :: Int=25,
@@ -54,8 +55,10 @@ function trunk(nlp :: AbstractNLPModel;
   xt = Array{Float64}(n)
   temp = Array{Float64}(n)
 
+  start_time = time()
+  el_time = 0.0
   optimal = ∇fNorm2 <= ϵ
-  tired = nlp.counters.neval_obj > max_f
+  tired = nlp.counters.neval_obj > max_f || el_time > max_time
   stalled = false
 
   if verbose
@@ -168,13 +171,24 @@ function trunk(nlp :: AbstractNLPModel;
 
     verbose && @printf("%4d  %9.2e  %7.1e  %7.1e  ", iter, f, ∇fNorm2, get_property(tr, :radius))
 
+    el_time = time() - start_time
     optimal = ∇fNorm2 <= ϵ
-    tired = nlp.counters.neval_obj > max_f
+    tired = nlp.counters.neval_obj > max_f || el_time > max_time
   end
   verbose && @printf("\n")
 
-  stalled || (status = tired ? "maximum number of evaluations" : "first-order stationary")
+  status = if tired
+    if el_time > max_time
+      "maximum elapsed_time"
+    else
+      "maximum number of iterations"
+    end
+  elseif optimal
+    "first-order stationary"
+  else
+    "stalled: $status"
+  end
 
   # TODO: create a type to hold solver statistics.
-  return (x, f, ∇fNorm2, iter, optimal, tired, status)
+  return x, f, ∇fNorm2, iter, optimal, tired, status, el_time
 end

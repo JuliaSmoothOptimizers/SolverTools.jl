@@ -213,7 +213,7 @@ end
   end
 
   @testset "Time limit" begin
-    x, fx, π, iter, optimal, tired, status, el_time = tron(nlp, timemax=0)
+    x, fx, π, iter, optimal, tired, status, el_time = tron(nlp, max_time=0)
     @test el_time > 0
     @test tired == true
   end
@@ -244,7 +244,7 @@ end
 
   nlp = ADNLPModel(f, x0)
 
-  x, fx, π, iter, optimal, tired, status = tron(nlp, timemax=600)
+  x, fx, π, iter, optimal, tired, status = tron(nlp, max_time=600)
   @test isapprox(x, ones(n), rtol=1e-5*n)
   @test isapprox(fx, 1.0, rtol=1e-3)
   @test π < 1e-3*n
@@ -252,7 +252,7 @@ end
 
   nlp = ADNLPModel(f, x0, lvar=zeros(n), uvar=0.3*ones(n))
 
-  x, fx, π, iter, optimal, tired, status = tron(nlp, timemax=600)
+  x, fx, π, iter, optimal, tired, status = tron(nlp, max_time=600)
   @test π < 1e-3*n
   @test optimal == true
 end
@@ -263,7 +263,7 @@ end
           "Problem", "n", "type", "f(x)", "π", "time", "it", "#f", "#g", "#Hp", "status")
   for p in problems
     nlp = CUTEstModel(p)
-    x, fx, π, iter, optimal, tired, status, el_time = tron(nlp, timemax=3.0)
+    x, fx, π, iter, optimal, tired, status, el_time = tron(nlp, max_time=3.0)
     finalize(nlp)
 
     ctype = length(nlp.meta.ifree) == nlp.meta.nvar ? "unc" : "bnd"
