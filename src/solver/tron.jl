@@ -139,7 +139,7 @@ function tron(nlp :: AbstractNLPModel;
   return x, fx, πx, iter, optimal, tired, status, el_time
 end
 
-"""`x, s = projected_line_search!(x, H, g, d, ℓ, u; μ₀ = 1e-2)`
+"""`s = projected_line_search!(x, H, g, d, ℓ, u; μ₀ = 1e-2)`
 
 Performs a projected line search, searching for a step size `t` such that
 
@@ -182,7 +182,7 @@ function projected_line_search!{T <: Real}(x::AbstractVector{T},
   project_step!(s, x, d, ℓ, u, α)
   x .= x .+ s
 
-  return x, s
+  return s
 end
 
 """`α, s = cauchy(x, H, g, Δ, ℓ, u; μ₀ = 1e-2, μ₁ = 1.0, σ=10.0)`
@@ -301,10 +301,8 @@ function projected_newton!{T <: Real}(x::AbstractVector{T}, H::Union{AbstractMat
     status = stats.status
 
     # Projected line search
-    # TODO: Don't create new arrays here
-    xfree = x[ifree]
-    xfree, w = projected_line_search!(xfree, ZHZ, gfree, st, ℓ[ifree], u[ifree])
-    x[ifree] = xfree
+    @views xfree = x[ifree]
+    @views w = projected_line_search!(xfree, ZHZ, gfree, st, ℓ[ifree], u[ifree])
     @views s[ifree] += w
 
     Hs .= H * s
