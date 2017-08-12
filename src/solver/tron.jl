@@ -180,7 +180,7 @@ function projected_line_search!{T <: Real}(x::AbstractVector{T},
   end
 
   project_step!(s, x, d, ℓ, u, α)
-  project!(x, x .+ s, ℓ, u)
+  x .= x .+ s
 
   return x, s
 end
@@ -281,7 +281,8 @@ function projected_newton!{T <: Real}(x::AbstractVector{T}, H::Union{AbstractMat
   exit_pcg = false
   exit_itmax = false
   iters = 0
-  project!(x, x .+ s, ℓ, u)
+  x .= x .+ s
+  project!(x, x, ℓ, u)
   while !(exit_optimal || exit_pcg || exit_itmax)
     ifree = setdiff(1:n, active(x, ℓ, u))
     if length(ifree) == 0
