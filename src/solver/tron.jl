@@ -56,7 +56,7 @@ function tron(nlp :: AbstractNLPModel;
   project_step!(gpx, x, gx, ℓ, u, -1.0)
   πx = norm(gpx)
   ϵ = atol + rtol * πx
-  fmin = -min(1.0, abs(fx)) / eps(eltype(x))
+  fmin = min(-1.0, fx) / eps(eltype(x))
   optimal = πx <= ϵ
   tired = iter >= itmax || el_time > timemax
   unbounded = fx < fmin
