@@ -1,4 +1,4 @@
-export display_header, solve_problems, solve_problem
+export display_header, solve_problems, solve_problem, uncstats, constats
 
 type SkipException <: Exception
 end
