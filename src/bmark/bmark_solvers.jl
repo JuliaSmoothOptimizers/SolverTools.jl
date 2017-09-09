@@ -78,7 +78,7 @@ if Pkg.installed("BenchmarkProfiles") != nothing
   * A Dict{Symbol, Array{Int,2}} of statistics
   * a profile as returned by `performance_profile()`.
   """
-  function bmark_and_profile(args...; cost :: Function = stat->stat.elapsed_time,
+  @compat function bmark_and_profile(args...; cost :: Function = stat->stat.elapsed_time,
                              bmark_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}(),
                              profile_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}())
     stats = bmark_solvers(args...; bmark_args...)
@@ -86,7 +86,7 @@ if Pkg.installed("BenchmarkProfiles") != nothing
     return stats, profiles
   end
 
-  bmark_and_profile_by_evaluations(args...;
+  @compat bmark_and_profile_by_evaluations(args...;
                             bmark_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}(),
                             profile_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}()) =
     bmark_and_profile(args..., cost=stat->sum_counters(stat.eval);
