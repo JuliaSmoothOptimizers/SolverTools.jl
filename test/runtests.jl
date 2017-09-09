@@ -13,7 +13,7 @@ solvers = [trunk, lbfgs, tron]
 
 for model in models
   for solver in solvers
-    stats = solve_problem(solver, model, verbose=false)
+    stats = solve_problem(solver, model, verbose=false, colstats=uncstats)
     assert(stats.solved)
     reset!(model)
   end
@@ -21,11 +21,11 @@ for model in models
 end
 
 # test benchmark helpers, skip constrained problems (hs7 has constraints)
-solve_problem(trunk, simple_dixmaanj(), verbose=true, monotone=false)
+solve_problem(trunk, simple_dixmaanj(), verbose=true, monotone=false, colstats=uncstats)
 probs = [dixmaane, dixmaanf, dixmaang, dixmaanh, dixmaani, dixmaanj, hs7]
 
 models = (MathProgNLPModel(p(99), name=string(p)) for p in probs)
-stats = bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0)
+stats = bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0, colstats=uncstats)
 p = profile_solvers(stats)
 stats, p = bmark_and_profile(solvers, models, bmark_args=Dict(:skipif=>m -> m.meta.ncon > 0))
 println(stats)
