@@ -91,7 +91,7 @@ function auglag(nlp :: AbstractNLPModel;
   end
 
   return ExecutionStats(status, solved=optimal, tired=tired, x=x, f=fx,
-                        opt_norm=gpxNorm2, feas_norm=cNorm2, iter=iter, time=elapsed_time,
+                        dual_feas=gpxNorm2, primal_feas=cNorm2, iter=iter, time=elapsed_time,
                         eval=deepcopy(counters(nlp)))
 end
 

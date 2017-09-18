@@ -10,7 +10,7 @@ using OptimizationProblems
 
         λ = -1/sum(1./D)
         stats = auglag(nlp, verbose=false, rtol=0.0)
-        x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
+        x, fx, gpx, cx = stats.solution, stats.obj, stats.dual_feas, stats.primal_feas
         @test isapprox(x, -λ./D, atol=1e-4)
         @test isapprox(fx, -λ, atol=1e-5)
         @test isapprox(gpx, 0.0, atol=1e-4)
@@ -23,7 +23,7 @@ using OptimizationProblems
     nlp = MathProgNLPModel(hs6())
 
     stats = auglag(nlp, verbose=false, rtol=0.0)
-    x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
+    x, fx, gpx, cx = stats.solution, stats.obj, stats.dual_feas, stats.primal_feas
     @test isapprox(x, ones(2), atol=1e-4)
     @test isapprox(fx, 0.0, atol=1e-5)
     @test isapprox(gpx, 0.0, atol=1e-4)
@@ -34,7 +34,7 @@ using OptimizationProblems
     nlp = MathProgNLPModel(hs7())
 
     stats = auglag(nlp, verbose=false, rtol=0.0)
-    x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
+    x, fx, gpx, cx = stats.solution, stats.obj, stats.dual_feas, stats.primal_feas
     @test isapprox(x, [0.0; sqrt(3)], atol=1e-4)
     @test isapprox(fx, -sqrt(3), atol=1e-5)
     @test isapprox(gpx, 0.0, atol=1e-4)
@@ -45,7 +45,7 @@ using OptimizationProblems
     nlp = MathProgNLPModel(hs8())
 
     stats = auglag(nlp, verbose=false, rtol=0.0)
-    x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
+    x, fx, gpx, cx = stats.solution, stats.obj, stats.dual_feas, stats.primal_feas
     sol = sqrt( (25 + sqrt(301)*[1;-1])/2 )
     @test isapprox(abs(x), sol, atol=1e-4)
     @test isapprox(fx, -1.0, atol=1e-5)
@@ -57,7 +57,7 @@ using OptimizationProblems
     nlp = MathProgNLPModel(hs9())
 
     stats = auglag(nlp, verbose=false, rtol=0.0)
-    x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
+    x, fx, gpx, cx = stats.solution, stats.obj, stats.dual_feas, stats.primal_feas
     @test isapprox((x + [3;4]) .% [12; 16], zeros(2), atol=1e-4)
     @test isapprox(fx, -0.5, atol=1e-5)
     @test isapprox(gpx, 0.0, atol=1e-4)
@@ -68,7 +68,7 @@ using OptimizationProblems
     nlp = MathProgNLPModel(hs26())
 
     stats = auglag(nlp, verbose=false, rtol=0.0)
-    x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
+    x, fx, gpx, cx = stats.solution, stats.obj, stats.dual_feas, stats.primal_feas
     @test isapprox(fx, 0.0, atol=1e-5)
     @test isapprox(gpx, 0.0, atol=1e-4)
     @test isapprox(cx, 0.0, atol=1e-4)
@@ -78,7 +78,7 @@ using OptimizationProblems
     nlp = MathProgNLPModel(hs27())
 
     stats = auglag(nlp, verbose=false, rtol=0.0)
-    x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
+    x, fx, gpx, cx = stats.solution, stats.obj, stats.dual_feas, stats.primal_feas
     @test isapprox(x, [-1.0; 1.0; 0.0], atol=1e-4)
     @test isapprox(fx, 0.04, atol=1e-5)
     @test isapprox(gpx, 0.0, atol=1e-4)
@@ -92,7 +92,7 @@ end
     nlp = ADNLPModel(x->x[1], [1.0], c=x->[x[1]^2], lcon=[0.0], ucon=[0.0])
 
     stats = auglag(nlp, verbose=false, rtol=0.0)
-    x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
+    x, fx, gpx, cx = stats.solution, stats.obj, stats.dual_feas, stats.primal_feas
     @test isapprox(x, [0.0], atol=1e-4)
     @test isapprox(fx, 0.0, atol=1e-4)
     @test isapprox(gpx, 0.0, atol=1e-4)
@@ -114,7 +114,7 @@ end
 
           λ = -1/sum(1./D)
           stats = auglag(nlp, verbose=false, rtol=0.0)
-          x, fx, gpx, cx = stats.solution, stats.obj, stats.opt_norm, stats.feas_norm
+          x, fx, gpx, cx = stats.solution, stats.obj, stats.dual_feas, stats.primal_feas
           @test isapprox(x, -λ./D, atol=1e-4)
           @test isapprox(fx, -λ/2, atol=1e-5)
           @test isapprox(gpx, 0.0, atol=1e-4)
