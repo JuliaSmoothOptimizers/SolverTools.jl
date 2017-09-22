@@ -10,7 +10,12 @@ function auglag(nlp :: AbstractNLPModel;
                subverbose :: Bool=false)
 
   if nlp.meta.ncon == 0
-    return tron(nlp; kwargs...)
+    return tron(nlp; atol=atol, rtol=rtol, timemax=max_time, verbose=verbose)
+  elseif inequality_constrained(nlp)
+    stats = auglag(SlackModel(nlp); atol=atol, rtol=rtol, max_time=max_time,
+                  max_f=max_f, verbose=verbose, subverbose=subverbose)
+    stats.solution = stats.solution[1:nlp.meta.nvar]
+    return stats
   end
 
   ρ = 1.1

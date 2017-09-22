@@ -96,6 +96,20 @@ using OptimizationProblems
     @test gpx < 1e-4
     @test cx < 1e-4
   end
+
+  @testset "HS37" begin
+    nlp = ADNLPModel(x->-x[1] * x[2] * x[3], 10 * ones(3), lvar=zeros(3),
+                     uvar=42 * ones(3),
+                     c=x->[72 - x[1] - 2 * x[2] - 2 * x[3];
+                           x[1] + 2 * x[2] + 2 * x[3];],
+                     lcon=zeros(2), ucon=fill(Inf,2))
+    stats = Optimize.auglag(nlp, verbose=false, rtol=0.0)
+    x, fx, gpx, cx = stats.solution, stats.obj, stats.dual_feas, stats.primal_feas
+    @test isapprox(x, [24; 12; 12], atol=1e-4)
+    @test isapprox(fx, -3456, atol=1e-5)
+    @test gpx < 1e-4
+    @test cx < 1e-4
+  end
 end
 
 @testset "Troublesome problems" begin
