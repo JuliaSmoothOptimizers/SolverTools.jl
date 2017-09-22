@@ -61,7 +61,7 @@ function tron(nlp :: AbstractNLPModel;
   tired = iter >= itmax || el_time > timemax
   unbounded = fx < fmin
   stalled = false
-  status = ""
+  status = :unknown
 
   αC = 1.0
   tr = TRONTrustRegion(min(max(1.0, 0.1 * norm(πx)), 100))
@@ -86,7 +86,7 @@ function tron(nlp :: AbstractNLPModel;
     try
       ratio!(tr, nlp, fc, fx, qs, x, s, slope)
     catch exc
-      status = exc.msg
+      status = :neg_pred
       stalled = true
       continue
     end
@@ -122,21 +122,17 @@ function tron(nlp :: AbstractNLPModel;
     verbose && @printf("%4d  %9.2e  %7.1e  %7.1e  %7.1e  %s\n", iter, fx, πx, Δ, Ared / Pred, cginfo)
   end
 
-  status = if tired
-    iter >= itmax ? "maximum number of iterations" : "maximum elapsed time"
+  if tired
+    status = iter >= itmax ? :max_iter : :max_time
   elseif optimal
-    "first-order stationary"
+    status = :first_order
   elseif unbounded
-    "objective function is unbounded from below"
-  elseif status != ""
-    status
-  elseif stalled
-    "stalled"
-  else
-    "unknown"
+    status = :unbounded
   end
 
-  return x, fx, πx, iter, optimal, tired, status, el_time
+  return ExecutionStats(status, solved=optimal, tired=tired, stalled=stalled,
+                        x=x, f=fx, normg=πx, iter=iter, time=el_time,
+                        eval=deepcopy(counters(nlp)))
 end
 
 """`s = projected_line_search!(x, H, g, d, ℓ, u; μ₀ = 1e-2)`
@@ -323,7 +319,6 @@ function projected_newton!{T <: Real}(x::AbstractVector{T}, H::Union{AbstractMat
   else
     status # on trust-region
   end
-
 
   return s, Hs, iters, status
 end
