@@ -6,6 +6,7 @@ using Base.Test
   include("solvers/auglag.jl")
 end
 
+#=
 include("simple_dixmaanj.jl")
 
 models = [simple_dixmaanj(),
@@ -57,3 +58,4 @@ include("solvers/tron.jl")
 
 # Test ExecutionStats
 include("test_stats.jl")
+=#
