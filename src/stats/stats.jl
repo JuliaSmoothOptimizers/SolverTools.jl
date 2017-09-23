@@ -14,10 +14,8 @@ const STATUS = Dict(:unknown => "unknown",
 type ExecutionStats
   status :: Symbol
   solution :: Vector # x
-  dual_vector :: Vector # λ
   obj :: Float64 # f(x)
-  dual_feas :: Float64 # ‖∇f(x)‖ for unc, ‖P[x - ∇f(x)] - x‖ for bnd, etc.
-  primal_feas :: Float64 # ‖c(x)‖
+  dual_feas :: Float64 # ‖∇f(x)‖₂ for unc, ‖P[x - ∇f(x)] - x‖₂ for bnd, etc.
   iter :: Int
   eval :: NLPModels.Counters
   elapsed_time :: Float64
@@ -25,8 +23,8 @@ type ExecutionStats
 end
 
 function ExecutionStats{T}(status :: Symbol;
-                           x :: Vector=Float64[], λ :: Vector=Float64[], f :: Float64=Inf,
-                           normg :: Float64=Inf, c :: Float64=0.0, iter :: Int=-1,
+                           x :: Vector=Float64[], f :: Float64=Inf,
+                           normg :: Float64=Inf, iter :: Int=-1,
                            t :: Float64=Inf, eval :: NLPModels.Counters=Counters(),
                            solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}(),
                            kwargs...)
@@ -37,21 +35,17 @@ function ExecutionStats{T}(status :: Symbol;
   for (k,v) in kwargs
     if k == :solution || k == :sol
       x = v
-    elseif k == :dual_vector
-      λ = v
     elseif k == :objective || k == :obj
       f = v
     elseif k == :dual_feas || k == :opt
       normg = v
-    elseif k == :primal_feas || k == :feas
-      c = v
     elseif k == :elapsed_time || k == :time
       t = v
     else
       throw(UndefVarError(k))
     end
   end
-  return ExecutionStats(status, x, λ, f, normg, c, iter, deepcopy(eval), t, solver_specific)
+  return ExecutionStats(status, x, f, normg, iter, deepcopy(eval), t, solver_specific)
 end
 
 import Base.show, Base.print, Base.println
@@ -78,7 +72,6 @@ function print(io :: IO, stats :: ExecutionStats; showvec :: Function=disp_vecto
   @printf(io, "  status: "); show(io, getStatus(stats)); @printf(io, "\n")
   @printf(io, "  objective value: "); show(io, stats.obj); @printf(io, "\n")
   @printf(io, "  dual feasibility: "); show(io, stats.dual_feas); @printf(io, "\n")
-  @printf(io, "  primal feasibility: "); show(io, stats.primal_feas); @printf(io, "\n")
   @printf(io, "  solution: "); showvec(io, stats.solution); @printf(io, "\n")
   @printf(io, "  iterations: "); show(io, stats.iter); @printf(io, "\n")
   @printf(io, "  elapsed time: "); show(io, stats.elapsed_time); @printf(io, "\n")
@@ -114,7 +107,6 @@ const headsym = Dict(:status  => "  Status",
                      :neval_jhprod => "#jhprod",
                      :obj          => "              f",
                      :dual_feas    => "           ‖∇f‖",
-                     :primal_feas  => "            ‖c‖",
                      :elapsed_time => "  Elaspsed time")
 
 function statsgetfield(stats :: ExecutionStats, name :: Symbol)
