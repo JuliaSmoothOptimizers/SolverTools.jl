@@ -189,7 +189,6 @@ function trunk(nlp :: AbstractNLPModel;
     end
   end
 
-  return ExecutionStats(status, solved=optimal, tired=tired, stalled=stalled,
-                        x=x, f=f, normg=∇fNorm2, iter=iter, time=elapsed_time,
+  return ExecutionStats(status, x=x, f=f, normg=∇fNorm2, iter=iter, time=elapsed_time,
                         eval=deepcopy(counters(nlp)))
 end

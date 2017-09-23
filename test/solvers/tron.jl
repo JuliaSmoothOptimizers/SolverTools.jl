@@ -47,7 +47,7 @@ end
     @test isapprox(stats.solution, zeros(2), rtol=1e-6)
     @test isapprox(stats.obj, 0.0, rtol=1e-12)
     @test stats.dual_feas < 1e-6
-    @test stats.solved == true
+    @test stats.status == :first_order
   end
 
   @testset "Bounds" begin
@@ -62,7 +62,7 @@ end
     @test stats.solution ≈ l
     @test stats.obj == f(l)
     @test stats.dual_feas < 1e-6
-    @test stats.solved == true
+    @test stats.status == :first_order
   end
 
   @testset "Rosenbrock" begin
@@ -75,7 +75,7 @@ end
     @test isapprox(stats.solution, [1.0;1.0], rtol=1e-3)
     @test isapprox(stats.obj, 1.0, rtol=1e-5)
     @test stats.dual_feas < 1e-6
-    @test stats.solved == true
+    @test stats.status == :first_order
   end
 
   @testset "Rosenbrock inactive bounds" begin
@@ -90,7 +90,7 @@ end
     @test isapprox(stats.solution, [1.0;1.0], rtol=1e-3)
     @test isapprox(stats.obj, 1.0, rtol=1e-5)
     @test stats.dual_feas < 1e-6
-    @test stats.solved == true
+    @test stats.status == :first_order
   end
 
   @testset "Rosenbrock active bounds" begin
@@ -107,7 +107,7 @@ end
     @test isapprox(stats.solution, sol, rtol=1e-3)
     @test isapprox(stats.obj, f(sol), rtol=1e-5)
     @test stats.dual_feas < 1e-6
-    @test stats.solved == true
+    @test stats.status == :first_order
   end
 end
 
@@ -119,7 +119,7 @@ end
     f(x) = 0.5*dot(x - 3, x - 3)
     nlp = ADNLPModel(f, x0, lvar=l, uvar=u)
     stats = tron(nlp)
-    @test stats.solved == true
+    @test stats.status == :first_order
     @test stats.dual_feas < 1e-6
     @test isapprox(stats.solution, [1.0; 2.0; 2.0], rtol=1e-3)
     @test stats.solution[1] == 1.0
@@ -133,7 +133,7 @@ end
     f(x) = sum(x.^4)
     nlp = ADNLPModel(f, x0, lvar=l, uvar=u)
     stats = tron(nlp)
-    @test stats.solved == true
+    @test stats.status == :first_order
     @test stats.dual_feas == 0.0
     @test stats.solution == l
   end
@@ -159,7 +159,7 @@ end
       @test norm(stats.solution - r) < 1e-4 * normg0
       @test isapprox(stats.obj, 1.0, rtol=1e-6)
       @test stats.dual_feas < 1e-6 * normg0
-      @test stats.solved == true
+      @test stats.status == :first_order
     end
   end
 
@@ -192,7 +192,7 @@ end
       @test norm(stats.solution - r) < 1e-3
       @test isapprox(stats.obj, f(r), rtol=1e-4)
       @test stats.dual_feas < 1e-4
-      @test stats.solved == true
+      @test stats.status == :first_order
       @test stats.iter <= 10000
       @test stats.status == :first_order
     end
@@ -212,13 +212,13 @@ end
   @testset "Iteration limit" begin
     stats = tron(nlp, itmax=1)
     @test stats.iter == 1
-    @test stats.tired == true
+    @test stats.status == :max_iter
   end
 
   @testset "Time limit" begin
     stats = tron(nlp, timemax=0)
     @test stats.elapsed_time > 0
-    @test stats.tired == true
+    @test stats.status == :max_time
   end
 
   @testset "x0 outside box" begin
@@ -230,7 +230,7 @@ end
     @test norm(stats.solution - l) < 1e-3
     @test isapprox(stats.obj, dot(l,l), rtol=1e-5)
     @test stats.dual_feas < 1e-4
-    @test stats.solved == true
+    @test stats.status == :first_order
   end
 end
 
@@ -251,13 +251,13 @@ end
   @test isapprox(stats.solution, ones(n), rtol=1e-5*n)
   @test isapprox(stats.obj, 1.0, rtol=1e-3)
   @test stats.dual_feas < 1e-3*n
-  @test stats.solved == true
+  @test stats.status == :first_order
 
   nlp = ADNLPModel(f, x0, lvar=zeros(n), uvar=0.3*ones(n))
 
   stats = tron(nlp, timemax=600)
   @test stats.dual_feas < 1e-3*n
-  @test stats.solved == true
+  @test stats.status == :first_order
 end
 
 @static if is_unix()

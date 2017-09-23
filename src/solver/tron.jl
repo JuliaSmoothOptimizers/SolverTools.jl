@@ -130,8 +130,7 @@ function tron(nlp :: AbstractNLPModel;
     status = :unbounded
   end
 
-  return ExecutionStats(status, solved=optimal, tired=tired, stalled=stalled,
-                        x=x, f=fx, normg=πx, iter=iter, time=el_time,
+  return ExecutionStats(status, x=x, f=fx, normg=πx, iter=iter, time=el_time,
                         eval=deepcopy(counters(nlp)))
 end
 

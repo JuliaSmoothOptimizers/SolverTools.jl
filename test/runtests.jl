@@ -14,7 +14,7 @@ solvers = [trunk, lbfgs, tron]
 for model in models
   for solver in solvers
     stats = solve_problem(solver, model, verbose=false, colstats=uncstats)
-    assert(stats.solved)
+    assert(stats.status == :first_order)
     reset!(model)
   end
   finalize(model)

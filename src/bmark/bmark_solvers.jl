@@ -64,7 +64,7 @@ if Pkg.installed("BenchmarkProfiles") != nothing
     end
     solvers = keys(stats)
     np, ns = length(stats[first(solvers)]), length(solvers)
-    P = [stats[s][p].solved ? cost(stats[s][p]) : -1 for p = 1:np, s in solvers]
+    P = [stats[s][p].status == :first_order ? cost(stats[s][p]) : -1 for p = 1:np, s in solvers]
     performance_profile(P, map(string, solvers); args...)
   end
 

@@ -7,14 +7,12 @@ const STATUS = Dict(:unknown => "unknown",
                     :max_iter => "maximum iteration",
                     :neg_pred => "negative predicted reduction",
                     :unbounded => "objective function may be unbounded from below",
-                    :exception => "unhandled exception"
+                    :exception => "unhandled exception",
+                    :stalled => "stalled"
                    )
 
 type ExecutionStats
   status :: Symbol
-  solved :: Bool
-  tired :: Bool
-  stalled :: Bool
   solution :: Vector # x
   dual_vector :: Vector # λ
   obj :: Float64 # f(x)
@@ -26,7 +24,7 @@ type ExecutionStats
   solver_specific :: Dict{Symbol,Any}
 end
 
-function ExecutionStats{T}(status :: Symbol; solved :: Bool=false, tired :: Bool=false, stalled :: Bool=false,
+function ExecutionStats{T}(status :: Symbol;
                            x :: Vector=Float64[], λ :: Vector=Float64[], f :: Float64=Inf,
                            normg :: Float64=Inf, c :: Float64=0.0, iter :: Int=-1,
                            t :: Float64=Inf, eval :: NLPModels.Counters=Counters(),
@@ -53,7 +51,7 @@ function ExecutionStats{T}(status :: Symbol; solved :: Bool=false, tired :: Bool
       throw(UndefVarError(k))
     end
   end
-  return ExecutionStats(status, solved, tired, stalled, x, λ, f, normg, c, iter, deepcopy(eval), t, solver_specific)
+  return ExecutionStats(status, x, λ, f, normg, c, iter, deepcopy(eval), t, solver_specific)
 end
 
 import Base.show, Base.print, Base.println
@@ -78,7 +76,6 @@ function print(io :: IO, stats :: ExecutionStats; showvec :: Function=disp_vecto
   # TODO: Show evaluations
   @printf(io, "Execution stats\n")
   @printf(io, "  status: "); show(io, getStatus(stats)); @printf(io, "\n")
-  @printf(io, "  solved: "); show(io, stats.solved); @printf(io, "\n")
   @printf(io, "  objective value: "); show(io, stats.obj); @printf(io, "\n")
   @printf(io, "  dual feasibility: "); show(io, stats.dual_feas); @printf(io, "\n")
   @printf(io, "  primal feasibility: "); show(io, stats.primal_feas); @printf(io, "\n")
@@ -102,10 +99,7 @@ print(stats :: ExecutionStats; showvec :: Function=disp_vector) = print(STDOUT, 
 println(io :: IO, stats :: ExecutionStats; showvec :: Function=disp_vector) = print(io, stats, showvec=showvec)
 println(stats :: ExecutionStats; showvec :: Function=disp_vector) = print(STDOUT, stats, showvec=showvec)
 
-const headsym = Dict(:solved  => "  Solved",
-                     :tired   => "   Tired",
-                     :stalled => " Stalled",
-                     :status  => "  Status",
+const headsym = Dict(:status  => "  Status",
                      :iter         => "   Iter",
                      :neval_obj    => "   #obj",
                      :neval_grad   => "  #grad",
