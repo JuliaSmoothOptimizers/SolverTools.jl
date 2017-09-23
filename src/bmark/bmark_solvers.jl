@@ -1,5 +1,5 @@
-export bmark_solvers, profile_solvers, profile_solvers_by_evaluations,
-       bmark_and_profile, bmark_and_profile_by_evaluations
+export bmark_solvers, profile_solvers,
+       bmark_and_profile
 
 
 """
@@ -38,14 +38,25 @@ if Pkg.installed("BenchmarkProfiles") != nothing
   * `stats`: a dict of statistics such as obtained from `bmark_solvers()`
 
   #### Keyword arguments
-  * `cost`: a function `cost(::ExecutionStats)` returning a positive cost value. Usually, time or number of function evaluations.
+  * `cost`: a function `cost(::ExecutionStats)` returning a positive cost
+    value. Usually, time or number of function evaluations.
   * Any keyword argument accepted by `BenchmarkProfiles.performance_profile()`.
 
   #### Return value
   A profile as returned by `performance_profile()`.
+
+  #### Cost functions
+
+  The default cost function is the number of function evaluations, i.e.,
+
+      cost = stat->sum_counters(stat.eval)
+
+  Another commonly used option is the elapsed time:
+
+      cost = stat->stat.elapsed_time
   """
   function profile_solvers(stats :: Dict{Symbol, Array{ExecutionStats,1}};
-                           cost :: Function = stat->stat.elapsed_time,
+                           cost :: Function = stat->sum_counters(stat.eval),
                            kwargs...)
     args = Dict(kwargs)
     if haskey(args, :title)
@@ -56,9 +67,6 @@ if Pkg.installed("BenchmarkProfiles") != nothing
     P = [stats[s][p].solved ? cost(stats[s][p]) : -1 for p = 1:np, s in solvers]
     performance_profile(P, map(string, solvers); args...)
   end
-
-  profile_solvers_by_evaluations(stats :: Dict{Symbol, Array{ExecutionStats,1}}; kwargs...) =
-      profile_solvers(stats, cost=stat->sum_counters(stat.eval); kwargs...)
 
   """
       bmark_and_profile(args...;
@@ -77,18 +85,22 @@ if Pkg.installed("BenchmarkProfiles") != nothing
   #### Return value
   * A Dict{Symbol, Array{Int,2}} of statistics
   * a profile as returned by `performance_profile()`.
+
+  #### Cost functions
+
+  The default cost function is the number of function evaluations, i.e.,
+
+      cost = stat->sum_counters(stat.eval)
+
+  Another commonly used option is the elapsed time:
+
+      cost = stat->stat.elapsed_time
   """
-  @compat function bmark_and_profile(args...; cost :: Function = stat->stat.elapsed_time,
+  @compat function bmark_and_profile(args...; cost :: Function = stat->sum_counters(stat.eval),
                              bmark_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}(),
                              profile_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}())
     stats = bmark_solvers(args...; bmark_args...)
     profiles = profile_solvers(stats, cost=cost; profile_args...)
     return stats, profiles
   end
-
-  @compat bmark_and_profile_by_evaluations(args...;
-                            bmark_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}(),
-                            profile_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}()) =
-    bmark_and_profile(args..., cost=stat->sum_counters(stat.eval);
-      bmark_args=bmark_args, profile_args=profile_args)
 end
