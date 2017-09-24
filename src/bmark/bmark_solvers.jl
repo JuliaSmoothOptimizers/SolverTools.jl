@@ -42,7 +42,7 @@ if Pkg.installed("BenchmarkProfiles") != nothing
   #### Return value
   A profile as returned by `performance_profile()`.
   """
-  function profile_solvers(stats :: Dict{Symbol, Array{Int,2}}; kwargs...)
+  function profile_solvers{T,n}(stats :: Dict{Symbol, Array{T,n}}; kwargs...)
     args = Dict(kwargs)
     if haskey(args, :title)
       args[:title] *= @sprintf(" (%d problems)", size(stats[first(keys(stats))], 1))
