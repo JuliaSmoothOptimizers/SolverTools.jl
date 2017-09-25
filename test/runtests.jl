@@ -43,3 +43,5 @@ end
 # Test TRON
 include("solvers/tron.jl")
 
+# Test ExecutionStats
+include("test_stats.jl")
