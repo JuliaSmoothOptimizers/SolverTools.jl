@@ -202,7 +202,10 @@ end
 @testset "Non-first-order exits" begin
   n = 10
   x0 = 10*ones(n)
-  f(x) = 1e7*sum(exp.(x))
+  f(x) = begin
+    sleep(0.1)
+    1e7*sum(exp.(x))
+  end
 
   nlp = ADNLPModel(f, x0)
 
