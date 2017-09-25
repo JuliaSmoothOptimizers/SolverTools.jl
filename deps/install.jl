@@ -6,7 +6,7 @@ const home = "https://github.com/JuliaSmoothOptimizers"
 
 const deps = Dict{String, String}(
               "OptimizationProblems" => "master",
-              "Krylov" => "develop",
+              "Krylov" => "master",
               "BenchmarkProfiles" => "master")
 
 function dep_installed(dep)
