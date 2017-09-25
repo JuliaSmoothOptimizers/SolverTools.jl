@@ -1,4 +1,4 @@
-using CUTEst, LinearOperators
+using LinearOperators
 
 @testset "Test auxiliary functions" begin
   for t = 1:100
@@ -257,18 +257,20 @@ end
   @test optimal == true
 end
 
-@testset "CUTEst" begin
-  problems = CUTEst.select(max_var=10, max_con=0, only_bnd_var=true)
-  @printf("%8s  %5s  %4s  %9s  %9s  %9s  %6s  %6s  %6s  %6s  %s\n",
-          "Problem", "n", "type", "f(x)", "π", "time", "it", "#f", "#g", "#Hp", "status")
-  for p in problems
-    nlp = CUTEstModel(p)
-    x, fx, π, iter, optimal, tired, status, el_time = tron(nlp, timemax=3.0)
-    finalize(nlp)
+@static if is_unix()
+  @testset "CUTEst" begin
+    problems = CUTEst.select(max_var=10, max_con=0, only_bnd_var=true)
+    @printf("%8s  %5s  %4s  %9s  %9s  %9s  %6s  %6s  %6s  %6s  %s\n",
+            "Problem", "n", "type", "f(x)", "π", "time", "it", "#f", "#g", "#Hp", "status")
+    for p in problems
+      nlp = CUTEstModel(p)
+      x, fx, π, iter, optimal, tired, status, el_time = tron(nlp, timemax=3.0)
+      finalize(nlp)
 
-    ctype = length(nlp.meta.ifree) == nlp.meta.nvar ? "unc" : "bnd"
-    @printf("%8s  %5d  %4s  %9.2e  %9.2e  %9.2e  %6d  %6d  %6d  %6d  %s\n", p,
-            nlp.meta.nvar, ctype, fx, π, el_time, iter, neval_obj(nlp), neval_grad(nlp),
-            neval_hprod(nlp), status)
+      ctype = length(nlp.meta.ifree) == nlp.meta.nvar ? "unc" : "bnd"
+      @printf("%8s  %5d  %4s  %9.2e  %9.2e  %9.2e  %6d  %6d  %6d  %6d  %s\n", p,
+              nlp.meta.nvar, ctype, fx, π, el_time, iter, neval_obj(nlp), neval_grad(nlp),
+              neval_hprod(nlp), status)
+    end
   end
 end
