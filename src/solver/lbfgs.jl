@@ -10,8 +10,8 @@ function lbfgs(nlp :: AbstractNLPModel;
   x = copy(nlp.meta.x0)
   n = nlp.meta.nvar
 
-  xt = Array{Float64}(n)
-  ∇ft = Array{Float64}(n)
+  xt = Vector{Float64}(n)
+  ∇ft = Vector{Float64}(n)
 
   f = obj(nlp, x)
   ∇f = grad(nlp, x)
@@ -25,7 +25,7 @@ function lbfgs(nlp :: AbstractNLPModel;
   @info(lbfgslogger, @sprintf("%4s  %8s  %7s  %8s  %4s", "iter", "f", "‖∇f‖", "∇f'd", "bk"))
   infoline = @sprintf("%4d  %8.1e  %7.1e", iter, f, ∇fNorm)
 
-  optimal = ∇fNorm <= ϵ
+  optimal = ∇fNorm ≤ ϵ
   tired = nlp.counters.neval_obj > max_f
 
   h = LineModel(nlp, x, ∇f)
@@ -45,7 +45,7 @@ function lbfgs(nlp :: AbstractNLPModel;
 
     BLAS.blascopy!(n, x, 1, xt, 1)
     BLAS.axpy!(n, t, d, 1, xt, 1)
-    good_grad || (∇ft = grad!(nlp, xt, ∇ft))
+    good_grad || grad!(nlp, xt, ∇ft)
 
     # Update L-BFGS approximation.
     push!(H, t * d, ∇ft - ∇f)
@@ -60,7 +60,7 @@ function lbfgs(nlp :: AbstractNLPModel;
 
     infoline = @sprintf("%4d  %8.1e  %7.1e", iter, f, ∇fNorm)
 
-    optimal = ∇fNorm <= ϵ
+    optimal = ∇fNorm ≤ ϵ
     tired = nlp.counters.neval_obj > max_f
   end
   @info(lbfgslogger, infoline)
