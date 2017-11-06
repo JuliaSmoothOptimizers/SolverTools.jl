@@ -4,6 +4,7 @@ using NLPModels
 using LinearOperators
 using Krylov
 using Requires
+using MiniLogging
 using Compat
 import Compat.String
 
