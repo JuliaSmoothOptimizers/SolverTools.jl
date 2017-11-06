@@ -33,7 +33,11 @@ function lbfgs(nlp :: AbstractNLPModel;
   while !(optimal || tired)
     d = - H * ∇f
     slope = BLAS.dot(n, d, 1, ∇f, 1)
-    slope < 0.0 || error("Not a descent direction! slope = ", slope)
+    if slope ≥ 0.0
+      @critical(lbfgslogger, "not a descent direction: slope = ", slope)
+      status = "direction error"
+      return (x, f, ∇fNorm, iter, optimal, tired, status)
+    end
 
     infoline *= @sprintf("  %8.1e", slope)
 
