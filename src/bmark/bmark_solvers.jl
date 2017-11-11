@@ -25,9 +25,8 @@ function bmark_solvers(solvers :: Vector{Function}, args...; kwargs...)
   return stats
 end
 
-if Pkg.installed("BenchmarkProfiles") != nothing
-  using BenchmarkProfiles
 
+@require BenchmarkProfiles begin
   """
       profile_solvers(stats :: Dict{Symbol, Array{Int,2}}; title :: String="")
 
@@ -47,8 +46,8 @@ if Pkg.installed("BenchmarkProfiles") != nothing
     if haskey(args, :title)
       args[:title] *= @sprintf(" (%d problems)", size(stats[first(keys(stats))], 1))
     end
-    performance_profile(hcat([sum(p, 2) for p in values(stats)]...),
-                        collect(String, [string(s) for s in keys(stats)]); args...)
+    BenchmarkProfiles.performance_profile(hcat([sum(p, 2) for p in values(stats)]...),
+                                          collect(String, [string(s) for s in keys(stats)]); args...)
   end
 
   """
