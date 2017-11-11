@@ -3,9 +3,48 @@ export display_header, solve_problems, solve_problem
 type SkipException <: Exception
 end
 
+optimizelogger = get_logger("optimize")
+
+
+"""
+    display_header()
+
+Output header for stats table.
+
+This function is called once before the first problem solve and can be overridden to customize the display.
+
+#### Return value
+Nothing.
+"""
 function display_header()
-  @printf("%-15s  %8s  %9s  %7s  %5s  %5s  %6s  %s\n",
-          "Name", "nvar", "f", "‖∇f‖", "#obj", "#grad", "#hprod", "status")
+  @info(optimizelogger,
+        @sprintf("%-15s  %8s  %9s  %7s  %5s  %5s  %6s  %s",
+                 "Name", "nvar", "f", "‖∇f‖", "#obj", "#grad", "#hprod", "status"))
+end
+
+
+"""
+    display_problem_stats(nlp, f, gNorm, status)
+
+Output stats for problem `nlp` after a solve.
+
+This function is called after each problem solve and can be overridden to customize the display.
+
+#### Arguments
+* `nlp::AbstractNLPModel`: the problem just solved
+* `f::Float64`: final objective value
+* `gNorm::Float64`: final gradient norm
+* `status::String`: final solver status or error message.
+
+#### Return value
+Nothing.
+"""
+function display_problem_stats(nlp::AbstractNLPModel, f::Float64, gNorm::Float64, status::String)
+  @info(optimizelogger,
+        @sprintf("%-15s  %8d  %9.2e  %7.1e  %5d  %5d  %6d  %s",
+                 nlp.meta.name, nlp.meta.nvar, f, gNorm,
+                 nlp.counters.neval_obj, nlp.counters.neval_grad,
+                 nlp.counters.neval_hprod, status))
 end
 
 
@@ -30,12 +69,15 @@ Apply a solver to a set of problems.
 function solve_problems(solver :: Function, problems :: Any; prune :: Bool=true, kwargs...)
   display_header()
   nprobs = length(problems)
-  verbose = nprobs ≤ 1
+  solverstr = split(string(solver), ".")[end]
+  solverlogger = get_logger("optimize.$(solverstr)")
+  current_level = solverlogger.level
+  solverlogger.level = nprobs > 1 ? MiniLogging.WARN : MiniLogging.INFO
   stats = -ones(nprobs, 3)
   k = 0
   for problem in problems
     try
-      (f, g, h) = solve_problem(solver, problem, verbose=verbose; kwargs...)
+      (f, g, h) = solve_problem(solver, problem; kwargs...)
       k = k + 1
       stats[k, :] = [f, g, h]
       finalize(problem)
@@ -43,6 +85,7 @@ function solve_problems(solver :: Function, problems :: Any; prune :: Bool=true,
       isa(e, SkipException) || rethrow(e)
     end
   end
+  solverlogger.level = current_level
   return prune ? stats[1:k, :] : stats
 end
 
@@ -78,16 +121,12 @@ function solve_problem(solver :: Function, nlp :: AbstractNLPModel; kwargs...)
   try
     (x, f, gNorm, iter, optimal, tired, status) = solver(nlp; args...)
   catch e
-    println(e)
-    status = e.msg
+    status = :msg in fieldnames(e) ? e.msg : string(e)
   end
   # if nlp.scale_obj
   #   f /= nlp.scale_obj_factor
   #   gNorm /= nlp.scale_obj_factor
   # end
-  @printf("%-15s  %8d  %9.2e  %7.1e  %5d  %5d  %6d  %s\n",
-          nlp.meta.name, nlp.meta.nvar, f, gNorm,
-          nlp.counters.neval_obj, nlp.counters.neval_grad,
-          nlp.counters.neval_hprod, status)
+  display_problem_stats(nlp, f, gNorm, status)
   return optimal ? (nlp.counters.neval_obj, nlp.counters.neval_grad, nlp.counters.neval_hprod) : (-nlp.counters.neval_obj, -nlp.counters.neval_grad, -nlp.counters.neval_hprod)
 end
