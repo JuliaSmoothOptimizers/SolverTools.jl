@@ -1,4 +1,5 @@
 # Benchmark two solvers on a set of small problems and profile.
+using BenchmarkProfiles
 using Optimize
 using OptimizationProblems
 using NLPModels
