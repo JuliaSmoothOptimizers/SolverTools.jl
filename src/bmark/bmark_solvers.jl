@@ -19,7 +19,6 @@ A Dict{Symbol, Array{Int,2}} of statistics.
 function bmark_solvers(solvers :: Vector{Function}, args...; kwargs...)
   stats = Dict{Symbol, Array{Int,2}}()
   for solver in solvers
-    @printf("running %s\n", string(solver))
     stats[Symbol(solver)] = solve_problems(solver, args...; kwargs...)
   end
   return stats
