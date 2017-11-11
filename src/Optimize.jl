@@ -3,6 +3,7 @@ module Optimize
 using NLPModels
 using LinearOperators
 using Krylov
+using Requires
 using Compat
 import Compat.String
 
