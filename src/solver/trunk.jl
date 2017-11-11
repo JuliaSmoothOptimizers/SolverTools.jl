@@ -18,13 +18,14 @@ type TrunkException <: Exception
   msg  :: String
 end
 
+trunklogger = get_logger("optimize.trunk")
+
 function trunk(nlp :: AbstractNLPModel;
                atol :: Float64=1.0e-8, rtol :: Float64=1.0e-6,
                max_f :: Int=0,
                bk_max :: Int=10,
-               monotone :: Bool=false,
-               nm_itmax :: Int=25,
-               verbose :: Bool=true)
+               monotone :: Bool=true,
+               nm_itmax :: Int=25)
 
   n = nlp.meta.nvar
   x = copy(nlp.meta.x0)
@@ -58,10 +59,11 @@ function trunk(nlp :: AbstractNLPModel;
   tired = nlp.counters.neval_obj > max_f
   stalled = false
 
-  if verbose
-    @printf("%4s  %9s  %7s  %7s  %8s  %5s  %2s  %s\n", "Iter", "f", "‖∇f‖", "Radius", "Ratio", "Inner", "bk", "status")
-    @printf("%4d  %9.2e  %7.1e  %7.1e  ", iter, f, ∇fNorm2, get_property(tr, :radius))
-  end
+  @info(trunklogger,
+        @sprintf("%4s  %9s  %7s  %7s  %8s  %5s  %2s  %s",
+                 "Iter", "f", "‖∇f‖", "Radius", "Ratio", "Inner", "bk", "status"))
+  infoline = @sprintf("%4d  %9.2e  %7.1e  %7.1e  ",
+                      iter, f, ∇fNorm2, get_property(tr, :radius))
 
   while !(optimal || tired || stalled)
     iter = iter + 1
@@ -74,8 +76,7 @@ function trunk(nlp :: AbstractNLPModel;
     (s, cg_stats) = cg(H, -∇f,
                        atol=atol, rtol=cgtol,
                        radius=get_property(tr, :radius),
-                       itmax=max(2 * n, 50),
-                       verbose=false)
+                       itmax=max(2 * n, 50))
 
     # Compute actual vs. predicted reduction.
     sNorm = BLAS.nrm2(n, s, 1)
@@ -161,17 +162,20 @@ function trunk(nlp :: AbstractNLPModel;
       ∇fNorm2 = BLAS.nrm2(n, ∇f, 1)
     end
 
-    verbose && @printf("%8.1e  %5d  %2d  %s\n", get_property(tr, :ratio), length(cg_stats.residuals), bk, cg_stats.status)
+    infoline *= @sprintf("%8.1e  %5d  %2d  %s",
+                         get_property(tr, :ratio), length(cg_stats.residuals),
+                         bk, cg_stats.status)
+    @info(trunklogger, infoline)
 
     # Move on.
     update!(tr, sNorm)
 
-    verbose && @printf("%4d  %9.2e  %7.1e  %7.1e  ", iter, f, ∇fNorm2, get_property(tr, :radius))
+    infoline = @sprintf("%4d  %9.2e  %7.1e  %7.1e  ", iter, f, ∇fNorm2, get_property(tr, :radius))
 
     optimal = ∇fNorm2 <= ϵ
     tired = nlp.counters.neval_obj > max_f
   end
-  verbose && @printf("\n")
+  @info(trunklogger, infoline)
 
   stalled || (status = tired ? "maximum number of evaluations" : "first-order stationary")
 
