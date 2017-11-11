@@ -26,6 +26,8 @@ function bmark_solvers(solvers :: Vector{Function}, args...; kwargs...)
 end
 
 
+profile_solvers(args...; kwargs...) = error("BenchmarkProfiles is required for profiles")
+
 @require BenchmarkProfiles begin
   """
       profile_solvers(stats :: Dict{Symbol, Array{Int,2}}; title :: String="")
