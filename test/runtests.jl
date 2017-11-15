@@ -13,33 +13,41 @@ solvers = [trunk, lbfgs, tron]
 
 for model in models
   for solver in solvers
-    stats = solve_problem(solver, model, verbose=false)
-    assert(all([stats...] .>= 0))
+    stats = solve_problem(solver, model, verbose=false, colstats=uncstats)
+    assert(stats.status == :first_order)
     reset!(model)
   end
   finalize(model)
 end
 
 # test benchmark helpers, skip constrained problems (hs7 has constraints)
-solve_problem(trunk, simple_dixmaanj(), verbose=true, monotone=false)
+solve_problem(trunk, simple_dixmaanj(), verbose=true, monotone=false, colstats=uncstats)
 probs = [dixmaane, dixmaanf, dixmaang, dixmaanh, dixmaani, dixmaanj, hs7]
 
 models = (MathProgNLPModel(p(99), name=string(p)) for p in probs)
-stats = bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0)
+stats = bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0, colstats=uncstats)
+p = profile_solvers(stats)
+stats, p = bmark_and_profile(solvers, models, bmark_args=Dict(:skipif=>m -> m.meta.ncon > 0))
 println(stats)
 println(size(stats[Symbol(solvers[1])], 1))
 println(length(probs))
 assert(size(stats[Symbol(solvers[1])], 1) == length(probs) - 1)
 stats = bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0, prune=false)
+p = profile_solvers(stats)
+stats, p = bmark_and_profile(solvers, models, bmark_args=Dict(:skipif=>m -> m.meta.ncon > 0, :prune=>false))
 assert(size(stats[Symbol(solvers[1])], 1) == length(probs))
 
 # test bmark_solvers with CUTEst
 @static if is_unix()
   models = (isa(p, String) ? CUTEstModel(p) : CUTEstModel(p...) for p in ["ROSENBR", ("DIXMAANJ", "-param", "M=30")])
   stats = bmark_solvers(solvers, models)
+  p = profile_solvers(stats)
+  stats, p = bmark_and_profile(solvers, models)
   println(stats)
 end
 
 # Test TRON
 include("solvers/tron.jl")
 
+# Test ExecutionStats
+include("test_stats.jl")

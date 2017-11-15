@@ -43,11 +43,11 @@ end
 
     nlp = ADNLPModel(f, x0, lvar=[-Inf; -Inf], uvar=[Inf; Inf])
 
-    x, fx, π, iter, optimal, tired, status = tron(nlp)
-    @test isapprox(x, zeros(2), rtol=1e-6)
-    @test isapprox(fx, 0.0, rtol=1e-12)
-    @test π < 1e-6
-    @test optimal == true
+    stats = tron(nlp)
+    @test isapprox(stats.solution, zeros(2), rtol=1e-6)
+    @test isapprox(stats.obj, 0.0, rtol=1e-12)
+    @test stats.dual_feas < 1e-6
+    @test stats.status == :first_order
   end
 
   @testset "Bounds" begin
@@ -58,11 +58,11 @@ end
 
     nlp = ADNLPModel(f, x0, lvar=l, uvar=u)
 
-    x, fx, π, iter, optimal, tired, status = tron(nlp)
-    @test x ≈ l
-    @test fx == f(l)
-    @test π < 1e-6
-    @test optimal == true
+    stats = tron(nlp)
+    @test stats.solution ≈ l
+    @test stats.obj == f(l)
+    @test stats.dual_feas < 1e-6
+    @test stats.status == :first_order
   end
 
   @testset "Rosenbrock" begin
@@ -71,11 +71,11 @@ end
 
     nlp = ADNLPModel(f, x0)
 
-    x, fx, π, iter, optimal, tired, status = tron(nlp)
-    @test isapprox(x, [1.0;1.0], rtol=1e-3)
-    @test isapprox(fx, 1.0, rtol=1e-5)
-    @test π < 1e-6
-    @test optimal == true
+    stats = tron(nlp)
+    @test isapprox(stats.solution, [1.0;1.0], rtol=1e-3)
+    @test isapprox(stats.obj, 1.0, rtol=1e-5)
+    @test stats.dual_feas < 1e-6
+    @test stats.status == :first_order
   end
 
   @testset "Rosenbrock inactive bounds" begin
@@ -86,11 +86,11 @@ end
 
     nlp = ADNLPModel(f, x0, lvar=l, uvar=u)
 
-    x, fx, π, iter, optimal, tired, status = tron(nlp)
-    @test isapprox(x, [1.0;1.0], rtol=1e-3)
-    @test isapprox(fx, 1.0, rtol=1e-5)
-    @test π < 1e-6
-    @test optimal == true
+    stats = tron(nlp)
+    @test isapprox(stats.solution, [1.0;1.0], rtol=1e-3)
+    @test isapprox(stats.obj, 1.0, rtol=1e-5)
+    @test stats.dual_feas < 1e-6
+    @test stats.status == :first_order
   end
 
   @testset "Rosenbrock active bounds" begin
@@ -103,11 +103,11 @@ end
 
     sol = [0.9; 0.81]
 
-    x, fx, π, iter, optimal, tired, status = tron(nlp)
-    @test isapprox(x, sol, rtol=1e-3)
-    @test isapprox(fx, f(sol), rtol=1e-5)
-    @test π < 1e-6
-    @test optimal == true
+    stats = tron(nlp)
+    @test isapprox(stats.solution, sol, rtol=1e-3)
+    @test isapprox(stats.obj, f(sol), rtol=1e-5)
+    @test stats.dual_feas < 1e-6
+    @test stats.status == :first_order
   end
 end
 
@@ -118,11 +118,11 @@ end
     u = [1.0; 2.0; 2.0]
     f(x) = 0.5*dot(x - 3, x - 3)
     nlp = ADNLPModel(f, x0, lvar=l, uvar=u)
-    x, fx, π, iter, optimal, tired, status = tron(nlp)
-    @test optimal == true
-    @test π < 1e-6
-    @test isapprox(x, [1.0; 2.0; 2.0], rtol=1e-3)
-    @test x[1] == 1.0
+    stats = tron(nlp)
+    @test stats.status == :first_order
+    @test stats.dual_feas < 1e-6
+    @test isapprox(stats.solution, [1.0; 2.0; 2.0], rtol=1e-3)
+    @test stats.solution[1] == 1.0
   end
 
   @testset "All fixed" begin
@@ -132,10 +132,10 @@ end
     u = copy(l)
     f(x) = sum(x.^4)
     nlp = ADNLPModel(f, x0, lvar=l, uvar=u)
-    x, fx, π, iter, optimal, tired, status = tron(nlp)
-    @test optimal == true
-    @test π == 0.0
-    @test x == l
+    stats = tron(nlp)
+    @test stats.status == :first_order
+    @test stats.dual_feas == 0.0
+    @test stats.solution == l
   end
 end
 
@@ -154,12 +154,12 @@ end
 
       nlp = ADNLPModel(f, x0)
 
-      x, fx, π, iter, optimal, tired, status = tron(nlp)
+      stats = tron(nlp)
       normg0 = norm(B*(x0-r))
-      @test norm(x - r) < 1e-4 * normg0
-      @test isapprox(fx, 1.0, rtol=1e-6)
-      @test π < 1e-6 * normg0
-      @test optimal == true
+      @test norm(stats.solution - r) < 1e-4 * normg0
+      @test isapprox(stats.obj, 1.0, rtol=1e-6)
+      @test stats.dual_feas < 1e-6 * normg0
+      @test stats.status == :first_order
     end
   end
 
@@ -186,15 +186,15 @@ end
 
       nlp = ADNLPModel(f, x0, lvar=l, uvar=u)
 
-      x, fx, π, iter, optimal, tired, status = tron(nlp)
+      stats = tron(nlp)
       normg0 = norm(B*(x0-r))
 
-      @test norm(x - r) < 1e-3
-      @test isapprox(fx, f(r), rtol=1e-4)
-      @test π < 1e-4
-      @test optimal == true
-      @test iter <= 10000
-      @test status == "first-order stationary"
+      @test norm(stats.solution - r) < 1e-3
+      @test isapprox(stats.obj, f(r), rtol=1e-4)
+      @test stats.dual_feas < 1e-4
+      @test stats.status == :first_order
+      @test stats.iter <= 10000
+      @test stats.status == :first_order
     end
   end
 end
@@ -210,15 +210,15 @@ end
   nlp = ADNLPModel(f, x0)
 
   @testset "Iteration limit" begin
-    x, fx, π, iter, optimal, tired, status = tron(nlp, itmax=1)
-    @test iter == 1
-    @test tired == true
+    stats = tron(nlp, itmax=1)
+    @test stats.iter == 1
+    @test stats.status == :max_iter
   end
 
   @testset "Time limit" begin
-    x, fx, π, iter, optimal, tired, status, el_time = tron(nlp, timemax=0)
-    @test el_time > 0
-    @test tired == true
+    stats = tron(nlp, timemax=0)
+    @test stats.elapsed_time > 0
+    @test stats.status == :max_time
   end
 
   @testset "x0 outside box" begin
@@ -226,11 +226,11 @@ end
     u = l + rand(n)
     x0 = u + rand(n)
     nlp = ADNLPModel(x->dot(x,x), x0, lvar=l, uvar=u)
-    x, fx, π, iter, optimal, tired, status = tron(nlp)
-    @test norm(x - l) < 1e-3
-    @test isapprox(fx, dot(l,l), rtol=1e-5)
-    @test π < 1e-4
-    @test optimal == true
+    stats = tron(nlp)
+    @test norm(stats.solution - l) < 1e-3
+    @test isapprox(stats.obj, dot(l,l), rtol=1e-5)
+    @test stats.dual_feas < 1e-4
+    @test stats.status == :first_order
   end
 end
 
@@ -247,33 +247,34 @@ end
 
   nlp = ADNLPModel(f, x0)
 
-  x, fx, π, iter, optimal, tired, status = tron(nlp, timemax=600)
-  @test isapprox(x, ones(n), rtol=1e-5*n)
-  @test isapprox(fx, 1.0, rtol=1e-3)
-  @test π < 1e-3*n
-  @test optimal == true
+  stats = tron(nlp, timemax=600)
+  @test isapprox(stats.solution, ones(n), rtol=1e-5*n)
+  @test isapprox(stats.obj, 1.0, rtol=1e-3)
+  @test stats.dual_feas < 1e-3*n
+  @test stats.status == :first_order
 
   nlp = ADNLPModel(f, x0, lvar=zeros(n), uvar=0.3*ones(n))
 
-  x, fx, π, iter, optimal, tired, status = tron(nlp, timemax=600)
-  @test π < 1e-3*n
-  @test optimal == true
+  stats = tron(nlp, timemax=600)
+  @test stats.dual_feas < 1e-3*n
+  @test stats.status == :first_order
 end
 
 @static if is_unix()
   @testset "CUTEst" begin
     problems = CUTEst.select(max_var=10, max_con=0, only_bnd_var=true)
-    @printf("%8s  %5s  %4s  %9s  %9s  %9s  %6s  %6s  %6s  %6s  %s\n",
-            "Problem", "n", "type", "f(x)", "π", "time", "it", "#f", "#g", "#Hp", "status")
+    stline = statshead([:obj, :dual_feas, :elapsed_time, :iter, :neval_obj,
+                        :neval_grad, :neval_hprod, :status])
+    @printf("%8s  %5s  %4s  %s\n", "Problem", "n", "type", stline)
     for p in problems
       nlp = CUTEstModel(p)
-      x, fx, π, iter, optimal, tired, status, el_time = tron(nlp, timemax=3.0)
+      stats = tron(nlp, timemax=3.0)
       finalize(nlp)
 
       ctype = length(nlp.meta.ifree) == nlp.meta.nvar ? "unc" : "bnd"
-      @printf("%8s  %5d  %4s  %9.2e  %9.2e  %9.2e  %6d  %6d  %6d  %6d  %s\n", p,
-              nlp.meta.nvar, ctype, fx, π, el_time, iter, neval_obj(nlp), neval_grad(nlp),
-              neval_hprod(nlp), status)
+      stline = statsline(stats, [:obj, :dual_feas, :elapsed_time, :iter, :neval_obj,
+                                 :neval_grad, :neval_hprod, :status])
+      @printf("%8s  %5d  %4s  %s\n", p, nlp.meta.nvar, ctype, stline)
     end
   end
 end

@@ -8,6 +8,7 @@ import Compat.String
 
 # Auxiliary.
 include("auxiliary/bounds.jl")
+include("stats/stats.jl")
 
 # Algorithmic components.
 include("linesearch/linesearch.jl")

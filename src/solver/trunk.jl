@@ -21,13 +21,18 @@ end
 function trunk(nlp :: AbstractNLPModel;
                atol :: Float64=1.0e-8, rtol :: Float64=1.0e-6,
                max_f :: Int=0,
+               max_time :: Float64=Inf,
                bk_max :: Int=10,
                monotone :: Bool=false,
                nm_itmax :: Int=25,
                verbose :: Bool=true)
 
-  n = nlp.meta.nvar
+  start_time = time()
+  elapsed_time = 0.0
+
   x = copy(nlp.meta.x0)
+  n = nlp.meta.nvar
+
   max_f == 0 && (max_f = max(min(100, 2 * n), 5000))
   cgtol = 1.0  # Must be ≤ 1.
 
@@ -55,7 +60,7 @@ function trunk(nlp :: AbstractNLPModel;
   temp = Array{Float64}(n)
 
   optimal = ∇fNorm2 <= ϵ
-  tired = nlp.counters.neval_obj > max_f
+  tired = neval_obj(nlp) > max_f || elapsed_time > max_time
   stalled = false
 
   if verbose
@@ -89,7 +94,7 @@ function trunk(nlp :: AbstractNLPModel;
     try
       ratio!(tr, nlp, f, ft, Δq, xt, s, slope)
     catch exc # negative predicted reduction
-      status = exc.msg
+      status = :neg_pred
       stalled = true
       continue
     end
@@ -169,12 +174,21 @@ function trunk(nlp :: AbstractNLPModel;
     verbose && @printf("%4d  %9.2e  %7.1e  %7.1e  ", iter, f, ∇fNorm2, get_property(tr, :radius))
 
     optimal = ∇fNorm2 <= ϵ
-    tired = nlp.counters.neval_obj > max_f
+    elapsed_time = time() - start_time
+    tired = neval_obj(nlp) > max_f || elapsed_time > max_time
   end
   verbose && @printf("\n")
 
-  stalled || (status = tired ? "maximum number of evaluations" : "first-order stationary")
+  if optimal
+    status = :first_order
+  elseif tired
+    if neval_obj(nlp) > max_f
+      status = :max_eval
+    elseif elapsed_time > max_time
+      status = :max_time
+    end
+  end
 
-  # TODO: create a type to hold solver statistics.
-  return (x, f, ∇fNorm2, iter, optimal, tired, status)
+  return ExecutionStats(status, x=x, f=f, normg=∇fNorm2, iter=iter, time=elapsed_time,
+                        get_counters=nlp)
 end

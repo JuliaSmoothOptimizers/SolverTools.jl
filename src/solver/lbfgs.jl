@@ -3,8 +3,12 @@ export lbfgs
 function lbfgs(nlp :: AbstractNLPModel;
                atol :: Float64=1.0e-8, rtol :: Float64=1.0e-6,
                max_f :: Int=0,
+               max_time :: Float64=Inf,
                verbose :: Bool=true,
                mem :: Int=5)
+
+  start_time = time()
+  elapsed_time = 0.0
 
   x = copy(nlp.meta.x0)
   n = nlp.meta.nvar
@@ -25,7 +29,7 @@ function lbfgs(nlp :: AbstractNLPModel;
   verbose && @printf("%4d  %8.1e  %7.1e", iter, f, ∇fNorm)
 
   optimal = ∇fNorm <= ϵ
-  tired = nlp.counters.neval_obj > max_f
+  tired = neval_obj(nlp) > max_f || elapsed_time > max_time
 
   h = LineModel(nlp, x, ∇f)
 
@@ -60,10 +64,21 @@ function lbfgs(nlp :: AbstractNLPModel;
     verbose && @printf("%4d  %8.1e  %7.1e", iter, f, ∇fNorm)
 
     optimal = ∇fNorm <= ϵ
-    tired = nlp.counters.neval_obj > max_f
+    elapsed_time = time() - start_time
+    tired = neval_obj(nlp) > max_f || elapsed_time > max_time
   end
   verbose && @printf("\n")
 
-  status = tired ? "maximum number of evaluations" : "first-order stationary"
-  return (x, f, ∇fNorm, iter, optimal, tired, status)
+  if optimal
+    status = :first_order
+  elseif tired
+    if neval_obj(nlp) > max_f
+      status = :max_eval
+    elseif elapsed_time > max_time
+      status = :max_time
+    end
+  end
+
+  return ExecutionStats(status, x=x, f=f, normg=∇fNorm, iter=iter, time=elapsed_time,
+                        get_counters=nlp)
 end
