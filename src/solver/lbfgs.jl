@@ -80,5 +80,5 @@ function lbfgs(nlp :: AbstractNLPModel;
   end
 
   return ExecutionStats(status, x=x, f=f, normg=∇fNorm, iter=iter, time=elapsed_time,
-                        eval=deepcopy(counters(nlp)))
+                        get_counters=nlp)
 end

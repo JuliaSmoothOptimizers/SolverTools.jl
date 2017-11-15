@@ -131,7 +131,7 @@ function tron(nlp :: AbstractNLPModel;
   end
 
   return ExecutionStats(status, x=x, f=fx, normg=πx, iter=iter, time=el_time,
-                        eval=deepcopy(counters(nlp)))
+                        get_counters=nlp)
 end
 
 """`s = projected_line_search!(x, H, g, d, ℓ, u; μ₀ = 1e-2)`

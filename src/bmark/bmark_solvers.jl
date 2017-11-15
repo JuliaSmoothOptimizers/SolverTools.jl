@@ -49,14 +49,14 @@ if Pkg.installed("BenchmarkProfiles") != nothing
 
   The default cost function is the number of function evaluations, i.e.,
 
-      cost = stat->sum_counters(stat.eval)
+      cost = stat->sum_counters(stat.counters)
 
   Another commonly used option is the elapsed time:
 
       cost = stat->stat.elapsed_time
   """
   function profile_solvers(stats :: Dict{Symbol, Array{ExecutionStats,1}};
-                           cost :: Function = stat->sum_counters(stat.eval),
+                           cost :: Function = stat->sum_counters(stat.counters),
                            kwargs...)
     args = Dict(kwargs)
     if haskey(args, :title)
@@ -90,13 +90,13 @@ if Pkg.installed("BenchmarkProfiles") != nothing
 
   The default cost function is the number of function evaluations, i.e.,
 
-      cost = stat->sum_counters(stat.eval)
+      cost = stat->sum_counters(stat.counters)
 
   Another commonly used option is the elapsed time:
 
       cost = stat->stat.elapsed_time
   """
-  @compat function bmark_and_profile(args...; cost :: Function = stat->sum_counters(stat.eval),
+  @compat function bmark_and_profile(args...; cost :: Function = stat->sum_counters(stat.counters),
                              bmark_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}(),
                              profile_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}())
     stats = bmark_solvers(args...; bmark_args...)

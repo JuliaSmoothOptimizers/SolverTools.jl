@@ -17,15 +17,18 @@ type ExecutionStats
   obj :: Float64 # f(x)
   dual_feas :: Float64 # ‖∇f(x)‖₂ for unc, ‖P[x - ∇f(x)] - x‖₂ for bnd, etc.
   iter :: Int
-  eval :: NLPModels.Counters
+  counters :: NLPModels.Counters
   elapsed_time :: Float64
   solver_specific :: Dict{Symbol,Any}
 end
 
+type NullNLPModel <: AbstractNLPModel end
+
 function ExecutionStats{T}(status :: Symbol;
                            x :: Vector=Float64[], f :: Float64=Inf,
                            normg :: Float64=Inf, iter :: Int=-1,
-                           t :: Float64=Inf, eval :: NLPModels.Counters=Counters(),
+                           t :: Float64=Inf,
+                           get_counters :: AbstractNLPModel=NullNLPModel(),
                            solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}(),
                            kwargs...)
   if !(status in keys(STATUS))
@@ -45,7 +48,13 @@ function ExecutionStats{T}(status :: Symbol;
       throw(UndefVarError(k))
     end
   end
-  return ExecutionStats(status, x, f, normg, iter, deepcopy(eval), t, solver_specific)
+  c = Counters()
+  if !isa(get_counters, NullNLPModel)
+    for counter in fieldnames(Counters)
+      setfield!(c, counter, eval(parse("$counter"))(get_counters))
+    end
+  end
+  return ExecutionStats(status, x, f, normg, iter, c, t, solver_specific)
 end
 
 import Base.show, Base.print, Base.println
@@ -118,7 +127,7 @@ function statsgetfield(stats :: ExecutionStats, name :: Symbol)
     v = getfield(stats, name)
     t = fieldtype(ExecutionStats, name)
   elseif name in fieldnames(NLPModels.Counters)
-    v = getfield(stats.eval, name)
+    v = getfield(stats.counters, name)
   else
     throw("No such field '$name' in ExecutionStats")
   end
