@@ -70,9 +70,9 @@ function trunk(nlp :: AbstractNLPModel;
     # minimize g's + 1/2 s'Hs  subject to ‖s‖ ≤ radius.
     # In this particular case, we may use an operator with preallocation.
     H = hess_op!(nlp, x, temp)
-    cgtol = max(ϵ, min(0.7 * cgtol, 0.01 * ∇fNorm2))
+    cgtol = max(rtol, min(0.1, 0.9 * cgtol, sqrt(∇fNorm2)))
     (s, cg_stats) = cg(H, -∇f,
-                       atol=cgtol, rtol=0.0,
+                       atol=atol, rtol=cgtol,
                        radius=get_property(tr, :radius),
                        itmax=max(2 * n, 50),
                        verbose=false)
