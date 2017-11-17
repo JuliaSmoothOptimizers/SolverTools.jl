@@ -5,6 +5,8 @@ using LinearOperators, NLPModels
 
 export tron
 
+tronlogger = get_logger("optimize.tron")
+
 """`tron(nlp)`
 
 A pure Julia implementation of a trust-region solver for bound-constrained
@@ -21,7 +23,6 @@ function tron(nlp :: AbstractNLPModel;
               μ₀ :: Real=1e-2,
               μ₁ :: Real=1.0,
               σ :: Real=10.0,
-              verbose :: Bool=false,
               itmax :: Int=10_000 * nlp.meta.nvar,
               max_cgiter :: Int=nlp.meta.nvar,
               cgtol :: Real=0.1,
@@ -65,10 +66,12 @@ function tron(nlp :: AbstractNLPModel;
 
   αC = 1.0
   tr = TRONTrustRegion(min(max(1.0, 0.1 * norm(πx)), 100))
-  if verbose
-    @printf("%4s  %9s  %7s  %7s  %7s  %s\n", "Iter", "f", "π", "Radius", "Ratio", "CG-status")
-    @printf("%4d  %9.2e  %7.1e  %7.1e\n", iter, fx, πx, get_property(tr, :radius))
-  end
+  @info(tronlogger,
+        @sprintf("%4s  %9s  %7s  %7s  %7s  %s\n",
+                 "Iter", "f", "π", "Radius", "Ratio", "CG-status"))
+  @info(tronlogger,
+        @sprintf("%4d  %9.2e  %7.1e  %7.1e\n",
+                 iter, fx, πx, get_property(tr, :radius)))
   while !(optimal || tired || stalled || unbounded)
     # Current iteration
     xc .= x
@@ -120,7 +123,9 @@ function tron(nlp :: AbstractNLPModel;
     optimal = πx <= ϵ
     unbounded = fx < fmin
 
-    verbose && @printf("%4d  %9.2e  %7.1e  %7.1e  %7.1e  %s\n", iter, fx, πx, Δ, Ared / Pred, cginfo)
+    @info(tronlogger,
+          @sprintf("%4d  %9.2e  %7.1e  %7.1e  %7.1e  %s\n",
+                   iter, fx, πx, Δ, tr.ratio, cginfo))
   end
 
   status = if tired
