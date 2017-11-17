@@ -83,13 +83,14 @@ function tron(nlp :: AbstractNLPModel;
     qs = 0.5 * dot(s, Hs) + slope
     fx = f(x)
 
-    try
-      ratio!(tr, nlp, fc, fx, qs, x, s, slope)
-    catch exc
-      status = exc.msg
+    ared, pred, quad_min = aredpred(tr, nlp, fc, fx, qs, x, s, slope)
+    if pred ≥ 0
+      status = "nonnegative predicted reduction"
       stalled = true
       continue
     end
+    tr.ratio = ared / pred
+    tr.quad_min = quad_min
 
     s_norm = norm(s)
     if num_success_iters == 0
