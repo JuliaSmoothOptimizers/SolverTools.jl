@@ -24,18 +24,17 @@ and the following function:
 """
 @compat abstract type AbstractTrustRegion end
 
-"""`ρ = ratio(nlp, f, f_trial, Δm, x_trial, step, slope)`
+"""`ared, pred = aredpred(nlp, f, f_trial, Δm, x_trial, step, slope)`
 
-Compute the actual vs. predicted reduction radio `∆f/Δm`, where
+Compute the actual and predicted reductions `∆f` and `Δm`, where
 `Δf = f_trial - f` is the actual reduction is an objective/merit/penalty function,
 `Δm = m_trial - m` is the reduction predicted by the model `m` of `f`.
 We assume that `m` is being minimized, and therefore that `Δm < 0`.
 """
-function ratio(nlp :: AbstractNLPModel, f :: Float64, f_trial :: Float64, Δm :: Float64,
-               x_trial :: Vector{Float64}, step :: Vector{Float64}, slope :: Float64)
+function aredpred(nlp :: AbstractNLPModel, f :: Float64, f_trial :: Float64, Δm :: Float64,
+                  x_trial :: Vector{Float64}, step :: Vector{Float64}, slope :: Float64)
   absf = abs(f)
   pred = Δm - max(1.0, absf) * 10.0 * ϵ
-  pred < 0 || throw(TrustRegionException(@sprintf("Nonnegative predicted reduction: pred = %8.1e", pred)))
 
   ared = f_trial - f + max(1.0, absf) * 10.0 * ϵ
   if (abs(Δm) < 1.0e+4 * ϵ) || (abs(ared) < 1.0e+4 * ϵ * absf)
@@ -44,23 +43,9 @@ function ratio(nlp :: AbstractNLPModel, f :: Float64, f_trial :: Float64, Δm ::
     slope_trial = dot(g_trial, step)
     ared = (slope_trial + slope) / 2
   end
-  return ared / pred
+  return ared, pred
 end
 
-"""`tr = ratio!(tr, nlp, f, f_trial, Δm, x_trial, step, slope)`
-
-Compute the actual vs. predicted reduction radio `∆f/Δm`, where
-`Δf = f_trial - f` is the actual reduction is an objective/merit/penalty function,
-`Δm = m_trial - m` is the reduction predicted by the model `m` of `f`.
-We assume that `m` is being minimized, and therefore that `Δm < 0`.
-`tr` is updated inplace.
-"""
-function ratio!(tr :: AbstractTrustRegion, nlp :: AbstractNLPModel, f :: Float64,
-                f_trial :: Float64, Δm :: Float64, x_trial :: Vector{Float64},
-                step :: Vector{Float64}, slope :: Float64)
-  tr.ratio = ratio(nlp, f, f_trial, Δm, x_trial, step, slope)
-  return tr
-end
 
 """`acceptable(tr)`
 
