@@ -13,11 +13,6 @@
 
 export trunk
 
-"Exception type raised in case of error inside Trunk."
-type TrunkException <: Exception
-  msg  :: String
-end
-
 trunklogger = get_logger("optimize.trunk")
 
 function trunk(nlp :: AbstractNLPModel;
@@ -87,13 +82,13 @@ function trunk(nlp :: AbstractNLPModel;
     Δq = slope + 0.5 * curv
     ft = obj(nlp, xt)
 
-    try
-      ratio!(tr, nlp, f, ft, Δq, xt, s, slope)
-    catch exc # negative predicted reduction
-      status = exc.msg
+    ared, pred = aredpred(nlp, f, ft, Δq, xt, s, slope)
+    if pred ≥ 0
+      status = "nonnegative predicted reduction"
       stalled = true
       continue
     end
+    tr.ratio = ared / pred
 
     if !monotone
       ρ_hist = ratio(nlp, fref, ft, σref + Δq, xt, s, slope)
@@ -110,7 +105,11 @@ function trunk(nlp :: AbstractNLPModel;
       # slope *= get_property(tr, :radius) / sNorm
       # sNorm = get_property(tr, :radius)
 
-      slope < 0.0 || throw(TrunkException(@sprintf("not a descent direction: slope = %9.2e, ‖∇f‖ = %7.1e", slope, ∇fNorm2)))
+      if slope ≥ 0.0
+        status = @sprintf("not a descent direction: slope = %9.2e, ‖∇f‖ = %7.1e", slope, ∇fNorm2)
+        stalled = true
+        continue
+      end
       α = 1.0
       while (bk < bk_max) && (ft > f + β * α * slope)
         bk = bk + 1
@@ -123,9 +122,21 @@ function trunk(nlp :: AbstractNLPModel;
       BLAS.scal!(n, α, s, 1)
       slope *= α
       Δq = slope + 0.5 * α * α * curv
-      ratio!(tr, nlp, f, ft, Δq, xt, s, slope)
+      ared, pred = aredpred(nlp, f, ft, Δq, xt, s, slope)
+      if pred ≥ 0
+        status = "nonnegative predicted reduction"
+        stalled = true
+        continue
+      end
+      tr.ratio = ared / pred
       if !monotone
-        ρ_hist = ratio(nlp, fref, ft, σref + Δq, xt, s, slope)
+        ared_hist, pred_hist = ratio(nlp, fref, ft, σref + Δq, xt, s, slope)
+        if pred_hist ≥ 0
+          status = "nonnegative predicted reduction"
+          stalled = true
+          continue
+        end
+        ρ_hist = ared_hist / pred_hist
         set_property!(tr, :ratio, max(get_property(tr, :ratio), ρ_hist))
       end
     end
