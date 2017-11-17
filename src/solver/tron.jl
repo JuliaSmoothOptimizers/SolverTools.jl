@@ -62,7 +62,7 @@ function tron(nlp :: AbstractNLPModel;
   tired = iter >= itmax || el_time > timemax
   unbounded = fx < fmin
   stalled = false
-  status = ""
+  status = "unknown"
 
   αC = 1.0
   tr = TRONTrustRegion(min(max(1.0, 0.1 * norm(πx)), 100))
@@ -79,8 +79,14 @@ function tron(nlp :: AbstractNLPModel;
     Δ = get_property(tr, :radius)
     H = hess_op!(nlp, xc, temp)
 
-    αC, s = cauchy(x, H, gx, Δ, αC, ℓ, u, μ₀=μ₀, μ₁=μ₁, σ=σ)
+    αC, s, cauchy_status = cauchy(x, H, gx, Δ, αC, ℓ, u, μ₀=μ₀, μ₁=μ₁, σ=σ)
 
+    if cauchy_status != "success"
+      @critical(tronlogger, "Cauchy step returned: $cauchy_status")
+      status = cauchy_status
+      stalled = true
+      continue
+    end
     s, Hs, cgits, cginfo = projected_newton!(x, H, gx, Δ, cgtol, s, ℓ, u, max_cgiter=max_cgiter)
     slope = dot(gx, s)
     qs = 0.5 * dot(s, Hs) + slope
@@ -128,18 +134,12 @@ function tron(nlp :: AbstractNLPModel;
                    iter, fx, πx, Δ, tr.ratio, cginfo))
   end
 
-  status = if tired
-    iter >= itmax ? "maximum number of iterations" : "maximum elapsed time"
+  if tired
+    status = iter >= itmax ? "maximum number of iterations" : "maximum elapsed time"
   elseif optimal
-    "first-order stationary"
+    status = "first-order stationary"
   elseif unbounded
-    "objective function is unbounded from below"
-  elseif status != ""
-    status
-  elseif stalled
-    "stalled"
-  else
-    "unknown"
+    status = "objective function is unbounded from below"
   end
 
   return x, fx, πx, iter, optimal, tired, status, el_time
@@ -212,6 +212,8 @@ function cauchy{T <: Real}(x::AbstractVector{T},
   s = zeros(n)
   Hs = zeros(n)
 
+  status = "success"
+
   project_step!(s, x, g, ℓ, u, -α)
 
   # Interpolate or extrapolate
@@ -235,10 +237,9 @@ function cauchy{T <: Real}(x::AbstractVector{T},
       end
       # TODO: Correctly assess why this fails
       if α < sqrt(nextfloat(zero(α)))
-        throw("α too small (qs = $qs, slope = $slope)")
-        #stalled = true
-        #status = "α too small"
-        #break
+        stalled = true
+        search = false
+        status = "Failure to achieve sufficient decrease: α too small"
       end
     end
   else
@@ -261,7 +262,7 @@ function cauchy{T <: Real}(x::AbstractVector{T},
     α = αs
     s = project_step!(s, x, g, ℓ, u, -α)
   end
-  return α, s
+  return α, s, status
 end
 
 """`projected_newton!(x, H, g, Δ, gctol, s, max_cgiter, ℓ, u)`
