@@ -47,10 +47,10 @@ function trunk(nlp :: AbstractNLPModel;
   nm_iter = 0
 
   # Preallocate xt.
-  xt = Array{Float64}(n)
-  temp = Array{Float64}(n)
+  xt = Vector{Float64}(n)
+  temp = Vector{Float64}(n)
 
-  optimal = ∇fNorm2 <= ϵ
+  optimal = ∇fNorm2 ≤ ϵ
   tired = nlp.counters.neval_obj > max_f
   stalled = false
 
@@ -160,7 +160,7 @@ function trunk(nlp :: AbstractNLPModel;
             σcur = 0.0
           end
 
-          if nm_iter >= nm_itmax
+          if nm_iter ≥ nm_itmax
             fref = fcur
             σref = σcur
           end
@@ -183,7 +183,7 @@ function trunk(nlp :: AbstractNLPModel;
 
     infoline = @sprintf("%4d  %9.2e  %7.1e  %7.1e  ", iter, f, ∇fNorm2, get_property(tr, :radius))
 
-    optimal = ∇fNorm2 <= ϵ
+    optimal = ∇fNorm2 ≤ ϵ
     tired = nlp.counters.neval_obj > max_f
   end
   @info(trunklogger, infoline)
