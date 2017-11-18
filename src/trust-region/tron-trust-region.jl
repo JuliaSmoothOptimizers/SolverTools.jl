@@ -35,13 +35,13 @@ type TRONTrustRegion <: AbstractTrustRegion
   end
 end
 
-function ratio!(tr :: TRONTrustRegion, nlp :: AbstractNLPModel, f :: Float64,
-                f_trial :: Float64, Δm :: Float64, x_trial :: Vector{Float64},
-                step :: Vector{Float64}, slope :: Float64)
-  tr.ratio = ratio(nlp, f, f_trial, Δm, x_trial, step, slope)
+function aredpred(tr :: TRONTrustRegion, nlp :: AbstractNLPModel, f :: Float64,
+                  f_trial :: Float64, Δm :: Float64, x_trial :: Vector{Float64},
+                  step :: Vector{Float64}, slope :: Float64)
+  ared, pred = aredpred(nlp, f, f_trial, Δm, x_trial, step, slope)
   γ = f_trial - f - slope
-  tr.quad_min = γ <= 0.0 ? tr.increase_factor : max(tr.large_decrease_factor, -0.5 * slope / γ)
-  return tr
+  quad_min = γ <= 0.0 ? tr.increase_factor : max(tr.large_decrease_factor, -0.5 * slope / γ)
+  return ared, pred, quad_min
 end
 
 function update!(tr :: TRONTrustRegion, step_norm :: Float64)

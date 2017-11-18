@@ -91,7 +91,8 @@ function trunk(nlp :: AbstractNLPModel;
     tr.ratio = ared / pred
 
     if !monotone
-      ρ_hist = ratio(nlp, fref, ft, σref + Δq, xt, s, slope)
+      ared_hist, pred_hist = aredpred(nlp, fref, ft, σref + Δq, xt, s, slope)
+      ρ_hist = ared_hist / pred_hist
       set_property!(tr, :ratio, max(get_property(tr, :ratio), ρ_hist))
     end
 
@@ -130,7 +131,7 @@ function trunk(nlp :: AbstractNLPModel;
       end
       tr.ratio = ared / pred
       if !monotone
-        ared_hist, pred_hist = ratio(nlp, fref, ft, σref + Δq, xt, s, slope)
+        ared_hist, pred_hist = aredpred(nlp, fref, ft, σref + Δq, xt, s, slope)
         if pred_hist ≥ 0
           status = "nonnegative predicted reduction"
           stalled = true
