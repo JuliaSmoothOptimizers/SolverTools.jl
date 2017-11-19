@@ -1,5 +1,5 @@
-julia 0.5
+julia 0.6
 Compat 0.7.15
-NLPModels 0.1.0
+NLPModels 0.3.0
 Requires 0.3.0
 MiniLogging
