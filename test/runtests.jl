@@ -4,7 +4,9 @@ import Compat.String
 include("simple_dixmaanj.jl")
 
 models = [simple_dixmaanj(),
-          MathProgNLPModel(dixmaanj(), name="dixmaanj")]
+          MathProgNLPModel(dixmaanj(), name="dixmaanj"),
+          ADNLSModel(x->[x[1] - 1; 10 * (x[2] - x[1]^2)], [-1.2; 1.0], 2)
+         ]
 @static if is_unix()
   using CUTEst
   push!(models, CUTEstModel("DIXMAANJ", "-param", "M=30"))

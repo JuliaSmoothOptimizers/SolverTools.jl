@@ -51,7 +51,7 @@ function trunk(nlp :: AbstractNLPModel;
   temp = Vector{Float64}(n)
 
   optimal = ∇fNorm2 ≤ ϵ
-  tired = nlp.counters.neval_obj > max_f
+  tired = neval_obj(nlp) > max_f
   stalled = false
 
   @info(trunklogger,
@@ -190,7 +190,7 @@ function trunk(nlp :: AbstractNLPModel;
     infoline = @sprintf("%4d  %9.2e  %7.1e  %7.1e  ", iter, f, ∇fNorm2, get_property(tr, :radius))
 
     optimal = ∇fNorm2 ≤ ϵ
-    tired = nlp.counters.neval_obj > max_f
+    tired = neval_obj(nlp) > max_f
   end
   @info(trunklogger, infoline)
 

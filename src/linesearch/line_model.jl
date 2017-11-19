@@ -39,8 +39,8 @@ end
     ϕ(t) := f(x + td).
 """
 function obj(f :: LineModel, t :: Float64)
-    f.counters.neval_obj += 1
-    return obj(f.nlp, f.x + t * f.d)
+  NLPModels.increment!(f, :neval_obj)
+  return obj(f.nlp, f.x + t * f.d)
 end
 
 """`grad(f, t)` evaluates the first derivative of the `LineModel`
@@ -52,8 +52,8 @@ i.e.,
     ϕ'(t) = ∇f(x + td)ᵀd.
 """
 function grad(f :: LineModel, t :: Float64)
-    f.counters.neval_grad += 1
-    return dot(grad(f.nlp, f.x + t * f.d), f.d)
+  NLPModels.increment!(f, :neval_grad)
+  return dot(grad(f.nlp, f.x + t * f.d), f.d)
 end
 derivative(f :: LineModel, t :: Float64) = grad(f, t)
 
@@ -68,8 +68,8 @@ i.e.,
 The gradient ∇f(x + td) is stored in `g`.
 """
 function grad!(f :: LineModel, t :: Float64, g :: Vector{Float64})
-    f.counters.neval_grad += 1
-    return dot(grad!(f.nlp, f.x + t * f.d, g), f.d)
+  NLPModels.increment!(f, :neval_grad)
+  return dot(grad!(f.nlp, f.x + t * f.d, g), f.d)
 end
 derivative!(f :: LineModel, t :: Float64, g :: Vector{Float64}) = grad!(f, t, g)
 
@@ -82,6 +82,6 @@ i.e.,
     ϕ"(t) = dᵀ∇²f(x + td)d.
 """
 function hess(f :: LineModel, t :: Float64)
-    f.counters.neval_hess += 1
-    return dot(f.d, hprod(f.nlp, f.x + t * f.d, f.d))
+  NLPModels.increment!(f, :neval_hess)
+  return dot(f.d, hprod(f.nlp, f.x + t * f.d, f.d))
 end
