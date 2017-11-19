@@ -26,7 +26,7 @@ function lbfgs(nlp :: AbstractNLPModel;
   infoline = @sprintf("%4d  %8.1e  %7.1e", iter, f, ∇fNorm)
 
   optimal = ∇fNorm ≤ ϵ
-  tired = nlp.counters.neval_obj > max_f
+  tired = neval_obj(nlp) > max_f
 
   h = LineModel(nlp, x, ∇f)
 
@@ -65,7 +65,7 @@ function lbfgs(nlp :: AbstractNLPModel;
     infoline = @sprintf("%4d  %8.1e  %7.1e", iter, f, ∇fNorm)
 
     optimal = ∇fNorm ≤ ϵ
-    tired = nlp.counters.neval_obj > max_f
+    tired = neval_obj(nlp) > max_f
   end
   @info(lbfgslogger, infoline)
 

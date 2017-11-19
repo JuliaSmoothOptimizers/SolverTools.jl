@@ -43,8 +43,8 @@ function display_problem_stats(nlp::AbstractNLPModel, f::Float64, gNorm::Float64
   @info(optimizelogger,
         @sprintf("%-15s  %8d  %9.2e  %7.1e  %5d  %5d  %6d  %s",
                  nlp.meta.name, nlp.meta.nvar, f, gNorm,
-                 nlp.counters.neval_obj, nlp.counters.neval_grad,
-                 nlp.counters.neval_hprod, status))
+                 neval_obj(nlp), neval_grad(nlp), neval_hprod(nlp),
+                 status))
 end
 
 
@@ -128,5 +128,6 @@ function solve_problem(solver :: Function, nlp :: AbstractNLPModel; kwargs...)
   #   gNorm /= nlp.scale_obj_factor
   # end
   display_problem_stats(nlp, f, gNorm, status)
-  return optimal ? (nlp.counters.neval_obj, nlp.counters.neval_grad, nlp.counters.neval_hprod) : (-nlp.counters.neval_obj, -nlp.counters.neval_grad, -nlp.counters.neval_hprod)
+  return optimal ? (neval_obj(nlp), neval_grad(nlp), neval_hprod(nlp)) :
+  (-neval_obj(nlp), -neval_grad(nlp), -neval_hprod(nlp))
 end
