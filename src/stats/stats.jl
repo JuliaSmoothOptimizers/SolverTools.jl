@@ -14,38 +14,36 @@ const STATUS = Dict(:unknown => "unknown",
 type ExecutionStats
   status :: Symbol
   solution :: Vector # x
-  obj :: Float64 # f(x)
+  objective :: Float64 # f(x)
   dual_feas :: Float64 # ‖∇f(x)‖₂ for unc, ‖P[x - ∇f(x)] - x‖₂ for bnd, etc.
   iter :: Int
-  eval :: NLPModels.Counters
+  counters :: NLPModels.Counters
   elapsed_time :: Float64
   solver_specific :: Dict{Symbol,Any}
 end
 
+type NullNLPModel <: AbstractNLPModel end
+
 function ExecutionStats{T}(status :: Symbol;
-                           x :: Vector=Float64[], f :: Float64=Inf,
-                           normg :: Float64=Inf, iter :: Int=-1,
-                           t :: Float64=Inf, eval :: NLPModels.Counters=Counters(),
-                           solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}(),
-                           kwargs...)
+                           solution :: Vector=Float64[],
+                           objective :: Float64=Inf,
+                           dual_feas :: Float64=Inf,
+                           iter :: Int=-1,
+                           nlp :: AbstractNLPModel=NullNLPModel(),
+                           elapsed_time :: Float64=Inf,
+                           solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}())
   if !(status in keys(STATUS))
     s = join(keys(STATUS, ", "))
     error("$status is not a valid status. Use one of the following: $s")
   end
-  for (k,v) in kwargs
-    if k == :solution || k == :sol
-      x = v
-    elseif k == :objective || k == :obj
-      f = v
-    elseif k == :dual_feas || k == :opt
-      normg = v
-    elseif k == :elapsed_time || k == :time
-      t = v
-    else
-      throw(UndefVarError(k))
+  c = Counters()
+  if !isa(nlp, NullNLPModel)
+    for counter in fieldnames(Counters)
+      setfield!(c, counter, eval(parse("$counter"))(nlp))
     end
   end
-  return ExecutionStats(status, x, f, normg, iter, deepcopy(eval), t, solver_specific)
+  return ExecutionStats(status, solution, objective, dual_feas, iter,
+                        c, elapsed_time, solver_specific)
 end
 
 import Base.show, Base.print, Base.println
@@ -59,10 +57,10 @@ function disp_vector(io :: IO, x :: Vector)
   if length(x) == 0
     @printf(io, "∅")
   elseif length(x) <= 5
-    Base.show_delim_array(io, x, "", " ", "", false)
+    Base.show_delim_array(io, x, "[", " ", "]", false)
   else
-    Base.show_delim_array(io, x[1:4], "", " ", "", false)
-    @printf(io, " ⋯ %s", x[end])
+    Base.show_delim_array(io, x[1:4], "[", " ", "", false)
+    @printf(io, " ⋯ %s]", x[end])
   end
 end
 
@@ -70,7 +68,7 @@ function print(io :: IO, stats :: ExecutionStats; showvec :: Function=disp_vecto
   # TODO: Show evaluations
   @printf(io, "Execution stats\n")
   @printf(io, "  status: "); show(io, getStatus(stats)); @printf(io, "\n")
-  @printf(io, "  objective value: "); show(io, stats.obj); @printf(io, "\n")
+  @printf(io, "  objective value: "); show(io, stats.objective); @printf(io, "\n")
   @printf(io, "  dual feasibility: "); show(io, stats.dual_feas); @printf(io, "\n")
   @printf(io, "  solution: "); showvec(io, stats.solution); @printf(io, "\n")
   @printf(io, "  iterations: "); show(io, stats.iter); @printf(io, "\n")
@@ -105,7 +103,7 @@ const headsym = Dict(:status  => "  Status",
                      :neval_hess   => "  #hess",
                      :neval_hprod  => " #hprod",
                      :neval_jhprod => "#jhprod",
-                     :obj          => "              f",
+                     :objective    => "              f",
                      :dual_feas    => "           ‖∇f‖",
                      :elapsed_time => "  Elaspsed time")
 
@@ -118,7 +116,7 @@ function statsgetfield(stats :: ExecutionStats, name :: Symbol)
     v = getfield(stats, name)
     t = fieldtype(ExecutionStats, name)
   elseif name in fieldnames(NLPModels.Counters)
-    v = getfield(stats.eval, name)
+    v = getfield(stats.counters, name)
   else
     throw("No such field '$name' in ExecutionStats")
   end
