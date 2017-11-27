@@ -1,5 +1,5 @@
 function test_stats()
-  stats = ExecutionStats(:first_order, objective=1.0, dual_feas=1e-12,
+  stats = GenericExecutionStats(:first_order, objective=1.0, dual_feas=1e-12,
                          solution=ones(100),
                          solver_specific=Dict(:matvec=>10, :dot=>25,
                                               :axpy=>20, :ray=>-1 ./ (1:100)))
