@@ -1,4 +1,5 @@
-export ExecutionStats, statshead, statsline
+export AbstractExecutionStats, GenericExecutionStats,
+       statshead, statsline
 
 const STATUS = Dict(:unknown => "unknown",
                     :first_order => "first-order stationary",
@@ -11,7 +12,9 @@ const STATUS = Dict(:unknown => "unknown",
                     :stalled => "stalled"
                    )
 
-type ExecutionStats
+abstract type AbstractExecutionStats end
+
+type GenericExecutionStats <: AbstractExecutionStats
   status :: Symbol
   solution :: Vector # x
   objective :: Float64 # f(x)
@@ -24,7 +27,7 @@ end
 
 type NullNLPModel <: AbstractNLPModel end
 
-function ExecutionStats{T}(status :: Symbol;
+function GenericExecutionStats{T}(status :: Symbol;
                            solution :: Vector=Float64[],
                            objective :: Float64=Inf,
                            dual_feas :: Float64=Inf,
@@ -42,13 +45,13 @@ function ExecutionStats{T}(status :: Symbol;
       setfield!(c, counter, eval(parse("$counter"))(nlp))
     end
   end
-  return ExecutionStats(status, solution, objective, dual_feas, iter,
+  return GenericExecutionStats(status, solution, objective, dual_feas, iter,
                         c, elapsed_time, solver_specific)
 end
 
 import Base.show, Base.print, Base.println
 
-function show(io :: IO, stats :: ExecutionStats)
+function show(io :: IO, stats :: AbstractExecutionStats)
   show(io, "Execution stats: $(getStatus(stats))")
 end
 
@@ -64,9 +67,9 @@ function disp_vector(io :: IO, x :: Vector)
   end
 end
 
-function print(io :: IO, stats :: ExecutionStats; showvec :: Function=disp_vector)
+function print(io :: IO, stats :: GenericExecutionStats; showvec :: Function=disp_vector)
   # TODO: Show evaluations
-  @printf(io, "Execution stats\n")
+  @printf(io, "Generic Execution stats\n")
   @printf(io, "  status: "); show(io, getStatus(stats)); @printf(io, "\n")
   @printf(io, "  objective value: "); show(io, stats.objective); @printf(io, "\n")
   @printf(io, "  dual feasibility: "); show(io, stats.dual_feas); @printf(io, "\n")
@@ -86,9 +89,12 @@ function print(io :: IO, stats :: ExecutionStats; showvec :: Function=disp_vecto
     end
   end
 end
-print(stats :: ExecutionStats; showvec :: Function=disp_vector) = print(STDOUT, stats, showvec=showvec)
-println(io :: IO, stats :: ExecutionStats; showvec :: Function=disp_vector) = print(io, stats, showvec=showvec)
-println(stats :: ExecutionStats; showvec :: Function=disp_vector) = print(STDOUT, stats, showvec=showvec)
+print(stats :: GenericExecutionStats; showvec :: Function=disp_vector) =
+    print(STDOUT, stats, showvec=showvec)
+println(io :: IO, stats :: GenericExecutionStats; showvec ::
+        Function=disp_vector) = print(io, stats, showvec=showvec)
+println(stats :: GenericExecutionStats; showvec :: Function=disp_vector) =
+    print(STDOUT, stats, showvec=showvec)
 
 const headsym = Dict(:status  => "  Status",
                      :iter         => "   Iter",
@@ -107,18 +113,16 @@ const headsym = Dict(:status  => "  Status",
                      :dual_feas    => "           ‖∇f‖",
                      :elapsed_time => "  Elaspsed time")
 
-function statsgetfield(stats :: ExecutionStats, name :: Symbol)
+function statsgetfield(stats :: AbstractExecutionStats, name :: Symbol)
   t = Int
   if name == :status
     v = getStatus(stats)
     t = String
-  elseif name in fieldnames(ExecutionStats)
-    v = getfield(stats, name)
-    t = fieldtype(ExecutionStats, name)
   elseif name in fieldnames(NLPModels.Counters)
     v = getfield(stats.counters, name)
-  else
-    throw("No such field '$name' in ExecutionStats")
+  elseif name in fieldnames(AbstractExecutionStats)
+    v = getfield(stats, name)
+    t = fieldtype(AbstractExecutionStats, name)
   end
   if t == Int
     @sprintf("%7d", v)
@@ -133,10 +137,10 @@ function statshead(line :: Array{Symbol})
   return join([headsym[x] for x in line], "  ")
 end
 
-function statsline(stats :: ExecutionStats, line :: Array{Symbol})
+function statsline(stats :: AbstractExecutionStats, line :: Array{Symbol})
   return join([statsgetfield(stats, x) for x in line], "  ")
 end
 
-function getStatus(stats :: ExecutionStats)
+function getStatus(stats :: AbstractExecutionStats)
   return STATUS[stats.status]
 end
