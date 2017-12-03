@@ -16,16 +16,17 @@ Any keyword argument accepted by `solve_problems()`
 #### Return value
 A Dict{Symbol, Array{Int,2}} of statistics.
 """
-function bmark_solvers(solvers :: Vector{Function}, args...; kwargs...)
+function bmark_solvers(solvers :: Dict{Symbol,Function}, args...; kwargs...)
   stats = Dict{Symbol, Array{Int,2}}()
-  for solver in solvers
-    stats[Symbol(solver)] = solve_problems(solver, args...; kwargs...)
+  for (name, solver) in solvers
+    stats[name] = solve_problems(solver, args...; kwargs...)
   end
   return stats
 end
 
 
 profile_solvers(args...; kwargs...) = error("BenchmarkProfiles is required for profiles")
+bmark_and_profile(args...; kwargs...) = error("BenchmarkProfiles is required for profiles")
 
 @require BenchmarkProfiles begin
   """
