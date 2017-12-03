@@ -84,6 +84,7 @@ function solve_problems(solver :: Function, problems :: Any; prune :: Bool=true,
     catch e
       isa(e, SkipException) || rethrow(e)
     end
+    finalize(problem)
   end
   solverlogger.level = current_level
   return prune ? stats[1:k, :] : stats
