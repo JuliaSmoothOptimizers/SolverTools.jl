@@ -21,7 +21,7 @@ ampl_probs = filter(x -> contains(x, ".nl"), readdir(ampl_prob_dir))
 
 # Example 1: benchmark two solvers on a set of problems
 function two_solvers()
-  solvers = [trunk, lbfgs]
+  solvers = Dict{Symbol,Function}(:trunk => trunk, :lbfgs => lbfgs)
   bmark_args = Dict{Symbol, Any}(:skipif => model -> !unconstrained(model))
   profile_args = Dict{Symbol, Any}(:title => "f+g+hprod")
   bmark_and_profile(solvers,
