@@ -24,7 +24,7 @@ notifications:
   email: false
 
 before_install:
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update && brew install gcc; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update && brew cask uninstall --force oclint && brew install gcc; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then
     wget --no-check-certificate http://www.cmake.org/files/v3.3/cmake-3.3.2-Linux-x86_64.tar.gz;
     tar -xzf cmake-3.3.2-Linux-x86_64.tar.gz;
