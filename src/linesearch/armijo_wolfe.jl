@@ -4,6 +4,7 @@ function armijo_wolfe(h :: LineModel,
                       h₀ :: Float64,
                       slope :: Float64,
                       g :: Array{Float64,1};
+                      t :: Float64=1.0,
                       τ₀ :: Float64=1.0e-4,
                       τ₁ :: Float64=0.9999,
                       bk_max :: Int=10,
@@ -13,7 +14,6 @@ function armijo_wolfe(h :: LineModel,
   # Perform improved Armijo linesearch.
   nbk = 0
   nbW = 0
-  t = 1.0
 
   # First try to increase t to satisfy loose Wolfe condition
   ht = obj(h, t)
