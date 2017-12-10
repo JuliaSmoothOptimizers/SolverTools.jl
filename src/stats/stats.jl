@@ -1,16 +1,16 @@
 export AbstractExecutionStats, GenericExecutionStats,
        statshead, statsline
 
-const STATUS = Dict(:unknown => "unknown",
-                    :first_order => "first-order stationary",
-                    :max_eval => "maximum number of function evaluations",
-                    :max_time => "maximum elapsed time",
-                    :max_iter => "maximum iteration",
-                    :neg_pred => "negative predicted reduction",
-                    :unbounded => "objective function may be unbounded from below",
-                    :exception => "unhandled exception",
-                    :stalled => "stalled"
-                   )
+const STATUSES = Dict(:unknown => "unknown",
+                      :first_order => "first-order stationary",
+                      :max_eval => "maximum number of function evaluations",
+                      :max_time => "maximum elapsed time",
+                      :max_iter => "maximum iteration",
+                      :neg_pred => "negative predicted reduction",
+                      :unbounded => "objective function may be unbounded from below",
+                      :exception => "unhandled exception",
+                      :stalled => "stalled"
+                     )
 
 abstract type AbstractExecutionStats end
 
@@ -35,8 +35,8 @@ function GenericExecutionStats{T}(status :: Symbol;
                            nlp :: AbstractNLPModel=NullNLPModel(),
                            elapsed_time :: Float64=Inf,
                            solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}())
-  if !(status in keys(STATUS))
-    s = join(keys(STATUS, ", "))
+  if !(status in keys(STATUSES))
+    s = join(keys(STATUSES, ", "))
     error("$status is not a valid status. Use one of the following: $s")
   end
   c = Counters()
@@ -142,5 +142,5 @@ function statsline(stats :: AbstractExecutionStats, line :: Array{Symbol})
 end
 
 function getStatus(stats :: AbstractExecutionStats)
-  return STATUS[stats.status]
+  return STATUSES[stats.status]
 end
