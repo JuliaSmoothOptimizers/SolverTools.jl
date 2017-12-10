@@ -25,14 +25,12 @@ type GenericExecutionStats <: AbstractExecutionStats
   solver_specific :: Dict{Symbol,Any}
 end
 
-type NullNLPModel <: AbstractNLPModel end
-
-function GenericExecutionStats{T}(status :: Symbol;
+function GenericExecutionStats{T}(status :: Symbol,
+                           nlp :: AbstractNLPModel;
                            solution :: Vector=Float64[],
                            objective :: Float64=Inf,
                            dual_feas :: Float64=Inf,
                            iter :: Int=-1,
-                           nlp :: AbstractNLPModel=NullNLPModel(),
                            elapsed_time :: Float64=Inf,
                            solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}())
   if !(status in keys(STATUSES))
@@ -40,10 +38,8 @@ function GenericExecutionStats{T}(status :: Symbol;
     error("$status is not a valid status. Use one of the following: $s")
   end
   c = Counters()
-  if !isa(nlp, NullNLPModel)
-    for counter in fieldnames(Counters)
-      setfield!(c, counter, eval(parse("$counter"))(nlp))
-    end
+  for counter in fieldnames(Counters)
+    setfield!(c, counter, eval(parse("$counter"))(nlp))
   end
   return GenericExecutionStats(status, solution, objective, dual_feas, iter,
                         c, elapsed_time, solver_specific)
