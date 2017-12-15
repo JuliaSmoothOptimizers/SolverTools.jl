@@ -33,10 +33,7 @@ function GenericExecutionStats{T}(status :: Symbol,
                            iter :: Int=-1,
                            elapsed_time :: Float64=Inf,
                            solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}())
-  if !(status in keys(STATUSES))
-    s = join(keys(STATUSES, ", "))
-    error("$status is not a valid status. Use one of the following: $s")
-  end
+  status in keys(STATUSES) || error("$status is not a valid status. Use one of the following: $(join(keys(STATUSES, ", ")))")
   c = Counters()
   for counter in fieldnames(Counters)
     setfield!(c, counter, eval(parse("$counter"))(nlp))
