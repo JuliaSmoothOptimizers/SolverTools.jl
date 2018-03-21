@@ -1,5 +1,5 @@
 export AbstractExecutionStats, GenericExecutionStats,
-       statshead, statsline
+       statsgetfield, statshead, statsline, getStatus
 
 const STATUSES = Dict(:unknown => "unknown",
                       :first_order => "first-order stationary",
@@ -113,9 +113,11 @@ function statsgetfield(stats :: AbstractExecutionStats, name :: Symbol)
     t = String
   elseif name in fieldnames(NLPModels.Counters)
     v = getfield(stats.counters, name)
-  elseif name in fieldnames(AbstractExecutionStats)
+  elseif name in fieldnames(typeof(stats))
     v = getfield(stats, name)
-    t = fieldtype(AbstractExecutionStats, name)
+    t = fieldtype(typeof(stats), name)
+  else
+    error("Unknown field $v")
   end
   if t == Int
     @sprintf("%7d", v)
