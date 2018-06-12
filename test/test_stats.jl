@@ -1,3 +1,5 @@
+using Base.Test
+
 function test_stats()
   nlp = ADNLPModel(x->dot(x,x), zeros(2))
   stats = GenericExecutionStats(:first_order, nlp, objective=1.0, dual_feas=1e-12,
@@ -26,6 +28,8 @@ function test_stats()
   end
   println(statshead(line))
   println(statsline(stats, line))
+
+  @test_throws Exception GenericExecutionStats(:unkwown, nlp, bad=true)
 end
 
 test_stats()

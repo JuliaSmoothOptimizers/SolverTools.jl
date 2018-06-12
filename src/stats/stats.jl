@@ -1,12 +1,16 @@
 export AbstractExecutionStats, GenericExecutionStats,
        statsgetfield, statshead, statsline, getStatus
 
+optimizelogger = get_logger("optimize")
+
 const STATUSES = Dict(:unknown => "unknown",
                       :first_order => "first-order stationary",
                       :max_eval => "maximum number of function evaluations",
                       :max_time => "maximum elapsed time",
                       :max_iter => "maximum iteration",
+                      :not_desc => "not a descent direction",
                       :neg_pred => "negative predicted reduction",
+                      :small_step => "step too small",
                       :unbounded => "objective function may be unbounded from below",
                       :exception => "unhandled exception",
                       :stalled => "stalled"
@@ -26,14 +30,19 @@ type GenericExecutionStats <: AbstractExecutionStats
 end
 
 function GenericExecutionStats{T}(status :: Symbol,
-                           nlp :: AbstractNLPModel;
-                           solution :: Vector=Float64[],
-                           objective :: Float64=Inf,
-                           dual_feas :: Float64=Inf,
-                           iter :: Int=-1,
-                           elapsed_time :: Float64=Inf,
-                           solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}())
-  status in keys(STATUSES) || error("$status is not a valid status. Use one of the following: $(join(keys(STATUSES, ", ")))")
+                                  nlp :: AbstractNLPModel;
+                                  solution :: Vector=Float64[],
+                                  objective :: Float64=Inf,
+                                  dual_feas :: Float64=Inf,
+                                  iter :: Int=-1,
+                                  elapsed_time :: Float64=Inf,
+                                  solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}())
+  if !(status in keys(STATUSES))
+    @error(optimizelogger,
+           "status is not a valid status. Use one of the following: ",
+           join(keys(STATUSES), ", "))
+    throw(KeyError(status))
+  end
   c = Counters()
   for counter in fieldnames(Counters)
     setfield!(c, counter, eval(parse("$counter"))(nlp))
