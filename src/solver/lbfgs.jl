@@ -5,7 +5,12 @@ lbfgslogger = get_logger("optimize.lbfgs")
 function lbfgs(nlp :: AbstractNLPModel;
                atol :: Float64=1.0e-8, rtol :: Float64=1.0e-6,
                max_f :: Int=0,
+               max_time :: Float64=Inf,
+               verbose :: Bool=true,
                mem :: Int=5)
+
+  start_time = time()
+  elapsed_time = 0.0
 
   x = copy(nlp.meta.x0)
   n = nlp.meta.nvar
@@ -26,17 +31,20 @@ function lbfgs(nlp :: AbstractNLPModel;
   infoline = @sprintf("%4d  %8.1e  %7.1e", iter, f, ∇fNorm)
 
   optimal = ∇fNorm ≤ ϵ
-  tired = neval_obj(nlp) > max_f
+  tired = neval_obj(nlp) > max_f || elapsed_time > max_time
+  stalled = false
+  status = :unknown
 
   h = LineModel(nlp, x, ∇f)
 
-  while !(optimal || tired)
+  while !(optimal || tired || stalled)
     d = - H * ∇f
     slope = BLAS.dot(n, d, 1, ∇f, 1)
     if slope ≥ 0.0
       @critical(lbfgslogger, "not a descent direction: slope = ", slope)
-      status = "direction error"
-      return (x, f, ∇fNorm, iter, optimal, tired, status)
+      status = :not_desc
+      stalled = true
+      continue
     end
 
     infoline *= @sprintf("  %8.1e", slope)
@@ -65,10 +73,21 @@ function lbfgs(nlp :: AbstractNLPModel;
     infoline = @sprintf("%4d  %8.1e  %7.1e", iter, f, ∇fNorm)
 
     optimal = ∇fNorm ≤ ϵ
-    tired = neval_obj(nlp) > max_f
+    elapsed_time = time() - start_time
+    tired = neval_obj(nlp) > max_f || elapsed_time > max_time
   end
   @info(lbfgslogger, infoline)
 
-  status = tired ? "maximum number of evaluations" : "first-order stationary"
-  return (x, f, ∇fNorm, iter, optimal, tired, status)
+  if optimal
+    status = :first_order
+  elseif tired
+    if neval_obj(nlp) > max_f
+      status = :max_eval
+    elseif elapsed_time > max_time
+      status = :max_time
+    end
+  end
+
+  return GenericExecutionStats(status, nlp, solution=x, objective=f, dual_feas=∇fNorm,
+                               iter=iter, elapsed_time=elapsed_time)
 end
