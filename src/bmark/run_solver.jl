@@ -1,10 +1,12 @@
-export display_header, solve_problems, solve_problem
+export display_header, solve_problems, solve_problem, uncstats, constats
 
 type SkipException <: Exception
 end
 
 optimizelogger = get_logger("optimize")
 
+const uncstats = [:objective, :dual_feas, :neval_obj, :neval_grad, :neval_hess, :neval_hprod, :iter, :elapsed_time, :status]
+const constats = [:objective, :dual_feas, :neval_obj, :neval_grad, :neval_hess, :neval_hprod, :neval_cons, :neval_jac, :neval_jprod, :neval_jtprod, :iter, :elapsed_time, :status]
 
 """
     display_header()
@@ -16,15 +18,15 @@ This function is called once before the first problem solve and can be overridde
 #### Return value
 Nothing.
 """
-function display_header()
+function display_header(;colstats::Array{Symbol} = constats)
+  s = statshead(colstats)
   @info(optimizelogger,
-        @sprintf("%-15s  %8s  %9s  %7s  %5s  %5s  %6s  %s",
-                 "Name", "nvar", "f", "‖∇f‖", "#obj", "#grad", "#hprod", "status"))
+        @printf("%-15s  %8s  %8s  %s\n", "Name", "nvar", "ncon", s))
 end
 
 
 """
-    display_problem_stats(nlp, f, gNorm, status)
+display_problem_stats(nlp, stats; colstats)
 
 Output stats for problem `nlp` after a solve.
 
@@ -32,21 +34,20 @@ This function is called after each problem solve and can be overridden to custom
 
 #### Arguments
 * `nlp::AbstractNLPModel`: the problem just solved
-* `f::Float64`: final objective value
-* `gNorm::Float64`: final gradient norm
-* `status::String`: final solver status or error message.
+* `stats::AbstractExecutionStats`: execution statistics
+* `colstats::Array{Symbol}`: list of desired stats to show
 
 #### Return value
 Nothing.
 """
-function display_problem_stats(nlp::AbstractNLPModel, f::Float64, gNorm::Float64, status::String)
+function display_problem_stats(nlp::AbstractNLPModel,
+                               stats::AbstractExecutionStats;
+                               colstats::Array{Symbol} = constats)
+  s = statsline(stats, colstats)
   @info(optimizelogger,
-        @sprintf("%-15s  %8d  %9.2e  %7.1e  %5d  %5d  %6d  %s",
-                 nlp.meta.name, nlp.meta.nvar, f, gNorm,
-                 neval_obj(nlp), neval_grad(nlp), neval_hprod(nlp),
-                 status))
+        @sprintf("%-15s  %8d  %8d  %s\n",
+                 nlp.meta.name, nlp.meta.nvar, nlp.meta.ncon, s))
 end
-
 
 """
     solve_problems(solver :: Function, problems :: Any; kwargs...)
@@ -63,8 +64,8 @@ Apply a solver to a set of problems.
 * any other keyword argument accepted by `run_problem()`
 
 #### Return value
-* an `Array{Int}(nprobs, 3)` where `nprobs` is the number of problems in the problem.
-  See the documentation of `solve_problem()` for the form of each entry.
+* an `Array(AbstractExecutionStats, nprobs)` where `nprobs` is the number of problems
+  in `problems` minus the skipped ones if `prune` is true.
 """
 function solve_problems(solver :: Function, problems :: Any; prune :: Bool=true, kwargs...)
   display_header()
@@ -73,21 +74,21 @@ function solve_problems(solver :: Function, problems :: Any; prune :: Bool=true,
   solverlogger = get_logger("optimize.$(solverstr)")
   current_level = solverlogger.level
   solverlogger.level = nprobs > 1 ? MiniLogging.WARN : MiniLogging.INFO
-  stats = -ones(nprobs, 3)
+  stats = []
   k = 0
   for problem in problems
     try
-      (f, g, h) = solve_problem(solver, problem; kwargs...)
-      k = k + 1
-      stats[k, :] = [f, g, h]
-      finalize(problem)
+      s = solve_problem(solver, problem; kwargs...)
+      push!(stats, s)
     catch e
       isa(e, SkipException) || rethrow(e)
+      prune || push!(stats, GenericExecutionStats(:unknown, problem))
+    finally
+      finalize(problem)
     end
-    finalize(problem)
   end
   solverlogger.level = current_level
-  return prune ? stats[1:k, :] : stats
+  return stats
 end
 
 
@@ -109,26 +110,17 @@ Any keyword argument accepted by the solver.
   `nlp` with `solver`.
   Negative values are used to represent failures.
 """
-function solve_problem(solver :: Function, nlp :: AbstractNLPModel; kwargs...)
+function solve_problem(solver :: Function, nlp :: AbstractNLPModel; colstats::Array{Symbol} = constats, kwargs...)
   args = Dict(kwargs)
   skip = haskey(args, :skipif) ? pop!(args, :skipif) : x -> false
   skip(nlp) && throw(SkipException())
 
-  # Julia nonsense
-  optimal = false
-  f = 0.0
-  gNorm = 0.0
-  status = "fail"
+  stats = GenericExecutionStats(:exception, nlp)
   try
-    (x, f, gNorm, iter, optimal, tired, status) = solver(nlp; args...)
+    stats = solver(nlp; args...)
   catch e
     status = :msg in fieldnames(e) ? e.msg : string(e)
   end
-  # if nlp.scale_obj
-  #   f /= nlp.scale_obj_factor
-  #   gNorm /= nlp.scale_obj_factor
-  # end
-  display_problem_stats(nlp, f, gNorm, status)
-  return optimal ? (neval_obj(nlp), neval_grad(nlp), neval_hprod(nlp)) :
-  (-neval_obj(nlp), -neval_grad(nlp), -neval_hprod(nlp))
+  display_problem_stats(nlp, stats, colstats=colstats)
+  return stats
 end

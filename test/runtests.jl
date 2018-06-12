@@ -15,22 +15,19 @@ solvers = Dict{Symbol,Function}(:trunk => trunk, :lbfgs => lbfgs, :tron => tron)
 
 for model in models
   for (name, solver) in solvers
-    stats = solve_problem(solver, model, verbose=false)
-    assert(all([stats...] .>= 0))
+    stats = solve_problem(solver, model, colstats=uncstats)
+    @assert stats.status == :first_order
     reset!(model)
   end
   finalize(model)
 end
 
 # test benchmark helpers, skip constrained problems (hs7 has constraints)
-solve_problem(trunk, simple_dixmaanj(), verbose=true, monotone=false)
+solve_problem(trunk, simple_dixmaanj(), monotone=false, colstats=uncstats)
 probs = [dixmaane, dixmaanf, dixmaang, dixmaanh, dixmaani, dixmaanj, hs7]
 
 models = (MathProgNLPModel(p(99), name=string(p)) for p in probs)
-stats = bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0)
-println(stats)
-println(size(stats[:trunk], 1))
-println(length(probs))
+stats = bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0, colstats=uncstats)
 assert(size(stats[:trunk], 1) == length(probs) - 1)
 stats = bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0, prune=false)
 assert(size(stats[:trunk], 1) == length(probs))
