@@ -18,12 +18,17 @@ trunklogger = get_logger("optimize.trunk")
 function trunk(nlp :: AbstractNLPModel;
                atol :: Float64=1.0e-8, rtol :: Float64=1.0e-6,
                max_f :: Int=0,
+               max_time :: Float64=Inf,
                bk_max :: Int=10,
                monotone :: Bool=true,
                nm_itmax :: Int=25)
 
-  n = nlp.meta.nvar
+  start_time = time()
+  elapsed_time = 0.0
+
   x = copy(nlp.meta.x0)
+  n = nlp.meta.nvar
+
   max_f == 0 && (max_f = max(min(100, 2 * n), 5000))
   cgtol = 1.0  # Must be ≤ 1.
 
@@ -51,8 +56,9 @@ function trunk(nlp :: AbstractNLPModel;
   temp = Vector{Float64}(n)
 
   optimal = ∇fNorm2 ≤ ϵ
-  tired = neval_obj(nlp) > max_f
+  tired = neval_obj(nlp) > max_f || elapsed_time > max_time
   stalled = false
+  status = :unknown
 
   @info(trunklogger,
         @sprintf("%4s  %9s  %7s  %7s  %8s  %5s  %2s  %s",
@@ -84,7 +90,7 @@ function trunk(nlp :: AbstractNLPModel;
 
     ared, pred = aredpred(nlp, f, ft, Δq, xt, s, slope)
     if pred ≥ 0
-      status = "nonnegative predicted reduction"
+      status = :neg_pred
       stalled = true
       continue
     end
@@ -93,7 +99,7 @@ function trunk(nlp :: AbstractNLPModel;
     if !monotone
       ared_hist, pred_hist = aredpred(nlp, fref, ft, σref + Δq, xt, s, slope)
       if pred_hist ≥ 0
-        status = "nonnegative predicted reduction"
+        status = :neg_pred
         stalled = true
         continue
       end
@@ -112,7 +118,8 @@ function trunk(nlp :: AbstractNLPModel;
       # sNorm = get_property(tr, :radius)
 
       if slope ≥ 0.0
-        status = @sprintf("not a descent direction: slope = %9.2e, ‖∇f‖ = %7.1e", slope, ∇fNorm2)
+        @critical(trunklogger, "not a descent direction: slope = $slope, ‖∇f‖ = $∇fNorm2")
+        status = :not_desc
         stalled = true
         continue
       end
@@ -130,7 +137,7 @@ function trunk(nlp :: AbstractNLPModel;
       Δq = slope + 0.5 * α * α * curv
       ared, pred = aredpred(nlp, f, ft, Δq, xt, s, slope)
       if pred ≥ 0
-        status = "nonnegative predicted reduction"
+        status = :neg_pred
         stalled = true
         continue
       end
@@ -138,7 +145,7 @@ function trunk(nlp :: AbstractNLPModel;
       if !monotone
         ared_hist, pred_hist = aredpred(nlp, fref, ft, σref + Δq, xt, s, slope)
         if pred_hist ≥ 0
-          status = "nonnegative predicted reduction"
+          status = :neg_pred
           stalled = true
           continue
         end
@@ -190,12 +197,21 @@ function trunk(nlp :: AbstractNLPModel;
     infoline = @sprintf("%4d  %9.2e  %7.1e  %7.1e  ", iter, f, ∇fNorm2, get_property(tr, :radius))
 
     optimal = ∇fNorm2 ≤ ϵ
-    tired = neval_obj(nlp) > max_f
+    elapsed_time = time() - start_time
+    tired = neval_obj(nlp) > max_f || elapsed_time > max_time
   end
   @info(trunklogger, infoline)
 
-  stalled || (status = tired ? "maximum number of evaluations" : "first-order stationary")
+  if optimal
+    status = :first_order
+  elseif tired
+    if neval_obj(nlp) > max_f
+      status = :max_eval
+    elseif elapsed_time > max_time
+      status = :max_time
+    end
+  end
 
-  # TODO: create a type to hold solver statistics.
-  return (x, f, ∇fNorm2, iter, optimal, tired, status)
+  return GenericExecutionStats(status, nlp, solution=x, objective=f, dual_feas=∇fNorm2,
+                               iter=iter, elapsed_time=elapsed_time)
 end
