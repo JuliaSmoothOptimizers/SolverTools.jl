@@ -62,7 +62,7 @@ function tron(nlp :: AbstractNLPModel;
   tired = iter >= itmax || el_time > timemax
   unbounded = fx < fmin
   stalled = false
-  status = "unknown"
+  status = :unknown
 
   αC = 1.0
   tr = TRONTrustRegion(min(max(1.0, 0.1 * norm(πx)), 100))
@@ -81,7 +81,7 @@ function tron(nlp :: AbstractNLPModel;
 
     αC, s, cauchy_status = cauchy(x, H, gx, Δ, αC, ℓ, u, μ₀=μ₀, μ₁=μ₁, σ=σ)
 
-    if cauchy_status != "success"
+    if cauchy_status != :success
       @critical(tronlogger, "Cauchy step returned: $cauchy_status")
       status = cauchy_status
       stalled = true
@@ -94,7 +94,7 @@ function tron(nlp :: AbstractNLPModel;
 
     ared, pred, quad_min = aredpred(tr, nlp, fc, fx, qs, x, s, slope)
     if pred ≥ 0
-      status = "nonnegative predicted reduction"
+      status = :neg_pred
       stalled = true
       continue
     end
@@ -135,14 +135,15 @@ function tron(nlp :: AbstractNLPModel;
   end
 
   if tired
-    status = iter >= itmax ? "maximum number of iterations" : "maximum elapsed time"
+    status = iter >= itmax ? :max_iter : :max_time
   elseif optimal
-    status = "first-order stationary"
+    status = :first_order
   elseif unbounded
-    status = "objective function is unbounded from below"
+    status = :unbounded
   end
 
-  return x, fx, πx, iter, optimal, tired, status, el_time
+  return GenericExecutionStats(status, nlp, solution=x, objective=fx, dual_feas=πx,
+                               iter=iter, elapsed_time=el_time)
 end
 
 """`s = projected_line_search!(x, H, g, d, ℓ, u; μ₀ = 1e-2)`
@@ -212,7 +213,7 @@ function cauchy{T <: Real}(x::AbstractVector{T},
   s = zeros(n)
   Hs = zeros(n)
 
-  status = "success"
+  status = :success
 
   project_step!(s, x, g, ℓ, u, -α)
 
@@ -239,7 +240,7 @@ function cauchy{T <: Real}(x::AbstractVector{T},
       if α < sqrt(nextfloat(zero(α)))
         stalled = true
         search = false
-        status = "Failure to achieve sufficient decrease: α too small"
+        status = :small_step
       end
     end
   else
@@ -330,7 +331,6 @@ function projected_newton!{T <: Real}(x::AbstractVector{T}, H::Union{AbstractMat
   else
     status # on trust-region
   end
-
 
   return s, Hs, iters, status
 end
