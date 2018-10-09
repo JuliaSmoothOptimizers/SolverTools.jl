@@ -1,12 +1,6 @@
 module Optimize
 
-using NLPModels
-using LinearOperators
-using Krylov
-using Requires
-using MiniLogging
-using Compat
-import Compat.String
+using NLPModels, NLPModelsJuMP, LinearOperators, Krylov, Requires, MiniLogging, Compat
 
 # Auxiliary.
 include("auxiliary/bounds.jl")

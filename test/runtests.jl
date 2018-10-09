@@ -1,5 +1,4 @@
-using Base.Test, Compat, NLPModels, OptimizationProblems, Optimize
-import Compat.String
+using Compat.Test, NLPModels, NLPModelsJuMP, OptimizationProblems, Optimize
 
 include("simple_dixmaanj.jl")
 
