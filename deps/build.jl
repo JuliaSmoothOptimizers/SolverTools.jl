@@ -1,1 +1,1 @@
-run(`julia $(joinpath(dirname(@__FILE__), "install.jl"))`)
+# run(`julia $(joinpath(dirname(@__FILE__), "install.jl"))`)

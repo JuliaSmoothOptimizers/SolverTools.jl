@@ -1,7 +1,7 @@
 export TRONTrustRegion
 
 """Trust region used by TRON"""
-type TRONTrustRegion <: AbstractTrustRegion
+mutable struct TRONTrustRegion <: AbstractTrustRegion
   initial_radius :: Float64
   radius :: Float64
   max_radius :: Float64

@@ -13,7 +13,7 @@
 
 export trunk
 
-trunklogger = get_logger("optimize.trunk")
+trunklogger = MiniLogging.get_logger("optimize.trunk")
 
 function trunk(nlp :: AbstractNLPModel;
                atol :: Float64=1.0e-8, rtol :: Float64=1.0e-6,
@@ -52,17 +52,17 @@ function trunk(nlp :: AbstractNLPModel;
   nm_iter = 0
 
   # Preallocate xt.
-  xt = Vector{Float64}(n)
-  temp = Vector{Float64}(n)
+  xt = Vector{Float64}(undef, n)
+  temp = Vector{Float64}(undef, n)
 
   optimal = ∇fNorm2 ≤ ϵ
   tired = neval_obj(nlp) > max_f || elapsed_time > max_time
   stalled = false
   status = :unknown
 
-  @info(trunklogger,
-        @sprintf("%4s  %9s  %7s  %7s  %8s  %5s  %2s  %s",
-                 "Iter", "f", "‖∇f‖", "Radius", "Ratio", "Inner", "bk", "status"))
+  MiniLogging.@info(trunklogger,
+                    @sprintf("%4s  %9s  %7s  %7s  %8s  %5s  %2s  %s",
+                             "Iter", "f", "‖∇f‖", "Radius", "Ratio", "Inner", "bk", "status"))
   infoline = @sprintf("%4d  %9.2e  %7.1e  %7.1e  ",
                       iter, f, ∇fNorm2, get_property(tr, :radius))
 
@@ -118,7 +118,7 @@ function trunk(nlp :: AbstractNLPModel;
       # sNorm = get_property(tr, :radius)
 
       if slope ≥ 0.0
-        @critical(trunklogger, "not a descent direction: slope = $slope, ‖∇f‖ = $∇fNorm2")
+        MiniLogging.@critical(trunklogger, "not a descent direction: slope = $slope, ‖∇f‖ = $∇fNorm2")
         status = :not_desc
         stalled = true
         continue
@@ -189,7 +189,7 @@ function trunk(nlp :: AbstractNLPModel;
     infoline *= @sprintf("%8.1e  %5d  %2d  %s",
                          get_property(tr, :ratio), length(cg_stats.residuals),
                          bk, cg_stats.status)
-    @info(trunklogger, infoline)
+    MiniLogging.@info(trunklogger, infoline)
 
     # Move on.
     update!(tr, sNorm)
@@ -200,7 +200,7 @@ function trunk(nlp :: AbstractNLPModel;
     elapsed_time = time() - start_time
     tired = neval_obj(nlp) > max_f || elapsed_time > max_time
   end
-  @info(trunklogger, infoline)
+  MiniLogging.@info(trunklogger, infoline)
 
   if optimal
     status = :first_order

@@ -1,7 +1,7 @@
 export TrustRegion
 
 """Basic trust region type."""
-type TrustRegion <: AbstractTrustRegion
+mutable struct TrustRegion <: AbstractTrustRegion
   initial_radius :: Float64
   radius :: Float64
   max_radius :: Float64
@@ -15,7 +15,7 @@ type TrustRegion <: AbstractTrustRegion
                        max_radius :: Float64=1.0/sqrt(eps(Float64)),
                        acceptance_threshold :: Float64=1.0e-4,
                        increase_threshold :: Float64=0.95,
-                       decrease_factor :: Float64=1./3,
+                       decrease_factor :: Float64=1.0/3,
                        increase_factor :: Float64=1.5)
 
     initial_radius > 0 || (initial_radius = 1.0)
