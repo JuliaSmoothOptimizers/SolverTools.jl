@@ -1,9 +1,9 @@
 export display_header, solve_problems, solve_problem, uncstats, constats
 
-type SkipException <: Exception
+struct SkipException <: Exception
 end
 
-optimizelogger = get_logger("optimize")
+optimizelogger = MiniLogging.get_logger("optimize")
 
 const uncstats = [:objective, :dual_feas, :neval_obj, :neval_grad, :neval_hess, :neval_hprod, :iter, :elapsed_time, :status]
 const constats = [:objective, :dual_feas, :neval_obj, :neval_grad, :neval_hess, :neval_hprod, :neval_cons, :neval_jac, :neval_jprod, :neval_jtprod, :iter, :elapsed_time, :status]
@@ -71,7 +71,7 @@ function solve_problems(solver :: Function, problems :: Any; prune :: Bool=true,
   display_header()
   nprobs = length(problems)
   solverstr = split(string(solver), ".")[end]
-  solverlogger = get_logger("optimize.$(solverstr)")
+  solverlogger = MiniLogging.get_logger("optimize.$(solverstr)")
   current_level = solverlogger.level
   solverlogger.level = nprobs > 1 ? MiniLogging.WARN : MiniLogging.INFO
   stats = []
@@ -116,11 +116,11 @@ function solve_problem(solver :: Function, nlp :: AbstractNLPModel; colstats::Ar
   skip(nlp) && throw(SkipException())
 
   stats = GenericExecutionStats(:exception, nlp)
-  try
+  # try
     stats = solver(nlp; args...)
-  catch e
-    status = :msg in fieldnames(e) ? e.msg : string(e)
-  end
+  # catch e
+  #   status = :msg in fieldnames(typeof(e)) ? e.msg : string(e)
+  # end
   display_problem_stats(nlp, stats, colstats=colstats)
   return stats
 end

@@ -1,10 +1,11 @@
 # A trust-region type and basic utility functions.
+import NLPModels: reset!
 export TrustRegionException, acceptable, get_property, ratio, ratio!, reset!, update!
 
 global const ϵ = eps(Float64)
 
 "Exception type raised in case of error."
-type TrustRegionException <: Exception
+mutable struct TrustRegionException <: Exception
   msg  :: String
 end
 
@@ -22,7 +23,7 @@ and the following function:
 
 - `update!(tr, step_norm)`
 """
-@compat abstract type AbstractTrustRegion end
+abstract type AbstractTrustRegion end
 
 """`ared, pred = aredpred(nlp, f, f_trial, Δm, x_trial, step, slope)`
 
@@ -70,17 +71,17 @@ Should be overhauled when it's possible to overload `getfield()`
 and `setfield!()`. See
 https://github.com/JuliaLang/julia/issues/1974
 """
-function get_property{T <: AbstractTrustRegion}(tr :: T, prop :: Symbol)
+function get_property(tr :: AbstractTrustRegion, prop :: Symbol)
   # All fields are gettable.
-  gettable = fieldnames(T)
+  gettable = fieldnames(typeof(tr))
   prop in gettable || throw(TrustRegionException("Unknown property: $prop"))
   getfield(tr, prop)
 end
 
 """A basic setter for `AbstractTrustRegion` instances.
 """
-function set_property!{T <: AbstractTrustRegion}(tr :: T, prop :: Symbol, value :: Any)
-  gettable = fieldnames(T)
+function set_property!(tr :: AbstractTrustRegion, prop :: Symbol, value :: Any)
+  gettable = fieldnames(typeof(tr))
   prop in gettable || throw(TrustRegionException("Unknown property: $prop"))
   setfield!(tr, prop, value)
 end

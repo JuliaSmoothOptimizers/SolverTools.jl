@@ -1,7 +1,7 @@
 export AbstractExecutionStats, GenericExecutionStats,
        statsgetfield, statshead, statsline, getStatus
 
-optimizelogger = get_logger("optimize")
+optimizelogger = MiniLogging.get_logger("optimize")
 
 const STATUSES = Dict(:unknown => "unknown",
                       :first_order => "first-order stationary",
@@ -18,7 +18,7 @@ const STATUSES = Dict(:unknown => "unknown",
 
 abstract type AbstractExecutionStats end
 
-type GenericExecutionStats <: AbstractExecutionStats
+mutable struct GenericExecutionStats <: AbstractExecutionStats
   status :: Symbol
   solution :: Vector # x
   objective :: Float64 # f(x)
@@ -29,23 +29,23 @@ type GenericExecutionStats <: AbstractExecutionStats
   solver_specific :: Dict{Symbol,Any}
 end
 
-function GenericExecutionStats{T}(status :: Symbol,
-                                  nlp :: AbstractNLPModel;
-                                  solution :: Vector=Float64[],
-                                  objective :: Float64=Inf,
-                                  dual_feas :: Float64=Inf,
-                                  iter :: Int=-1,
-                                  elapsed_time :: Float64=Inf,
-                                  solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}())
+function GenericExecutionStats(status :: Symbol,
+                               nlp :: AbstractNLPModel;
+                               solution :: Vector=Float64[],
+                               objective :: Float64=Inf,
+                               dual_feas :: Float64=Inf,
+                               iter :: Int=-1,
+                               elapsed_time :: Float64=Inf,
+                               solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}()) where {T}
   if !(status in keys(STATUSES))
-    @error(optimizelogger,
-           "status is not a valid status. Use one of the following: ",
-           join(keys(STATUSES), ", "))
+    MiniLogging.@error(optimizelogger,
+                       "status is not a valid status. Use one of the following: ",
+                       join(keys(STATUSES), ", "))
     throw(KeyError(status))
   end
   c = Counters()
   for counter in fieldnames(Counters)
-    setfield!(c, counter, eval(parse("$counter"))(nlp))
+    setfield!(c, counter, eval(Meta.parse("$counter"))(nlp))
   end
   return GenericExecutionStats(status, solution, objective, dual_feas, iter,
                         c, elapsed_time, solver_specific)

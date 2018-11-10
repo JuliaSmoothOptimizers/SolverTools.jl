@@ -5,7 +5,7 @@ using LinearOperators, NLPModels
 
 export tron
 
-tronlogger = get_logger("optimize.tron")
+tronlogger = MiniLogging.get_logger("optimize.tron")
 
 """`tron(nlp)`
 
@@ -66,12 +66,12 @@ function tron(nlp :: AbstractNLPModel;
 
   αC = 1.0
   tr = TRONTrustRegion(min(max(1.0, 0.1 * norm(πx)), 100))
-  @info(tronlogger,
-        @sprintf("%4s  %9s  %7s  %7s  %7s  %s",
-                 "Iter", "f", "π", "Radius", "Ratio", "CG-status"))
-  @info(tronlogger,
-        @sprintf("%4d  %9.2e  %7.1e  %7.1e",
-                 iter, fx, πx, get_property(tr, :radius)))
+  MiniLogging.@info(tronlogger,
+                    @sprintf("%4s  %9s  %7s  %7s  %7s  %s",
+                             "Iter", "f", "π", "Radius", "Ratio", "CG-status"))
+  MiniLogging.@info(tronlogger,
+                    @sprintf("%4d  %9.2e  %7.1e  %7.1e",
+                             iter, fx, πx, get_property(tr, :radius)))
   while !(optimal || tired || stalled || unbounded)
     # Current iteration
     xc .= x
@@ -82,7 +82,7 @@ function tron(nlp :: AbstractNLPModel;
     αC, s, cauchy_status = cauchy(x, H, gx, Δ, αC, ℓ, u, μ₀=μ₀, μ₁=μ₁, σ=σ)
 
     if cauchy_status != :success
-      @critical(tronlogger, "Cauchy step returned: $cauchy_status")
+      MiniLogging.@critical(tronlogger, "Cauchy step returned: $cauchy_status")
       status = cauchy_status
       stalled = true
       continue
@@ -129,9 +129,9 @@ function tron(nlp :: AbstractNLPModel;
     optimal = πx <= ϵ
     unbounded = fx < fmin
 
-    @info(tronlogger,
-          @sprintf("%4d  %9.2e  %7.1e  %7.1e  %7.1e  %s",
-                   iter, fx, πx, Δ, tr.ratio, cginfo))
+    MiniLogging.@info(tronlogger,
+                      @sprintf("%4d  %9.2e  %7.1e  %7.1e  %7.1e  %s",
+                               iter, fx, πx, Δ, tr.ratio, cginfo))
   end
 
   if tired
@@ -155,12 +155,12 @@ Performs a projected line search, searching for a step size `t` such that
 where `s = P(x + t * d) - x`, while remaining on the same face as `x + d`.
 Backtracking is performed from t = 1.0. `x` is updated in place.
 """
-function projected_line_search!{T <: Real}(x::AbstractVector{T},
-                                           H::Union{AbstractMatrix,AbstractLinearOperator},
-                                           g::AbstractVector{T},
-                                           d::AbstractVector{T},
-                                           ℓ::AbstractVector{T},
-                                           u::AbstractVector{T}; μ₀::Real = 1e-2)
+function projected_line_search!(x::AbstractVector{T},
+                                H::Union{AbstractMatrix,AbstractLinearOperator},
+                                g::AbstractVector{T},
+                                d::AbstractVector{T},
+                                ℓ::AbstractVector{T},
+                                u::AbstractVector{T}; μ₀::Real = 1e-2) where T <: Real
   α = one(T)
   _, brkmin, _ = breakpoints(x, d, ℓ, u)
   nsteps = 0
@@ -202,11 +202,11 @@ with the sufficient decrease condition
 
     q(s) ≦ μ₀sᵀg.
 """
-function cauchy{T <: Real}(x::AbstractVector{T},
-                           H::Union{AbstractMatrix,AbstractLinearOperator},
-                           g::AbstractVector{T},
-                           Δ::Real, α::Real, ℓ::AbstractVector{T}, u::AbstractVector{T};
-                           μ₀::Real = 1e-2, μ₁::Real = 1.0, σ::Real = 10.0)
+function cauchy(x::AbstractVector{T},
+                H::Union{AbstractMatrix,AbstractLinearOperator},
+                g::AbstractVector{T},
+                Δ::Real, α::Real, ℓ::AbstractVector{T}, u::AbstractVector{T};
+                μ₀::Real = 1e-2, μ₁::Real = 1.0, σ::Real = 10.0) where T <: Real
   # TODO: Use brkmin to care for g direction
   _, _, brkmax = breakpoints(x, -g, ℓ, u)
   n = length(x)
@@ -275,10 +275,10 @@ min q(d) = ¹/₂dᵀHs + dᵀg    s.t.    ℓ ≦ x + d ≦ u,  ‖d‖ ≦ Δ
 starting from `s`.  The steps are computed using the conjugate gradient method
 projected on the active bounds.
 """
-function projected_newton!{T <: Real}(x::AbstractVector{T}, H::Union{AbstractMatrix,AbstractLinearOperator},
-                                      g::AbstractVector{T}, Δ::Real, cgtol::Real, s::AbstractVector{T},
-                                      ℓ::AbstractVector{T}, u::AbstractVector{T};
-                                      max_cgiter::Int = max(50, length(x)))
+function projected_newton!(x::AbstractVector{T}, H::Union{AbstractMatrix,AbstractLinearOperator},
+                           g::AbstractVector{T}, Δ::Real, cgtol::Real, s::AbstractVector{T},
+                           ℓ::AbstractVector{T}, u::AbstractVector{T};
+                           max_cgiter::Int = max(50, length(x))) where T <: Real
   n = length(x)
   status = ""
 
@@ -309,9 +309,9 @@ function projected_newton!{T <: Real}(x::AbstractVector{T}, H::Union{AbstractMat
     status = stats.status
 
     # Projected line search
-    @views xfree = x[ifree]
+    xfree = x[ifree]
     @views w = projected_line_search!(xfree, ZHZ, gfree, st, ℓ[ifree], u[ifree])
-    @views s[ifree] += w
+    @views s[ifree] .+= w
 
     Hs .= H * s
 

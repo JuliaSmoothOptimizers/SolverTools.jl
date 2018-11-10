@@ -1,4 +1,4 @@
-importall NLPModels
+import NLPModels: obj, grad, grad!, hess
 
 export LineModel
 export obj, grad, derivative, grad!, derivative!, hess, redirect!
@@ -12,7 +12,7 @@ represents the function ϕ : R → R defined by
 
     ϕ(t) := f(x + td).
 """
-type LineModel <: AbstractNLPModel
+mutable struct LineModel <: AbstractNLPModel
   meta :: NLPModelMeta
   counters :: Counters
   nlp :: AbstractNLPModel
