@@ -143,11 +143,10 @@ end
   n = 10
   # TODO: Check the bounds on the errors
   (Q,R) = qr(rand(n,n))
-  Qop = LinearOperator(Q)
   Λ = linspace(1e-2, 1.0, n)
-  B = Qop'*opDiagonal(Λ)*Qop
+  B = Q'*diagm(Λ)*Q
   r = ones(n)
-  x0 = r + 1./Λ
+  x0 = r + 1 ./ Λ
   @testset "Quadratic unconstrained" begin
     for t = 1:10
       f(x) = 1.0 + 0.5 * dot(x-r, B * (x-r))
@@ -262,6 +261,8 @@ end
 
 @static if is_unix()
   @testset "CUTEst" begin
+    using CUTEst
+
     problems = CUTEst.select(max_var=10, max_con=0, only_bnd_var=true)
     stline = statshead([:objective, :dual_feas, :elapsed_time, :iter, :neval_obj,
                         :neval_grad, :neval_hprod, :status])
