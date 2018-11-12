@@ -12,7 +12,7 @@ models = [simple_dixmaanj(),
   using CUTEst
   push!(models, CUTEstModel("DIXMAANJ", "-param", "M=30"))
 end
-solvers = Dict{Symbol,Function}(:trunk => trunk, :lbfgs => lbfgs)  #, :tron => tron)
+solvers = Dict{Symbol,Function}(:trunk => trunk, :lbfgs => lbfgs, :tron => tron)
 
 for model in models
   for (name, solver) in solvers

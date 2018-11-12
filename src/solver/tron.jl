@@ -304,7 +304,7 @@ function projected_newton!(x::AbstractVector{T}, H::Union{AbstractMatrix,Abstrac
     status = stats.status
 
     # Projected line search
-    xfree = x[ifree]
+    xfree = @view x[ifree]
     @views w = projected_line_search!(xfree, ZHZ, gfree, st, ℓ[ifree], u[ifree])
     @views s[ifree] .+= w
 
