@@ -3,8 +3,6 @@ export display_header, solve_problems, solve_problem, uncstats, constats
 struct SkipException <: Exception
 end
 
-optimizelogger = MiniLogging.get_logger("optimize")
-
 const uncstats = [:objective, :dual_feas, :neval_obj, :neval_grad, :neval_hess, :neval_hprod, :iter, :elapsed_time, :status]
 const constats = [:objective, :dual_feas, :neval_obj, :neval_grad, :neval_hess, :neval_hprod, :neval_cons, :neval_jac, :neval_jprod, :neval_jtprod, :iter, :elapsed_time, :status]
 
@@ -20,8 +18,7 @@ Nothing.
 """
 function display_header(;colstats::Array{Symbol} = constats)
   s = statshead(colstats)
-  @info(optimizelogger,
-        @printf("%-15s  %8s  %8s  %s\n", "Name", "nvar", "ncon", s))
+  @info @printf("%-15s  %8s  %8s  %s\n", "Name", "nvar", "ncon", s)
 end
 
 
@@ -44,9 +41,8 @@ function display_problem_stats(nlp::AbstractNLPModel,
                                stats::AbstractExecutionStats;
                                colstats::Array{Symbol} = constats)
   s = statsline(stats, colstats)
-  @info(optimizelogger,
-        @sprintf("%-15s  %8d  %8d  %s\n",
-                 nlp.meta.name, nlp.meta.nvar, nlp.meta.ncon, s))
+  @info @sprintf("%-15s  %8d  %8d  %s\n",
+                 nlp.meta.name, nlp.meta.nvar, nlp.meta.ncon, s)
 end
 
 """
@@ -71,9 +67,6 @@ function solve_problems(solver :: Function, problems :: Any; prune :: Bool=true,
   display_header()
   nprobs = length(problems)
   solverstr = split(string(solver), ".")[end]
-  solverlogger = MiniLogging.get_logger("optimize.$(solverstr)")
-  current_level = solverlogger.level
-  solverlogger.level = nprobs > 1 ? MiniLogging.WARN : MiniLogging.INFO
   stats = []
   k = 0
   for problem in problems
@@ -87,7 +80,6 @@ function solve_problems(solver :: Function, problems :: Any; prune :: Bool=true,
       finalize(problem)
     end
   end
-  solverlogger.level = current_level
   return stats
 end
 

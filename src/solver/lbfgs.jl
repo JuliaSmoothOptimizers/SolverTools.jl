@@ -1,7 +1,5 @@
 export lbfgs
 
-lbfgslogger = MiniLogging.get_logger("optimize.lbfgs")
-
 function lbfgs(nlp :: AbstractNLPModel;
                atol :: Float64=1.0e-8, rtol :: Float64=1.0e-6,
                max_f :: Int=0,
@@ -27,7 +25,7 @@ function lbfgs(nlp :: AbstractNLPModel;
   max_f == 0 && (max_f = max(min(100, 2 * n), 5000))
   iter = 0
 
-  MiniLogging.@info(lbfgslogger, @sprintf("%4s  %8s  %7s  %8s  %4s", "iter", "f", "‖∇f‖", "∇f'd", "bk"))
+  @info @sprintf("%4s  %8s  %7s  %8s  %4s", "iter", "f", "‖∇f‖", "∇f'd", "bk")
   infoline = @sprintf("%4d  %8.1e  %7.1e", iter, f, ∇fNorm)
 
   optimal = ∇fNorm ≤ ϵ
@@ -41,7 +39,7 @@ function lbfgs(nlp :: AbstractNLPModel;
     d = - H * ∇f
     slope = BLAS.dot(n, d, 1, ∇f, 1)
     if slope ≥ 0.0
-      MiniLogging.@critical(lbfgslogger, "not a descent direction: slope = ", slope)
+      @error "not a descent direction" slope
       status = :not_desc
       stalled = true
       continue
@@ -53,7 +51,7 @@ function lbfgs(nlp :: AbstractNLPModel;
     # Perform improved Armijo linesearch.
     t, good_grad, ft, nbk, nbW = armijo_wolfe(h, f, slope, ∇ft, τ₁=0.9999, bk_max=25, verbose=false)
 
-    MiniLogging.@info(lbfgslogger, infoline * @sprintf("  %4d", nbk))
+    @info infoline * @sprintf("  %4d", nbk)
 
     BLAS.blascopy!(n, x, 1, xt, 1)
     BLAS.axpy!(n, t, d, 1, xt, 1)
@@ -76,7 +74,7 @@ function lbfgs(nlp :: AbstractNLPModel;
     elapsed_time = time() - start_time
     tired = neval_obj(nlp) > max_f || elapsed_time > max_time
   end
-  MiniLogging.@info(lbfgslogger, infoline)
+  @info infoline
 
   if optimal
     status = :first_order
