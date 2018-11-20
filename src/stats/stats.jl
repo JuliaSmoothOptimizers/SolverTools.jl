@@ -1,8 +1,6 @@
 export AbstractExecutionStats, GenericExecutionStats,
        statsgetfield, statshead, statsline, getStatus
 
-optimizelogger = MiniLogging.get_logger("optimize")
-
 const STATUSES = Dict(:unknown => "unknown",
                       :first_order => "first-order stationary",
                       :max_eval => "maximum number of function evaluations",
@@ -38,9 +36,7 @@ function GenericExecutionStats(status :: Symbol,
                                elapsed_time :: Float64=Inf,
                                solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}()) where {T}
   if !(status in keys(STATUSES))
-    MiniLogging.@error(optimizelogger,
-                       "status is not a valid status. Use one of the following: ",
-                       join(keys(STATUSES), ", "))
+    @error "status is not a valid status. Use one of the following: " join(keys(STATUSES), ", ")
     throw(KeyError(status))
   end
   c = Counters()

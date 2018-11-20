@@ -3,11 +3,9 @@ using BenchmarkProfiles
 using Optimize
 using OptimizationProblems
 using NLPModels
+using NLPModelsJuMP
 using AmplNLReader
-using MiniLogging
 
-MiniLogging.basic_config(MiniLogging.INFO; date_format="%Y-%m-%d %H:%M:%S")
-optimizelogger = get_logger("optimize")
 
 # In the benchmark examples, the problem lists are generator expressions
 # (note the parentheses); # the problems are not generated until needed.

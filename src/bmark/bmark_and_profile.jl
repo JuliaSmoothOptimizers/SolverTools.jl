@@ -31,7 +31,7 @@ function profile_solvers(stats :: Dict{Symbol, Array{AbstractExecutionStats,1}};
   if haskey(args, :title)
     args[:title] *= @sprintf(" (%d problems)", size(stats[first(keys(stats))], 1))
   end
-  solvers = keys(stats)
+  solvers = collect(keys(stats))
   np, ns = length(stats[first(solvers)]), length(solvers)
   P = [stats[s][p].status == :first_order ? cost(stats[s][p]) : -1 for p = 1:np, s in solvers]
   BenchmarkProfiles.performance_profile(P, map(string, solvers); args...)

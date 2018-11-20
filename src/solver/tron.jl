@@ -5,8 +5,6 @@ using LinearOperators, NLPModels
 
 export tron
 
-tronlogger = MiniLogging.get_logger("optimize.tron")
-
 """`tron(nlp)`
 
 A pure Julia implementation of a trust-region solver for bound-constrained
@@ -66,12 +64,10 @@ function tron(nlp :: AbstractNLPModel;
 
   αC = 1.0
   tr = TRONTrustRegion(min(max(1.0, 0.1 * norm(πx)), 100))
-  MiniLogging.@info(tronlogger,
-                    @sprintf("%4s  %9s  %7s  %7s  %7s  %s",
-                             "Iter", "f", "π", "Radius", "Ratio", "CG-status"))
-  MiniLogging.@info(tronlogger,
-                    @sprintf("%4d  %9.2e  %7.1e  %7.1e",
-                             iter, fx, πx, get_property(tr, :radius)))
+  @info @sprintf("%4s  %9s  %7s  %7s  %7s  %s",
+                 "Iter", "f", "π", "Radius", "Ratio", "CG-status")
+  @info @sprintf("%4d  %9.2e  %7.1e  %7.1e",
+                 iter, fx, πx, get_property(tr, :radius))
   while !(optimal || tired || stalled || unbounded)
     # Current iteration
     xc .= x
@@ -82,7 +78,7 @@ function tron(nlp :: AbstractNLPModel;
     αC, s, cauchy_status = cauchy(x, H, gx, Δ, αC, ℓ, u, μ₀=μ₀, μ₁=μ₁, σ=σ)
 
     if cauchy_status != :success
-      MiniLogging.@critical(tronlogger, "Cauchy step returned: $cauchy_status")
+      @error "Cauchy step returned: $cauchy_status"
       status = cauchy_status
       stalled = true
       continue
@@ -129,9 +125,8 @@ function tron(nlp :: AbstractNLPModel;
     optimal = πx <= ϵ
     unbounded = fx < fmin
 
-    MiniLogging.@info(tronlogger,
-                      @sprintf("%4d  %9.2e  %7.1e  %7.1e  %7.1e  %s",
-                               iter, fx, πx, Δ, tr.ratio, cginfo))
+    @info @sprintf("%4d  %9.2e  %7.1e  %7.1e  %7.1e  %s",
+                   iter, fx, πx, Δ, tr.ratio, cginfo)
   end
 
   if tired

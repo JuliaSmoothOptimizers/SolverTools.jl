@@ -1,8 +1,6 @@
-export bmark_solvers, profile_solvers,
-       bmark_and_profile
+export bmark_solvers, profile_solvers, bmark_and_profile
 
 
-optimizelogger = MiniLogging.get_logger("optimize")
 """
     bmark_solvers(solvers :: Vector{Function}, args...; kwargs...)
 
@@ -21,7 +19,7 @@ A Dict{Symbol, AbstractExecutionStats} of statistics.
 function bmark_solvers(solvers :: Dict{Symbol,Function}, args...; kwargs...)
   stats = Dict{Symbol, Array{AbstractExecutionStats,1}}()
   for (name,solver) in solvers
-    MiniLogging.@info(optimizelogger, @printf("running %s\n", string(solver)))
+    @info @printf("running %s\n", string(solver))
     stats[name] = solve_problems(solver, args...; kwargs...)
   end
   return stats

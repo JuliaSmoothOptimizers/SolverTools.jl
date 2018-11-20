@@ -5,8 +5,6 @@ using NLPModels, NLPModelsJuMP, LinearOperators, Krylov, Requires, Compat
 using LinearAlgebra
 using Printf
 
-import MiniLogging
-
 # Auxiliary.
 include("auxiliary/bounds.jl")
 include("stats/stats.jl")
