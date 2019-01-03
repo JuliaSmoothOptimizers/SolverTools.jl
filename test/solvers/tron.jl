@@ -1,4 +1,4 @@
-using LinearOperators
+using LinearOperators, Printf
 
 @testset "Test auxiliary functions" begin
   for t = 1:100
@@ -116,7 +116,7 @@ end
     x0 = ones(3)
     l = [1.0; 0.0; 0.0]
     u = [1.0; 2.0; 2.0]
-    f(x) = 0.5*dot(x - 3, x - 3)
+    f(x) = 0.5*dot(x .- 3, x .- 3)
     nlp = ADNLPModel(f, x0, lvar=l, uvar=u)
     stats = tron(nlp)
     @test stats.status == :first_order
@@ -143,8 +143,8 @@ end
   n = 10
   # TODO: Check the bounds on the errors
   (Q,R) = qr(rand(n,n))
-  Λ = linspace(1e-2, 1.0, n)
-  B = Q'*diagm(Λ)*Q
+  Λ = range(1e-2, stop=1.0, length=n)
+  B = Q' * diagm(0 => Λ) * Q
   r = ones(n)
   x0 = r + 1 ./ Λ
   @testset "Quadratic unconstrained" begin
@@ -166,7 +166,7 @@ end
     for t = 1:10
       # Create a problem so that the solution is known
       r = zeros(n)
-      l, u, λl, λu = -1-rand(n), 1+rand(n), zeros(n), zeros(n)
+      l, u, λl, λu = -1 .- rand(n), 1 .+ rand(n), zeros(n), zeros(n)
       for i = 1:n
         rnd = rand()
         if rnd < 1//3
@@ -259,14 +259,14 @@ end
   @test stats.status == :first_order
 end
 
-@static if is_unix()
+@static if Sys.isunix()
   @testset "CUTEst" begin
     using CUTEst
 
     problems = CUTEst.select(max_var=10, max_con=0, only_bnd_var=true)
     stline = statshead([:objective, :dual_feas, :elapsed_time, :iter, :neval_obj,
                         :neval_grad, :neval_hprod, :status])
-    @printf("%8s  %5s  %4s  %s\n", "Problem", "n", "type", stline)
+    @info @sprintf("%8s  %5s  %4s  %s\n", "Problem", "n", "type", stline)
     for p in problems
       nlp = CUTEstModel(p)
       stats = tron(nlp, timemax=3.0)
@@ -275,7 +275,7 @@ end
       ctype = length(nlp.meta.ifree) == nlp.meta.nvar ? "unc" : "bnd"
       stline = statsline(stats, [:objective, :dual_feas, :elapsed_time, :iter, :neval_obj,
                                  :neval_grad, :neval_hprod, :status])
-      @printf("%8s  %5d  %4s  %s\n", p, nlp.meta.nvar, ctype, stline)
+      @info @sprintf("%8s  %5d  %4s  %s\n", p, nlp.meta.nvar, ctype, stline)
     end
   end
 end

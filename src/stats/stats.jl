@@ -1,4 +1,4 @@
-export AbstractExecutionStats, GenericExecutionStats,
+export AbstractExecutionStats, GenericExecutionStats, Printf,
        statsgetfield, statshead, statsline, getStatus
 
 const STATUSES = Dict(:unknown => "unknown",
@@ -88,11 +88,11 @@ function print(io :: IO, stats :: GenericExecutionStats; showvec :: Function=dis
   end
 end
 print(stats :: GenericExecutionStats; showvec :: Function=disp_vector) =
-    print(STDOUT, stats, showvec=showvec)
+    print(Base.stdout, stats, showvec=showvec)
 println(io :: IO, stats :: GenericExecutionStats; showvec ::
         Function=disp_vector) = print(io, stats, showvec=showvec)
 println(stats :: GenericExecutionStats; showvec :: Function=disp_vector) =
-    print(STDOUT, stats, showvec=showvec)
+    print(Base.stdout, stats, showvec=showvec)
 
 const headsym = Dict(:status  => "  Status",
                      :iter         => "   Iter",

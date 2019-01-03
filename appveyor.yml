@@ -1,7 +1,5 @@
 environment:
   matrix:
-    - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x86/0.6/julia-0.6-latest-win32.exe"
-    - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.6/julia-0.6-latest-win64.exe"
     - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x86/0.7/julia-0.7-latest-win32.exe"
     - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/0.7/julia-0.7-latest-win64.exe"
     - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x86/1.0/julia-1.0-latest-win32.exe"
@@ -11,8 +9,6 @@ environment:
 
 matrix:
   allow_failures:
-    - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x86/1.0/julia-1.0-latest-win32.exe"
-    - JULIA_URL: "https://julialang-s3.julialang.org/bin/winnt/x64/1.0/julia-1.0-latest-win64.exe"
     - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x86/julia-latest-win32.exe"
     - JULIA_URL: "https://julialangnightlies-s3.julialang.org/bin/winnt/x64/julia-latest-win64.exe"
 
@@ -38,8 +34,9 @@ install:
 build_script:
 # Need to convert from shallow to complete for Pkg.clone to work
   - IF EXIST .git\shallow (git fetch --unshallow)
-  - C:\projects\julia\bin\julia -e "VERSION >= v\"0.7\" && using InteractiveUtils, Pkg;
-      versioninfo(); Pkg.init(); Pkg.clone(pwd(), \"Optimize\"); Pkg.build(\"Optimize\")"
+  - C:\projects\julia\bin\julia -e "using Pkg;
+      Pkg.add(PackageSpec(url=\"https://github.com/JuliaSmoothOptimizers/Krylov.jl\"));
+      Pkg.clone(pwd(), \"Optimize\"); Pkg.build(\"Optimize\")"
 
 test_script:
-  - C:\projects\julia\bin\julia --check-bounds=yes -e "VERSION >= v\"0.7\" && using Pkg; Pkg.test(\"Optimize\")"
+  - C:\projects\julia\bin\julia --check-bounds=yes -e "using Pkg; Pkg.test(\"Optimize\")"

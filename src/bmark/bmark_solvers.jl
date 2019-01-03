@@ -19,7 +19,7 @@ A Dict{Symbol, AbstractExecutionStats} of statistics.
 function bmark_solvers(solvers :: Dict{Symbol,Function}, args...; kwargs...)
   stats = Dict{Symbol, Array{AbstractExecutionStats,1}}()
   for (name,solver) in solvers
-    @info @printf("running %s\n", string(solver))
+    @info @sprintf("running %s\n", string(solver))
     stats[name] = solve_problems(solver, args...; kwargs...)
   end
   return stats

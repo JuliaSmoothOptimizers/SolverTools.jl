@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 
 function test_stats()
   nlp = ADNLPModel(x->dot(x,x), zeros(2))

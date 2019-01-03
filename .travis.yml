@@ -5,14 +5,12 @@ os:
   - osx
 
 julia:
-  - 0.6
   - 0.7
   - 1.0
   - nightly
 
 matrix:
   allow_failures:
-    - julia: 1.0
     - julia: nightly
 
 addons:
@@ -27,18 +25,12 @@ notifications:
   email: false
 
 before_install:
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update && brew cask uninstall --force oclint && brew install gcc; fi
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-    wget --no-check-certificate http://www.cmake.org/files/v3.3/cmake-3.3.2-Linux-x86_64.tar.gz;
-    tar -xzf cmake-3.3.2-Linux-x86_64.tar.gz;
-    sudo cp -fR cmake-3.3.2-Linux-x86_64/* /usr;
-    export PATH=`pwd`/cmake-3.3.2-Linux-x86_64/bin:$PATH;
-    unset DYLD_LIBRARY_PATH;
-    sudo ln -s /usr/lib/gcc/x86_64-linux-gnu/$(gfortran -dumpversion | cut -f1,2 -d.)/libgfortran.so /usr/local/lib; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update && brew cask uninstall --force oclint && brew install gcc; brew tap optimizers/cutest; brew install cutest; brew install mastsif; for f in "archdefs" "sifdecode" "mastsif" "cutest"; do source $(brew --prefix $f)/$f.bashrc; done; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then unset DYLD_LIBRARY_PATH; fi
 
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia -e 'VERSION >= v"0.7" && using Pkg; Pkg.clone(pwd()); Pkg.build("Optimize"); Pkg.test("Optimize"; coverage=true)'
+  - julia -e 'VERSION >= v"0.7" && using Pkg; Pkg.add(PackageSpec(url="https://github.com/JuliaSmoothOptimizers/Krylov.jl")); Pkg.clone(pwd()); Pkg.build("Optimize"); Pkg.test("Optimize"; coverage=true)'
 
 after_success:
   - julia -e 'VERSION >= v"0.7" && using Pkg; cd(Pkg.dir("Optimize")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'

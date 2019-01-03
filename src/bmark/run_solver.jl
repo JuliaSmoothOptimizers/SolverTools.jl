@@ -18,7 +18,7 @@ Nothing.
 """
 function display_header(;colstats::Array{Symbol} = constats)
   s = statshead(colstats)
-  @info @printf("%-15s  %8s  %8s  %s\n", "Name", "nvar", "ncon", s)
+  @info @sprintf("%-15s  %8s  %8s  %s\n", "Name", "nvar", "ncon", s)
 end
 
 
