@@ -1,7 +1,7 @@
 module Optimize
 __precompile__(false)
 
-using NLPModels, NLPModelsJuMP, LinearOperators, Krylov, Requires, Compat
+using NLPModels, NLPModelsJuMP, LinearOperators, Krylov, Requires
 using LinearAlgebra
 using Printf
 

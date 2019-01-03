@@ -65,7 +65,7 @@ Another commonly used option is the elapsed time:
 
     cost = stat->stat.elapsed_time
 """
-@compat function bmark_and_profile(args...; cost :: Function = stat->sum_counters(stat.counters),
+function bmark_and_profile(args...; cost :: Function = stat->sum_counters(stat.counters),
                            bmark_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}(),
                            profile_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}())
   stats = bmark_solvers(args...; bmark_args...)
