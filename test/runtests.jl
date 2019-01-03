@@ -1,6 +1,5 @@
-using Compat.Test, NLPModels, NLPModelsJuMP, OptimizationProblems, Optimize
-using LinearAlgebra
-using SparseArrays
+using Test, NLPModels, NLPModelsJuMP, OptimizationProblems, Optimize, LinearAlgebra,
+      SparseArrays
 
 include("simple_dixmaanj.jl")
 
