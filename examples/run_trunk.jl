@@ -1,5 +1,6 @@
 using Optimize
 using NLPModels
+using NLPModelsJuMP
 using OptimizationProblems
 
 model = MathProgNLPModel(dixmaanj())
