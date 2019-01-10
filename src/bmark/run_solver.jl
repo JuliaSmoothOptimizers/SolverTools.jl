@@ -1,5 +1,7 @@
 export display_header, solve_problems, solve_problem, uncstats, constats
 
+using DataFrames
+
 struct SkipException <: Exception
 end
 
@@ -67,15 +69,22 @@ function solve_problems(solver :: Function, problems :: Any; prune :: Bool=true,
   display_header()
   nprobs = length(problems)
   solverstr = split(string(solver), ".")[end]
-  stats = []
+
+  counter_fields = collect(fieldnames(Counters))
+  types = [String;  Symbol;    Float64;       Float64;   Int;    Float64; fill(Int, length(counter_fields))]
+  names = [ :name; :status; :objective; :elapsed_time; :iter; :dual_feas;                    counter_fields]
+  stats = DataFrame(types, names, 0)
+
   k = 0
   for problem in problems
     try
       s = solve_problem(solver, problem; kwargs...)
-      push!(stats, s)
+      push!(stats, [problem.meta.name; s.status; s.objective; s.elapsed_time; s.iter; s.dual_feas;
+                    [getfield(s.counters, f) for f in counter_fields]])
     catch e
       isa(e, SkipException) || rethrow(e)
-      prune || push!(stats, GenericExecutionStats(:unknown, problem))
+      prune || push!(stats, [problem.meta.name; :exception; Inf; Inf; -1; Inf;
+                             fill(-1, length(counter_fields))])
     finally
       finalize(problem)
     end
