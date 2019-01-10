@@ -7,8 +7,14 @@ Plot a performance profile from solver statistics.
 * `stats`: a dict of statistics such as obtained from `bmark_solvers()`
 
 #### Keyword arguments
-* `cost`: a function `cost(::AbstractExecutionStats)` returning a positive cost
-  value. Usually, time or number of function evaluations.
+* `cost`: a function which is applied to each row of the solver statistics DataFrame
+  returning a positive cost value.
+  Some useful options:
+  - `cost=row -> row.elapsed_time` for the elapsed time
+  - `cost=row -> row.neval_obj` for the number of objective evaluations
+  - `cost=row -> sum(row[f] for f in fieldnames(Counters))` for the total number of
+    function evaluations
+* `success_flags`: a vector of success flags.
 * Any keyword argument accepted by `BenchmarkProfiles.performance_profile()`.
 
 #### Return value
@@ -24,16 +30,18 @@ Another commonly used option is the elapsed time:
 
     cost = stat->stat.elapsed_time
 """
-function profile_solvers(stats :: Dict{Symbol, Array{AbstractExecutionStats,1}};
-                         cost :: Function = stat->sum_counters(stat.counters),
+function profile_solvers(stats :: Dict{Symbol, DataFrame};
+                         cost :: Function = row->sum(row[f] for f in fieldnames(Counters)),
+                         success_flags :: Array{Symbol} = collect(keys(STATUSES)),
+                         # TODO compare objective and feasibility
                          kwargs...)
   args = Dict(kwargs)
   if haskey(args, :title)
     args[:title] *= @sprintf(" (%d problems)", size(stats[first(keys(stats))], 1))
   end
   solvers = collect(keys(stats))
-  np, ns = length(stats[first(solvers)]), length(solvers)
-  P = [stats[s][p].status == :first_order ? cost(stats[s][p]) : -1 for p = 1:np, s in solvers]
+  P = convert(Matrix{Float64}, hcat([[row.status in success_flags ? cost(row) : Inf for
+                                      row in eachrow(stats[s])] for s in solvers]...))
   BenchmarkProfiles.performance_profile(P, map(string, solvers); args...)
 end
 
@@ -65,10 +73,11 @@ Another commonly used option is the elapsed time:
 
     cost = stat->stat.elapsed_time
 """
-function bmark_and_profile(args...; cost :: Function = stat->sum_counters(stat.counters),
+function bmark_and_profile(args...; cost :: Function = row->sum(row[f] for f in fieldnames(Counters)),
+                           success_flags :: Array{Symbol} = collect(keys(STATUSES)),
                            bmark_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}(),
                            profile_args :: Dict{Symbol, <: Any}=Dict{Symbol,Any}())
   stats = bmark_solvers(args...; bmark_args...)
-  profiles = profile_solvers(stats, cost=cost; profile_args...)
+  profiles = profile_solvers(stats, cost=cost, success_flags=success_flags; profile_args...)
   return stats, profiles
 end

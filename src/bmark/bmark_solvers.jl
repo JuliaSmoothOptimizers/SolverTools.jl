@@ -1,6 +1,5 @@
 export bmark_solvers, profile_solvers, bmark_and_profile
 
-
 """
     bmark_solvers(solvers :: Vector{Function}, args...; kwargs...)
 
@@ -17,7 +16,7 @@ Any keyword argument accepted by `solve_problems()`
 A Dict{Symbol, AbstractExecutionStats} of statistics.
 """
 function bmark_solvers(solvers :: Dict{Symbol,Function}, args...; kwargs...)
-  stats = Dict{Symbol, Array{AbstractExecutionStats,1}}()
+  stats = Dict{Symbol, DataFrame}()
   for (name,solver) in solvers
     @info @sprintf("running %s\n", string(solver))
     stats[name] = solve_problems(solver, args...; kwargs...)

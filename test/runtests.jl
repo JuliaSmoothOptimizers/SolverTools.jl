@@ -36,9 +36,13 @@ stats = bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0, prune=false)
 
 # test bmark_solvers with CUTEst
 @static if Sys.isunix()
+  using CUTEst
   models = (isa(p, String) ? CUTEstModel(p) : CUTEstModel(p...) for p in ["ROSENBR", ("DIXMAANJ", "-param", "M=30")])
   stats = bmark_solvers(solvers, models)
-  println(stats)
+  for s in keys(solvers)
+    @info "Solver $s"
+    @info stats[s][[:name, :status, :objective, :elapsed_time, :neval_obj]]
+  end
 end
 
 # Test TRON
