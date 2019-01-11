@@ -49,8 +49,8 @@ end
 function solver_options()
   stats = Dict{Symbol, DataFrame}()
   probs = (MathProgNLPModel(eval(p)(n), name=string(p)) for p in mpb_probs)
-  stats[:trunk] = solve_problems(trunk, probs, skipif=model -> !unconstrained(model), nm_itmax=5)
-  stats[:trunk_nonmonotone] = solve_problems(trunk, probs, skipif=model -> !unconstrained(model), monotone=false)
+  stats[:trunk] = solve_problems(trunk, probs, skipif=model -> !unconstrained(model))
+  stats[:trunk_nonmonotone] = solve_problems(trunk, probs, skipif=model -> !unconstrained(model), nm_itmax=5, monotone=false)
   profile_solvers(stats, title="f+g+hprod")
   png("solver-options")
 end
