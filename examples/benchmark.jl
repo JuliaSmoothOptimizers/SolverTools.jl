@@ -7,7 +7,6 @@ using NLPModelsJuMP
 using AmplNLReader
 using DataFrames
 using Plots
-gr()
 
 
 # In the benchmark examples, the problem lists are generator expressions
