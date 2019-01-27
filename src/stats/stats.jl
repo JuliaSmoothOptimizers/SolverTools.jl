@@ -11,7 +11,8 @@ const STATUSES = Dict(:unknown => "unknown",
                       :small_step => "step too small",
                       :unbounded => "objective function may be unbounded from below",
                       :exception => "unhandled exception",
-                      :stalled => "stalled"
+                      :stalled => "stalled",
+                      :small_residual => "small residual"
                      )
 
 abstract type AbstractExecutionStats end
@@ -22,7 +23,7 @@ mutable struct GenericExecutionStats <: AbstractExecutionStats
   objective :: Float64 # f(x)
   dual_feas :: Float64 # ‖∇f(x)‖₂ for unc, ‖P[x - ∇f(x)] - x‖₂ for bnd, etc.
   iter :: Int
-  counters :: NLPModels.Counters
+  counters :: NLPModels.NLSCounters
   elapsed_time :: Float64
   solver_specific :: Dict{Symbol,Any}
 end
@@ -36,12 +37,18 @@ function GenericExecutionStats(status :: Symbol,
                                elapsed_time :: Float64=Inf,
                                solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}()) where {T}
   if !(status in keys(STATUSES))
-    @error "status is not a valid status. Use one of the following: " join(keys(STATUSES), ", ")
+    @error "status $status is not a valid status. Use one of the following: " join(keys(STATUSES), ", ")
     throw(KeyError(status))
   end
-  c = Counters()
+  c = NLSCounters()
   for counter in fieldnames(Counters)
-    setfield!(c, counter, eval(Meta.parse("$counter"))(nlp))
+    setfield!(c.counters, counter, eval(Meta.parse("$counter"))(nlp))
+  end
+  if nlp isa AbstractNLSModel
+    for counter in fieldnames(NLSCounters)
+      counter == :counters && continue
+      setfield!(c, counter, eval(Meta.parse("$counter"))(nlp))
+    end
   end
   return GenericExecutionStats(status, solution, objective, dual_feas, iter,
                         c, elapsed_time, solver_specific)
@@ -116,8 +123,14 @@ function statsgetfield(stats :: AbstractExecutionStats, name :: Symbol)
   if name == :status
     v = getStatus(stats)
     t = String
-  elseif name in fieldnames(NLPModels.Counters)
+  elseif name in fieldnames(NLPModels.NLSCounters)
     v = getfield(stats.counters, name)
+  elseif name in fieldnames(NLPModels.Counters)
+    if stats.counters isa NLPModels.Counters
+      v = getfield(stats.counters, name)
+    else
+      v = getfield(stats.counters.counters, name)
+    end
   elseif name in fieldnames(typeof(stats))
     v = getfield(stats, name)
     t = fieldtype(typeof(stats), name)

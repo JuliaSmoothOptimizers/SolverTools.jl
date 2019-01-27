@@ -1,5 +1,5 @@
 using Test, NLPModels, NLPModelsJuMP, OptimizationProblems, Optimize, LinearAlgebra,
-      SparseArrays, Logging
+      SparseArrays, Logging, NLSProblems
 
 include("simple_dixmaanj.jl")
 
@@ -39,11 +39,13 @@ solve_problems(trunk, [nlp, nlp2], logger=ConsoleLogger(),
 trunk(simple_dixmaanj(), monotone=false)
 probs = [dixmaane, dixmaanf, dixmaang, dixmaanh, dixmaani, dixmaanj, hs7]
 
-models = (MathProgNLPModel(p(99), name=string(p)) for p in probs)
+models = [[MathProgNLPModel(p(99), name=string(p)) for p in probs];
+          [eval(Symbol("mgh0$p"))() for p in 1:3]]
 stats = bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0)
-@test size(stats[:trunk], 1) == length(probs) - 1
+@test size(stats[:trunk], 1) == length(models) - 1
 stats = bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0, prune=false)
-@test size(stats[:trunk], 1) == length(probs)
+@test size(stats[:trunk], 1) == length(models)
+@test count(stats[:trunk].extrainfo .== "skipped") == 1
 
 # test bmark_solvers with CUTEst
 @static if Sys.isunix()
