@@ -3,7 +3,7 @@ __precompile__(false)
 
 using NLPModels, NLPModelsJuMP, LinearOperators, Krylov, Requires
 using LinearAlgebra
-using Printf
+using Printf, Logging
 
 # Auxiliary.
 include("auxiliary/bounds.jl")
