@@ -16,16 +16,18 @@ Apply a solver to a set of problems.
 #### Keyword arguments
 * `logger::AbstractLogger`: logger used to show the statistics. Recommended `NullLogger`
   for nothing or `ConsoleLogger`. (default: `NullLogger`).
+* `solver_logger::AbstractLogger`: logger to be passed to the solver. (default: `NullLogger`).
 * `skipif::Function`: function to be applied to a problem and return whether to skip it
   (default: `x->false`)
 * `prune`: do not include skipped problems in the final statistics (default: `true`)
-* any other keyword argument to be passed to the solvers
+* any other keyword argument to be passed to the solver
 
 #### Return value
-* a `DataFrame` where each line is a problem, minus the skipped ones if `prune` is true.
+* a `DataFrame` where each row is a problem, minus the skipped ones if `prune` is true.
 """
 function solve_problems(solver :: Function, problems :: Any;
                         logger :: AbstractLogger=NullLogger(),
+                        solver_logger :: AbstractLogger=NullLogger(),
                         skipif :: Function=x->false,
                         colstats :: Array{Symbol,1} = [:name, :nvar, :ncon, :status],
                         prune :: Bool=true, kwargs...)
@@ -34,8 +36,8 @@ function solve_problems(solver :: Function, problems :: Any;
 
   counter_fields = collect(fieldnames(Counters))
   ncounters = length(counter_fields)
-  types = [Int; String;   Int;   Int;  Symbol;    Float64;       Float64;   Int;    Float64; fill(Int, ncounters)]
-  names = [:id;  :name; :nvar; :ncon; :status; :objective; :elapsed_time; :iter; :dual_feas;                    counter_fields]
+  types = [Int; String;   Int;   Int;  Symbol;    Float64;       Float64;   Int;    Float64; fill(Int, ncounters); String]
+  names = [:id;  :name; :nvar; :ncon; :status; :objective; :elapsed_time; :iter; :dual_feas;                    counter_fields; :extrainfo]
   stats = DataFrame(types, names, 0)
 
   with_logger(logger) do
@@ -46,17 +48,17 @@ function solve_problems(solver :: Function, problems :: Any;
   for (id,problem) in enumerate(problems)
     problem_info = [id; problem.meta.name; problem.meta.nvar; problem.meta.ncon]
     if skipif(problem)
-      prune || push!(stats, [problem_info; :exception; Inf; Inf; 0; Inf; fill(0, ncounters)])
+      prune || push!(stats, [problem_info; :exception; Inf; Inf; 0; Inf; fill(0, ncounters); "skipped"])
       finalize(problem)
       continue
     end
     try
-      s = solver(problem; kwargs...)
+      s = solver(problem; logger=solver_logger, kwargs...)
       push!(stats, [problem_info; s.status; s.objective; s.elapsed_time; s.iter; s.dual_feas;
-                    [getfield(s.counters, f) for f in counter_fields]])
+                    [getfield(s.counters, f) for f in counter_fields]; ""])
     catch e
       push!(stats, [problem_info; :exception; Inf; Inf; 0; Inf;
-                    fill(0, ncounters)])
+                    fill(0, ncounters); string(e)])
     finally
       finalize(problem)
     end

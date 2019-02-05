@@ -30,8 +30,9 @@ trunk(nlp, logger=ConsoleLogger())
 @info("Logging of calling solve_problems with trunk")
 nlp2 = ADNLPModel(x -> x[1]^4 + x[2]^4, ones(2), name="sumquartic")
 solve_problems(trunk, [nlp, nlp2], logger=ConsoleLogger())
-@info("Logging of calling solve_problems with trunk and colstats")
-solve_problems(trunk, [nlp, nlp2], logger=ConsoleLogger(), colstats=[:name, :objective])
+@info("Logging of calling solve_problems with trunk and colstats and solver logger")
+solve_problems(trunk, [nlp, nlp2], logger=ConsoleLogger(),
+               solver_logger=ConsoleLogger(), colstats=[:name, :objective])
 @info("Done")
 
 # test benchmark helpers, skip constrained problems (hs7 has constraints)
