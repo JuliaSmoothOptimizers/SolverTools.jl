@@ -15,11 +15,15 @@ Any keyword argument accepted by `solve_problems()`
 #### Return value
 A Dict{Symbol, AbstractExecutionStats} of statistics.
 """
-function bmark_solvers(solvers :: Dict{Symbol,Function}, args...; kwargs...)
+function bmark_solvers(solvers :: Dict{Symbol,Function}, args...;
+                       logger :: AbstractLogger=NullLogger(),
+                       kwargs...)
   stats = Dict{Symbol, DataFrame}()
   for (name,solver) in solvers
-    @info @sprintf("running %s\n", string(solver))
-    stats[name] = solve_problems(solver, args...; kwargs...)
+    with_logger(logger) do
+      @info @sprintf("running solver %s\n", string(solver))
+    end
+    stats[name] = solve_problems(solver, args...; logger=logger, kwargs...)
   end
   return stats
 end

@@ -94,7 +94,7 @@ println(io :: IO, stats :: GenericExecutionStats; showvec ::
 println(stats :: GenericExecutionStats; showvec :: Function=disp_vector) =
     print(Base.stdout, stats, showvec=showvec)
 
-const headsym = Dict(:status  => "  Status",
+const headsym = Dict(:status       => "  Status",
                      :iter         => "   Iter",
                      :neval_obj    => "   #obj",
                      :neval_grad   => "  #grad",

@@ -18,6 +18,7 @@ Chih-Jen Lin and Jorge J. Moré, *Newton's Method for Large Bound-Constrained
 Optimization Problems*, SIAM J. Optim., 9(4), 1100–1127, 1999.
 """
 function tron(nlp :: AbstractNLPModel;
+              logger :: AbstractLogger=NullLogger(),
               μ₀ :: Real=1e-2,
               μ₁ :: Real=1.0,
               σ :: Real=10.0,
@@ -64,10 +65,12 @@ function tron(nlp :: AbstractNLPModel;
 
   αC = 1.0
   tr = TRONTrustRegion(min(max(1.0, 0.1 * norm(πx)), 100))
-  @info @sprintf("%4s  %9s  %7s  %7s  %7s  %s",
-                 "Iter", "f", "π", "Radius", "Ratio", "CG-status")
-  @info @sprintf("%4d  %9.2e  %7.1e  %7.1e",
-                 iter, fx, πx, get_property(tr, :radius))
+  with_logger(logger) do
+    @info @sprintf("%4s  %9s  %7s  %7s  %7s  %s",
+                   "Iter", "f", "π", "Radius", "Ratio", "CG-status")
+    @info @sprintf("%4d  %9.2e  %7.1e  %7.1e",
+                   iter, fx, πx, get_property(tr, :radius))
+  end
   while !(optimal || tired || stalled || unbounded)
     # Current iteration
     xc .= x
@@ -125,8 +128,10 @@ function tron(nlp :: AbstractNLPModel;
     optimal = πx <= ϵ
     unbounded = fx < fmin
 
-    @info @sprintf("%4d  %9.2e  %7.1e  %7.1e  %7.1e  %s",
-                   iter, fx, πx, Δ, tr.ratio, cginfo)
+    with_logger(logger) do
+      @info @sprintf("%4d  %9.2e  %7.1e  %7.1e  %7.1e  %s",
+                     iter, fx, πx, Δ, tr.ratio, cginfo)
+    end
   end
 
   if tired
