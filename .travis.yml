@@ -7,11 +7,18 @@ os:
 julia:
   - 0.7
   - 1.0
+  - 1.1
   - nightly
 
 matrix:
   allow_failures:
     - julia: nightly
+
+notifications:
+  email:
+    recipients: abel.s.siqueira@gmail.com
+    on_success: never
+    on_failure: change
 
 addons:
   apt_packages:
@@ -20,9 +27,7 @@ addons:
 branches:
   only:
     - master
-
-notifications:
-  email: false
+    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/ # tags
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update && brew cask uninstall --force oclint && brew install gcc; brew tap optimizers/cutest; brew install cutest; brew install mastsif; for f in "archdefs" "sifdecode" "mastsif" "cutest"; do source $(brew --prefix $f)/$f.bashrc; done; fi
