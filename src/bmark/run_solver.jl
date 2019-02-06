@@ -1,7 +1,5 @@
 export solve_problems
 
-using DataFrames
-
 """
     solve_problems(solver :: Function, problems :: Any; kwargs...)
 

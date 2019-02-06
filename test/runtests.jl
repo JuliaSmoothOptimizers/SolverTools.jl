@@ -1,5 +1,5 @@
 using Test, NLPModels, NLPModelsJuMP, OptimizationProblems, Optimize, LinearAlgebra,
-      SparseArrays, Logging, NLSProblems
+      SparseArrays, Logging, NLSProblems, Printf
 
 include("simple_dixmaanj.jl")
 
@@ -31,8 +31,16 @@ trunk(nlp, logger=ConsoleLogger())
 nlp2 = ADNLPModel(x -> x[1]^4 + x[2]^4, ones(2), name="sumquartic")
 solve_problems(trunk, [nlp, nlp2], logger=ConsoleLogger())
 @info("Logging of calling solve_problems with trunk and colstats and solver logger")
-solve_problems(trunk, [nlp, nlp2], logger=ConsoleLogger(),
+df = solve_problems(trunk, [nlp, nlp2], logger=ConsoleLogger(),
                solver_logger=ConsoleLogger(), colstats=[:name, :objective])
+@info("Done")
+@info("Showing latex_tabular_results example")
+latex_tabular_results(stdout, df, cols=[:name, :status, :objective, :neval_obj],
+                      fmt_override = Dict{Symbol,Function}(:name=>x->@sprintf("\\textbf{%s}", x) |>
+                                         safe_latex_AbstractString),
+                      hdr_override = Dict(:neval_obj=>"\\#F")
+                     )
+
 @info("Done")
 
 # test benchmark helpers, skip constrained problems (hs7 has constraints)

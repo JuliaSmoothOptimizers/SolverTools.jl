@@ -1,9 +1,8 @@
 module Optimize
 __precompile__(false)
 
-using NLPModels, NLPModelsJuMP, LinearOperators, Krylov, Requires
-using LinearAlgebra
-using Printf, Logging
+using NLPModels, NLPModelsJuMP, LinearOperators, Krylov, Requires,
+      LinearAlgebra, Printf, Logging, DataFrames, LaTeXTabulars
 
 # Auxiliary.
 include("auxiliary/bounds.jl")
@@ -15,6 +14,7 @@ include("trust-region/trust-region.jl")
 include("solver/solver.jl")
 
 # Utilities.
+include("bmark/tables.jl")
 include("bmark/run_solver.jl")
 include("bmark/bmark_solvers.jl")
 
