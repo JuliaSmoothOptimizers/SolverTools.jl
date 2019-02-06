@@ -35,7 +35,10 @@ before_install:
 
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/JuliaSmoothOptimizers/Krylov.jl")); Pkg.clone(pwd()); Pkg.build("Optimize"); Pkg.test("Optimize"; coverage=true)'
+  - julia -e 'using Pkg;
+      pkg"add https://github.com/JuliaSmoothOptimizers/Krylov.jl";
+      pkg"add https://github.com/tpapp/LaTeXTabulars.jl";
+      Pkg.clone(pwd()); Pkg.build("Optimize"); Pkg.test("Optimize"; coverage=true)'
 
 after_success:
   - julia -e 'using Pkg; cd(Pkg.dir("Optimize")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'

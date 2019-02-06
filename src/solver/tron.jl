@@ -1,8 +1,6 @@
 #  Some parts of this code were adapted from
 # https://github.com/PythonOptimizers/NLP.py/blob/develop/nlp/optimize/tron.py
 
-using LinearOperators, NLPModels
-
 export tron
 
 """`tron(nlp)`
