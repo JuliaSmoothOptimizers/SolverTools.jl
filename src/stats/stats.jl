@@ -135,7 +135,7 @@ function statsgetfield(stats :: AbstractExecutionStats, name :: Symbol)
     v = getfield(stats, name)
     t = fieldtype(typeof(stats), name)
   else
-    error("Unknown field $v")
+    error("Unknown field $name")
   end
   if t == Int
     @sprintf("%7d", v)
