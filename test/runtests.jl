@@ -66,6 +66,9 @@ stats = bmark_solvers(solvers, models, skipif=m -> m.meta.ncon > 0, prune=false)
   end
 end
 
+# Test Trunk
+include("solvers/trunkls.jl")
+
 # Test TRON
 include("solvers/tron.jl")
 
