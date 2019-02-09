@@ -2,49 +2,49 @@ export TRONTrustRegion
 
 """Trust region used by TRON"""
 mutable struct TRONTrustRegion <: AbstractTrustRegion
-  initial_radius :: Float64
-  radius :: Float64
-  max_radius :: Float64
-  acceptance_threshold :: Float64
-  decrease_threshold :: Float64
-  increase_threshold :: Float64
-  large_decrease_factor :: Float64
-  small_decrease_factor :: Float64
-  increase_factor :: Float64
-  ratio :: Float64
-  quad_min :: Float64
+  initial_radius :: AbstractFloat
+  radius :: AbstractFloat
+  max_radius :: AbstractFloat
+  acceptance_threshold :: AbstractFloat
+  decrease_threshold :: AbstractFloat
+  increase_threshold :: AbstractFloat
+  large_decrease_factor :: AbstractFloat
+  small_decrease_factor :: AbstractFloat
+  increase_factor :: AbstractFloat
+  ratio :: AbstractFloat
+  quad_min :: AbstractFloat
 
-  function TRONTrustRegion(initial_radius :: Float64;
-                           max_radius :: Float64=1.0/sqrt(eps(Float64)),
-                           acceptance_threshold :: Float64=1.0e-4,
-                           decrease_threshold :: Float64=0.25,
-                           increase_threshold :: Float64=0.75,
-                           large_decrease_factor :: Float64=0.25,
-                           small_decrease_factor :: Float64=0.5,
-                           increase_factor :: Float64=4.0)
+  function TRONTrustRegion(initial_radius :: T;
+                           max_radius :: T=one(T)/sqrt(eps(T)),
+                           acceptance_threshold :: T=T(1.0e-4),
+                           decrease_threshold :: T=T(0.25),
+                           increase_threshold :: T=T(0.75),
+                           large_decrease_factor :: T=T(0.25),
+                           small_decrease_factor :: T=T(0.5),
+                           increase_factor :: T=T(4)) where T <: AbstractFloat
 
-    initial_radius > 0 || (initial_radius = 1.0)
+    initial_radius > 0 || (initial_radius = one(T))
     max_radius > initial_radius || throw(TrustRegionException("Invalid initial radius"))
-    (0.0 < acceptance_threshold < decrease_threshold < increase_threshold < 1.0) || throw(TrustRegionException("Invalid thresholds"))
-    (0.0 < large_decrease_factor < small_decrease_factor < 1.0 < increase_factor) || throw(TrustRegionException("Invalid decrease/increase factors"))
+    (0 < acceptance_threshold < decrease_threshold < increase_threshold < 1) || throw(TrustRegionException("Invalid thresholds"))
+    (0 < large_decrease_factor < small_decrease_factor < 1 < increase_factor) || throw(TrustRegionException("Invalid decrease/increase factors"))
 
     return new(initial_radius, initial_radius, max_radius,
                acceptance_threshold, decrease_threshold, increase_threshold,
                large_decrease_factor, small_decrease_factor, increase_factor,
-               0.0, 0.0)
+               zero(T), zero(T))
   end
 end
 
-function aredpred(tr :: TRONTrustRegion, nlp :: AbstractNLPModel, f :: Float64,
-                  f_trial :: Float64, Δm :: Float64, x_trial :: Vector{Float64},
-                  step :: Vector{Float64}, slope :: Float64)
+function aredpred(tr :: TRONTrustRegion, nlp :: AbstractNLPModel, f :: T,
+                  f_trial :: T, Δm :: T, x_trial :: Vector{T},
+                  step :: Vector{T}, slope :: T) where T <: AbstractFloat
   ared, pred = aredpred(nlp, f, f_trial, Δm, x_trial, step, slope)
   γ = f_trial - f - slope
-  quad_min = γ <= 0.0 ? tr.increase_factor : max(tr.large_decrease_factor, -0.5 * slope / γ)
+  quad_min = γ <= 0 ? tr.increase_factor : max(tr.large_decrease_factor, -slope / γ / 2)
   return ared, pred, quad_min
 end
 
-function update!(tr :: TRONTrustRegion, step_norm :: Float64)
+function update!(tr :: TRONTrustRegion, step_norm :: AbstractFloat)
   α, σ₁, σ₂, σ₃ = tr.quad_min, tr.large_decrease_factor, tr.small_decrease_factor, tr.increase_factor
   tr.radius = if tr.ratio < tr.acceptance_threshold
     min(max(α, σ₁) * step_norm, σ₂ * tr.radius)

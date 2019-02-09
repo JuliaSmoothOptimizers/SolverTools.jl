@@ -2,8 +2,6 @@
 import NLPModels: reset!
 export TrustRegionException, acceptable, get_property, ratio, ratio!, reset!, update!
 
-global const ϵ = eps(Float64)
-
 "Exception type raised in case of error."
 mutable struct TrustRegionException <: Exception
   msg  :: String
@@ -14,10 +12,10 @@ end
 An abstract trust region type so that specific trust regions define update
 rules differently. Child types must have at least the following fields:
 
-- `acceptance_threshold :: Float64`
-- `initial_radius :: Float64`
-- `radius :: Float64`
-- `ratio :: Float64`
+- `acceptance_threshold :: AbstractFloat`
+- `initial_radius :: AbstractFloat`
+- `radius :: AbstractFloat`
+- `ratio :: AbstractFloat`
 
 and the following function:
 
@@ -32,13 +30,14 @@ Compute the actual and predicted reductions `∆f` and `Δm`, where
 `Δm = m_trial - m` is the reduction predicted by the model `m` of `f`.
 We assume that `m` is being minimized, and therefore that `Δm < 0`.
 """
-function aredpred(nlp :: AbstractNLPModel, f :: Float64, f_trial :: Float64, Δm :: Float64,
-                  x_trial :: Vector{Float64}, step :: Vector{Float64}, slope :: Float64)
+function aredpred(nlp :: AbstractNLPModel, f :: T, f_trial :: T, Δm :: T,
+                  x_trial :: Vector{T}, step :: Vector{T}, slope :: T) where T <: AbstractFloat
   absf = abs(f)
-  pred = Δm - max(1.0, absf) * 10.0 * ϵ
+  ϵ = eps(T)
+  pred = Δm - max(one(T), absf) * 10 * ϵ
 
-  ared = f_trial - f + max(1.0, absf) * 10.0 * ϵ
-  if (abs(Δm) < 1.0e+4 * ϵ) || (abs(ared) < 1.0e+4 * ϵ * absf)
+  ared = f_trial - f + max(one(T), absf) * 10 * ϵ
+  if (abs(Δm) < 10_000 * ϵ) || (abs(ared) < 10_000 * ϵ * absf)
     # correct for roundoff error
     g_trial = grad(nlp, x_trial)
     slope_trial = dot(g_trial, step)
@@ -91,7 +90,7 @@ end
 Update the trust-region radius based on the ratio of actual vs. predicted reduction
 and the step norm.
 """
-function update!(tr :: AbstractTrustRegion, ratio :: Float64, step_norm :: Float64)
+function update!(tr :: AbstractTrustRegion, ratio :: AbstractFloat, step_norm :: AbstractFloat)
   throw(NotImplementedError("`update!` not implemented for this TrustRegion type"))
 end
 

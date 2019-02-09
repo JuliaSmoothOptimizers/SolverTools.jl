@@ -1,7 +1,8 @@
 export lbfgs
 
 function lbfgs(nlp :: AbstractNLPModel;
-               atol :: Float64=1.0e-8, rtol :: Float64=1.0e-6,
+               x :: AbstractVector=copy(nlp.meta.x0),
+               atol :: Real=√eps(eltype(x)), rtol :: Real=√eps(eltype(x)),
                max_f :: Int=0,
                max_time :: Float64=Inf,
                verbose :: Bool=true,
@@ -11,19 +12,19 @@ function lbfgs(nlp :: AbstractNLPModel;
   start_time = time()
   elapsed_time = 0.0
 
-  x = copy(nlp.meta.x0)
+  T = eltype(x)
   n = nlp.meta.nvar
 
-  xt = Vector{Float64}(undef, n)
-  ∇ft = Vector{Float64}(undef, n)
+  xt = zeros(T, n)
+  ∇ft = zeros(T, n)
 
   f = obj(nlp, x)
   ∇f = grad(nlp, x)
-  H = InverseLBFGSOperator(n, mem, scaling=true)
+  H = InverseLBFGSOperator(T, n, mem, scaling=true)
 
-  ∇fNorm = BLAS.nrm2(n, ∇f, 1)
+  ∇fNorm = nrm2(n, ∇f)
   ϵ = atol + rtol * ∇fNorm
-  max_f == 0 && (max_f = min(max(100, 2 * n), 5000))
+  max_f == 0 && (max_f = min(max(100, 5 * n), 5000))
   iter = 0
 
   @info @sprintf("%4s  %8s  %7s  %8s  %4s", "iter", "f", "‖∇f‖", "∇f'd", "bk")
@@ -38,8 +39,8 @@ function lbfgs(nlp :: AbstractNLPModel;
 
   while !(optimal || tired || stalled)
     d = - H * ∇f
-    slope = BLAS.dot(n, d, 1, ∇f, 1)
-    if slope ≥ 0.0
+    slope = dot(n, d, ∇f)
+    if slope ≥ 0
       @error "not a descent direction" slope
       status = :not_desc
       stalled = true
@@ -50,23 +51,22 @@ function lbfgs(nlp :: AbstractNLPModel;
 
     redirect!(h, x, d)
     # Perform improved Armijo linesearch.
-    t, good_grad, ft, nbk, nbW = armijo_wolfe(h, f, slope, ∇ft, τ₁=0.9999, bk_max=25, verbose=false)
+    t, good_grad, ft, nbk, nbW = armijo_wolfe(h, f, slope, ∇ft, τ₁=T(0.9999), bk_max=25, verbose=false)
 
     @info infoline * @sprintf("  %4d", nbk)
 
-    BLAS.blascopy!(n, x, 1, xt, 1)
-    BLAS.axpy!(n, t, d, 1, xt, 1)
+    copyaxpy!(n, t, d, x, xt)
     good_grad || grad!(nlp, xt, ∇ft)
 
     # Update L-BFGS approximation.
     push!(H, t * d, ∇ft - ∇f)
 
     # Move on.
-    x = xt
+    x .= xt
     f = ft
-    BLAS.blascopy!(n, ∇ft, 1, ∇f, 1)
-    # norm(∇f) bug: https://github.com/JuliaLang/julia/issues/11788
-    ∇fNorm = BLAS.nrm2(n, ∇f, 1)
+    ∇f .= ∇ft
+
+    ∇fNorm = nrm2(n, ∇f)
     iter = iter + 1
 
     infoline = @sprintf("%4d  %8.1e  %7.1e", iter, f, ∇fNorm)

@@ -20,21 +20,21 @@ abstract type AbstractExecutionStats end
 mutable struct GenericExecutionStats <: AbstractExecutionStats
   status :: Symbol
   solution :: Vector # x
-  objective :: Float64 # f(x)
-  dual_feas :: Float64 # ‖∇f(x)‖₂ for unc, ‖P[x - ∇f(x)] - x‖₂ for bnd, etc.
+  objective :: Real # f(x)
+  dual_feas :: Real # ‖∇f(x)‖₂ for unc, ‖P[x - ∇f(x)] - x‖₂ for bnd, etc.
   iter :: Int
   counters :: NLPModels.NLSCounters
-  elapsed_time :: Float64
+  elapsed_time :: Real
   solver_specific :: Dict{Symbol,Any}
 end
 
 function GenericExecutionStats(status :: Symbol,
                                nlp :: AbstractNLPModel;
                                solution :: Vector=Float64[],
-                               objective :: Float64=Inf,
-                               dual_feas :: Float64=Inf,
+                               objective :: Real=Inf,
+                               dual_feas :: Real=Inf,
                                iter :: Int=-1,
-                               elapsed_time :: Float64=Inf,
+                               elapsed_time :: Real=Inf,
                                solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}()) where {T}
   if !(status in keys(STATUSES))
     @error "status $status is not a valid status. Use one of the following: " join(keys(STATUSES), ", ")
@@ -137,9 +137,9 @@ function statsgetfield(stats :: AbstractExecutionStats, name :: Symbol)
   else
     error("Unknown field $name")
   end
-  if t == Int
+  if t <: Int
     @sprintf("%7d", v)
-  elseif t == Float64
+  elseif t <: Real
     @sprintf("%15.8e", v)
   else
     @sprintf("%8s", v)

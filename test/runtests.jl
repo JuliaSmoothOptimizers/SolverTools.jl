@@ -83,3 +83,6 @@ include("solvers/tron.jl")
 
 # Test ExecutionStats
 include("test_stats.jl")
+
+# Test multiprecision
+include("test_multiprecision.jl")

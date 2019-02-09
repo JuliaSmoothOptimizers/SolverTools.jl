@@ -5,6 +5,7 @@ using NLPModels, NLPModelsJuMP, LinearOperators, Krylov, Requires,
       LinearAlgebra, Printf, Logging, DataFrames, LaTeXTabulars
 
 # Auxiliary.
+include("auxiliary/blas.jl")
 include("auxiliary/bounds.jl")
 include("stats/stats.jl")
 

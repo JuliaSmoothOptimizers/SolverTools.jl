@@ -17,21 +17,24 @@ Optimization Problems*, SIAM J. Optim., 9(4), 1100–1127, 1999.
 """
 function tron(nlp :: AbstractNLPModel;
               subsolver_logger :: AbstractLogger=NullLogger(),
-              μ₀ :: Real=1e-2,
-              μ₁ :: Real=1.0,
-              σ :: Real=10.0,
+              x :: AbstractVector=copy(nlp.meta.x0),
+              μ₀ :: Real=eltype(x)(1e-2),
+              μ₁ :: Real=one(eltype(x)),
+              σ :: Real=eltype(x)(10),
               itmax :: Int=10_000 * nlp.meta.nvar,
               max_cgiter :: Int=nlp.meta.nvar,
-              cgtol :: Real=0.1,
+              cgtol :: Real=eltype(x)(0.1),
               timemax :: Real=60.0,
-              atol :: Real=1e-8,
-              rtol :: Real=1e-6,
-              fatol :: Real=0.0,
-              frtol :: Real=1e-12,
+              atol :: Real=√eps(eltype(x)),
+              rtol :: Real=√eps(eltype(x)),
+              fatol :: Real=zero(eltype(x)),
+              frtol :: Real=eps(eltype(x))^eltype(x)(2/3),
               kwargs...
              )
-  ℓ = nlp.meta.lvar
-  u = nlp.meta.uvar
+
+  T = eltype(x)
+  ℓ = T.(nlp.meta.lvar)
+  u = T.(nlp.meta.uvar)
   f(x) = obj(nlp, x)
   g(x) = grad(nlp, x)
   n = nlp.meta.nvar
@@ -41,29 +44,29 @@ function tron(nlp :: AbstractNLPModel;
   el_time = 0.0
 
   # Preallocation
-  temp = zeros(n)
-  gpx = zeros(n)
-  xc = zeros(n)
-  Hs = zeros(n)
+  temp = zeros(T, n)
+  gpx = zeros(T, n)
+  xc = zeros(T, n)
+  Hs = zeros(T, n)
 
-  x = max.(ℓ, min.(nlp.meta.x0, u))
+  x .= max.(ℓ, min.(x, u))
   fx = f(x)
   gx = g(x)
   num_success_iters = 0
 
   # Optimality measure
-  project_step!(gpx, x, gx, ℓ, u, -1.0)
-  πx = norm(gpx)
+  project_step!(gpx, x, gx, ℓ, u, -one(T))
+  πx = nrm2(n, gpx)
   ϵ = atol + rtol * πx
-  fmin = min(-1.0, fx) / eps(eltype(x))
+  fmin = min(-one(T), fx) / eps(eltype(x))
   optimal = πx <= ϵ
   tired = iter >= itmax || el_time > timemax
   unbounded = fx < fmin
   stalled = false
   status = :unknown
 
-  αC = 1.0
-  tr = TRONTrustRegion(min(max(1.0, 0.1 * norm(πx)), 100))
+  αC = one(T)
+  tr = TRONTrustRegion(min(max(one(T), πx / 10), 100))
   @info @sprintf("%4s  %9s  %7s  %7s  %7s  %s",
                  "Iter", "f", "π", "Radius", "Ratio", "CG-status")
   @info @sprintf("%4d  %9.2e  %7.1e  %7.1e",
@@ -86,8 +89,8 @@ function tron(nlp :: AbstractNLPModel;
     s, Hs, cgits, cginfo = with_logger(subsolver_logger) do
       projected_newton!(x, H, gx, Δ, cgtol, s, ℓ, u, max_cgiter=max_cgiter)
     end
-    slope = dot(gx, s)
-    qs = 0.5 * dot(s, Hs) + slope
+    slope = dot(n, gx, s)
+    qs = dot(n, s, Hs) / 2 + slope
     fx = f(x)
 
     ared, pred, quad_min = aredpred(tr, nlp, fc, fx, qs, x, s, slope)
@@ -99,7 +102,7 @@ function tron(nlp :: AbstractNLPModel;
     tr.ratio = ared / pred
     tr.quad_min = quad_min
 
-    s_norm = norm(s)
+    s_norm = nrm2(n, s)
     if num_success_iters == 0
       tr.radius = min(Δ, s_norm)
     end
@@ -110,8 +113,8 @@ function tron(nlp :: AbstractNLPModel;
     if acceptable(tr)
       num_success_iters += 1
       gx = g(x)
-      project_step!(gpx, x, gx, ℓ, u, -1.0)
-      πx = norm(gpx)
+      project_step!(gpx, x, gx, ℓ, u, -one(T))
+      πx = nrm2(n, gpx)
     end
 
     # No post-iteration
@@ -157,14 +160,14 @@ function projected_line_search!(x::AbstractVector{T},
                                 g::AbstractVector{T},
                                 d::AbstractVector{T},
                                 ℓ::AbstractVector{T},
-                                u::AbstractVector{T}; μ₀::Real = 1e-2) where T <: Real
+                                u::AbstractVector{T}; μ₀::Real = T(1e-2)) where T <: Real
   α = one(T)
   _, brkmin, _ = breakpoints(x, d, ℓ, u)
   nsteps = 0
   n = length(x)
 
-  s = zeros(n)
-  Hs = zeros(n)
+  s = zeros(T, n)
+  Hs = zeros(T, n)
 
   search = true
   while search && α > brkmin
@@ -177,7 +180,7 @@ function projected_line_search!(x::AbstractVector{T},
       α /= 2
     end
   end
-  if α < 1.0 && α < brkmin
+  if α < 1 && α < brkmin
     α = brkmin
     project_step!(s, x, d, ℓ, u, α)
     slope, qs = compute_Hs_slope_qs!(Hs, H, s, g)
@@ -203,19 +206,19 @@ function cauchy(x::AbstractVector{T},
                 H::Union{AbstractMatrix,AbstractLinearOperator},
                 g::AbstractVector{T},
                 Δ::Real, α::Real, ℓ::AbstractVector{T}, u::AbstractVector{T};
-                μ₀::Real = 1e-2, μ₁::Real = 1.0, σ::Real = 10.0) where T <: Real
+                μ₀::Real = T(1e-2), μ₁::Real = one(T), σ::Real = T(10)) where T <: Real
   # TODO: Use brkmin to care for g direction
   _, _, brkmax = breakpoints(x, -g, ℓ, u)
   n = length(x)
-  s = zeros(n)
-  Hs = zeros(n)
+  s = zeros(T, n)
+  Hs = zeros(T, n)
 
   status = :success
 
   project_step!(s, x, g, ℓ, u, -α)
 
   # Interpolate or extrapolate
-  s_norm = norm(s)
+  s_norm = nrm2(n, s)
   if s_norm > μ₁ * Δ
     interp = true
   else
@@ -228,7 +231,7 @@ function cauchy(x::AbstractVector{T},
     while search
       α /= σ
       project_step!(s, x, g, ℓ, u, -α)
-      s_norm = norm(s)
+      s_norm = nrm2(n, s)
       if s_norm <= μ₁ * Δ
         slope, qs = compute_Hs_slope_qs!(Hs, H, s, g)
         search = qs >= μ₀ * slope
@@ -246,7 +249,7 @@ function cauchy(x::AbstractVector{T},
     while search && α <= brkmax
       α *= σ
       project_step!(s, x, g, ℓ, u, -α)
-      s_norm = norm(s)
+      s_norm = nrm2(n, s)
       if s_norm <= μ₁ * Δ
         slope, qs = compute_Hs_slope_qs!(Hs, H, s, g)
         if qs <= μ₀ * slope
@@ -300,7 +303,7 @@ function projected_newton!(x::AbstractVector{T}, H::Union{AbstractMatrix,Abstrac
     gfnorm = norm(wa)
 
     ZHZ = Z' * H * Z
-    st, stats = Krylov.cg(ZHZ, -gfree, radius=Δ, rtol=cgtol, atol=0.0,
+    st, stats = Krylov.cg(ZHZ, -gfree, radius=Δ, rtol=cgtol, atol=zero(T),
                           itmax=max_cgiter)
     iters += length(stats.residuals)
     status = stats.status
