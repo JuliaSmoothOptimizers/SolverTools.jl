@@ -43,7 +43,9 @@ end
 
     nlp = ADNLPModel(f, x0, lvar=[-Inf; -Inf], uvar=[Inf; Inf])
 
-    stats = tron(nlp)
+    stats = with_logger(NullLogger()) do
+      tron(nlp)
+    end
     @test isapprox(stats.solution, zeros(2), rtol=1e-6)
     @test isapprox(stats.objective, 0.0, rtol=1e-12)
     @test stats.dual_feas < 1e-6
@@ -58,7 +60,9 @@ end
 
     nlp = ADNLPModel(f, x0, lvar=l, uvar=u)
 
-    stats = tron(nlp)
+    stats = with_logger(NullLogger()) do
+      tron(nlp)
+    end
     @test stats.solution ≈ l
     @test stats.objective == f(l)
     @test stats.dual_feas < 1e-6
@@ -71,7 +75,9 @@ end
 
     nlp = ADNLPModel(f, x0)
 
-    stats = tron(nlp)
+    stats = with_logger(NullLogger()) do
+      tron(nlp)
+    end
     @test isapprox(stats.solution, [1.0;1.0], rtol=1e-3)
     @test isapprox(stats.objective, 1.0, rtol=1e-5)
     @test stats.dual_feas < 1e-6
@@ -86,7 +92,9 @@ end
 
     nlp = ADNLPModel(f, x0, lvar=l, uvar=u)
 
-    stats = tron(nlp)
+    stats = with_logger(NullLogger()) do
+      tron(nlp)
+    end
     @test isapprox(stats.solution, [1.0;1.0], rtol=1e-3)
     @test isapprox(stats.objective, 1.0, rtol=1e-5)
     @test stats.dual_feas < 1e-6
@@ -103,7 +111,9 @@ end
 
     sol = [0.9; 0.81]
 
-    stats = tron(nlp)
+    stats = with_logger(NullLogger()) do
+      tron(nlp)
+    end
     @test isapprox(stats.solution, sol, rtol=1e-3)
     @test isapprox(stats.objective, f(sol), rtol=1e-5)
     @test stats.dual_feas < 1e-6
@@ -118,7 +128,9 @@ end
     u = [1.0; 2.0; 2.0]
     f(x) = 0.5*dot(x .- 3, x .- 3)
     nlp = ADNLPModel(f, x0, lvar=l, uvar=u)
-    stats = tron(nlp)
+    stats = with_logger(NullLogger()) do
+      tron(nlp)
+    end
     @test stats.status == :first_order
     @test stats.dual_feas < 1e-6
     @test isapprox(stats.solution, [1.0; 2.0; 2.0], rtol=1e-3)
@@ -132,7 +144,9 @@ end
     u = copy(l)
     f(x) = sum(x.^4)
     nlp = ADNLPModel(f, x0, lvar=l, uvar=u)
-    stats = tron(nlp)
+    stats = with_logger(NullLogger()) do
+      tron(nlp)
+    end
     @test stats.status == :first_order
     @test stats.dual_feas == 0.0
     @test stats.solution == l
@@ -153,7 +167,9 @@ end
 
       nlp = ADNLPModel(f, x0)
 
-      stats = tron(nlp)
+      stats = with_logger(NullLogger()) do
+        tron(nlp)
+      end
       normg0 = norm(B*(x0-r))
       @test norm(stats.solution - r) < 1e-4 * normg0
       @test isapprox(stats.objective, 1.0, rtol=1e-6)
@@ -185,7 +201,9 @@ end
 
       nlp = ADNLPModel(f, x0, lvar=l, uvar=u)
 
-      stats = tron(nlp)
+      stats = with_logger(NullLogger()) do
+        tron(nlp)
+      end
       normg0 = norm(B*(x0-r))
 
       @test norm(stats.solution - r) < 1e-3
@@ -209,13 +227,17 @@ end
   nlp = ADNLPModel(f, x0)
 
   @testset "Iteration limit" begin
-    stats = tron(nlp, itmax=1)
+    stats = with_logger(NullLogger()) do
+      tron(nlp, itmax=1)
+    end
     @test stats.iter == 1
     @test stats.status == :max_iter
   end
 
   @testset "Time limit" begin
-    stats = tron(nlp, timemax=0)
+    stats = with_logger(NullLogger()) do
+      tron(nlp, timemax=0)
+    end
     @test stats.elapsed_time > 0
     @test stats.status == :max_time
   end
@@ -225,7 +247,9 @@ end
     u = l + rand(n)
     x0 = u + rand(n)
     nlp = ADNLPModel(x->dot(x,x), x0, lvar=l, uvar=u)
-    stats = tron(nlp)
+    stats = with_logger(NullLogger()) do
+      tron(nlp)
+    end
     @test norm(stats.solution - l) < 1e-3
     @test isapprox(stats.objective, dot(l,l), rtol=1e-5)
     @test stats.dual_feas < 1e-4
@@ -246,7 +270,9 @@ end
 
   nlp = ADNLPModel(f, x0)
 
-  stats = tron(nlp, timemax=600)
+  stats = with_logger(NullLogger()) do
+    tron(nlp, timemax=600)
+  end
   @test isapprox(stats.solution, ones(n), rtol=1e-5*n)
   @test isapprox(stats.objective, 1.0, rtol=1e-3)
   @test stats.dual_feas < 1e-3*n
@@ -254,7 +280,9 @@ end
 
   nlp = ADNLPModel(f, x0, lvar=zeros(n), uvar=0.3*ones(n))
 
-  stats = tron(nlp, timemax=600)
+  stats = with_logger(NullLogger()) do
+    tron(nlp, timemax=600)
+  end
   @test stats.dual_feas < 1e-3*n
   @test stats.status == :first_order
 end
@@ -269,7 +297,9 @@ end
     @info @sprintf("%8s  %5s  %4s  %s\n", "Problem", "n", "type", stline)
     for p in problems
       nlp = CUTEstModel(p)
-      stats = tron(nlp, timemax=3.0)
+      stats = with_logger(NullLogger()) do
+        tron(nlp, timemax=3.0)
+      end
       finalize(nlp)
 
       ctype = length(nlp.meta.ifree) == nlp.meta.nvar ? "unc" : "bnd"
