@@ -23,7 +23,7 @@ function lbfgs(nlp :: AbstractNLPModel;
 
   ∇fNorm = BLAS.nrm2(n, ∇f, 1)
   ϵ = atol + rtol * ∇fNorm
-  max_f == 0 && (max_f = max(min(100, 2 * n), 5000))
+  max_f == 0 && (max_f = min(max(100, 2 * n), 5000))
   iter = 0
 
   with_logger(logger) do
