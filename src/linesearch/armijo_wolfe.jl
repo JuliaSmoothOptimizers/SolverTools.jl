@@ -1,15 +1,15 @@
 export armijo_wolfe
 
 function armijo_wolfe(h :: LineModel,
-                      h₀ :: Float64,
-                      slope :: Float64,
-                      g :: Array{Float64,1};
-                      t :: Float64=1.0,
-                      τ₀ :: Float64=1.0e-4,
-                      τ₁ :: Float64=0.9999,
+                      h₀ :: T,
+                      slope :: T,
+                      g :: Array{T,1};
+                      t :: T=one(T),
+                      τ₀ :: T=max(T(1.0e-4), sqrt(eps(T))),
+                      τ₁ :: T=T(0.9999),
                       bk_max :: Int=10,
                       nbWM :: Int=5,
-                      verbose :: Bool=false)
+                      verbose :: Bool=false) where T <: AbstractFloat
 
   # Perform improved Armijo linesearch.
   nbk = 0
@@ -19,21 +19,21 @@ function armijo_wolfe(h :: LineModel,
   ht = obj(h, t)
   slope_t = grad!(h, t, g)
   while (slope_t < τ₁*slope) && (ht <= h₀ + τ₀ * t * slope) && (nbW < nbWM)
-    t *= 5.0
+    t *= 5
     ht = obj(h, t)
     slope_t = grad!(h, t, g)
     nbW += 1
   end
 
   hgoal = h₀ + slope * t * τ₀;
-  fact = -0.8
-  ϵ = 1e-10
+  fact = -T(0.8)
+  ϵ = eps(T)^T(3/5)
 
   # Enrich Armijo's condition with Hager & Zhang numerical trick
   Armijo = (ht <= hgoal) || ((ht <= h₀ + ϵ * abs(h₀)) && (slope_t <= fact * slope))
   good_grad = true
   while !Armijo && (nbk < bk_max)
-    t *= 0.4
+    t *= T(0.4)
     ht = obj(h, t)
     hgoal = h₀ + slope * t * τ₀;
 

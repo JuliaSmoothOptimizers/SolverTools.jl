@@ -15,7 +15,8 @@ export trunk
 
 function trunk(nlp :: AbstractNLPModel;
                subsolver_logger :: AbstractLogger=NullLogger(),
-               atol :: Float64=1.0e-8, rtol :: Float64=1.0e-6,
+               x :: AbstractVector=copy(nlp.meta.x0),
+               atol :: Real=√eps(eltype(x)), rtol :: Real=√eps(eltype(x)),
                max_f :: Int=0,
                max_time :: Float64=Inf,
                bk_max :: Int=10,
@@ -26,21 +27,21 @@ function trunk(nlp :: AbstractNLPModel;
   start_time = time()
   elapsed_time = 0.0
 
-  x = copy(nlp.meta.x0)
+  T = eltype(x)
   n = nlp.meta.nvar
 
   max_f == 0 && (max_f = min(max(100, 2 * n), 5000))
-  cgtol = 1.0  # Must be ≤ 1.
+  cgtol = one(T)  # Must be ≤ 1.
 
   # Armijo linesearch parameter.
-  β = 1.0e-4
+  β = T(1.0e-4)
 
   iter = 0
   f = obj(nlp, x)
   ∇f = grad(nlp, x)
-  ∇fNorm2 = BLAS.nrm2(n, ∇f, 1)
+  ∇fNorm2 = nrm2(n, ∇f)
   ϵ = atol + rtol * ∇fNorm2
-  tr = TrustRegion(min(max(0.1 * ∇fNorm2, 1.0), 100.0))
+  tr = TrustRegion(min(max(∇fNorm2 / 10, one(T)), T(100)))
 
   # Non-monotone mode parameters.
   # fmin: current best overall objective value
@@ -48,12 +49,12 @@ function trunk(nlp :: AbstractNLPModel;
   # fref: objective value at reference iteration
   # σref: cumulative model decrease over successful iterations since the reference iteration
   fmin = fref = fcur = f
-  σref = σcur = 0.0
+  σref = σcur = zero(T)
   nm_iter = 0
 
   # Preallocate xt.
-  xt = Vector{Float64}(undef, n)
-  temp = Vector{Float64}(undef, n)
+  xt = Vector{T}(undef, n)
+  temp = Vector{T}(undef, n)
 
   optimal = ∇fNorm2 ≤ ϵ
   tired = neval_obj(nlp) > max_f || elapsed_time > max_time
@@ -72,21 +73,20 @@ function trunk(nlp :: AbstractNLPModel;
     # minimize g's + 1/2 s'Hs  subject to ‖s‖ ≤ radius.
     # In this particular case, we may use an operator with preallocation.
     H = hess_op!(nlp, x, temp)
-    cgtol = max(rtol, min(0.1, 0.9 * cgtol, sqrt(∇fNorm2)))
+    cgtol = max(rtol, min(T(0.1), 9 * cgtol / 10, sqrt(∇fNorm2)))
     (s, cg_stats) = with_logger(subsolver_logger) do
       cg(H, -∇f,
-         atol=atol, rtol=cgtol,
+         atol=T(atol), rtol=cgtol,
          radius=get_property(tr, :radius),
          itmax=max(2 * n, 50))
     end
 
     # Compute actual vs. predicted reduction.
-    sNorm = BLAS.nrm2(n, s, 1)
-    BLAS.blascopy!(n, x, 1, xt, 1)
-    BLAS.axpy!(n, 1.0, s, 1, xt, 1)
-    slope = BLAS.dot(n, s, 1, ∇f, 1)
-    curv = BLAS.dot(n, s, 1, H * s, 1)
-    Δq = slope + 0.5 * curv
+    sNorm = nrm2(n, s)
+    copyaxpy!(n, one(T), s, x, xt)
+    slope = dot(n, s, ∇f)
+    curv = dot(n, s, H * s)
+    Δq = slope + curv / 2
     ft = obj(nlp, xt)
 
     ared, pred = aredpred(nlp, f, ft, Δq, xt, s, slope)
@@ -118,24 +118,23 @@ function trunk(nlp :: AbstractNLPModel;
       # slope *= get_property(tr, :radius) / sNorm
       # sNorm = get_property(tr, :radius)
 
-      if slope ≥ 0.0
+      if slope ≥ 0
         @error "not a descent direction: slope = $slope, ‖∇f‖ = $∇fNorm2"
         status = :not_desc
         stalled = true
         continue
       end
-      α = 1.0
+      α = one(T)
       while (bk < bk_max) && (ft > f + β * α * slope)
         bk = bk + 1
-        α /= 1.2
-        BLAS.blascopy!(n, x, 1, xt, 1)
-        BLAS.axpy!(n, α, s, 1, xt, 1)
+        α /= T(1.2)
+        copyaxpy!(n, α, s, x, xt)
         ft = obj(nlp, xt)
       end
       sNorm *= α
-      BLAS.scal!(n, α, s, 1)
+      scal!(n, α, s)
       slope *= α
-      Δq = slope + 0.5 * α * α * curv
+      Δq = slope + α * α * curv / 2
       ared, pred = aredpred(nlp, f, ft, Δq, xt, s, slope)
       if pred ≥ 0
         status = :neg_pred
@@ -164,14 +163,14 @@ function trunk(nlp :: AbstractNLPModel;
           # New overall best objective value found.
           fcur = ft
           fmin = ft
-          σcur = 0.0
+          σcur = zero(T)
           nm_iter = 0
         else
           nm_iter = nm_iter + 1
 
           if ft > fcur
             fcur = ft
-            σcur = 0.0
+            σcur = zero(T)
           end
 
           if nm_iter ≥ nm_itmax
@@ -181,10 +180,10 @@ function trunk(nlp :: AbstractNLPModel;
         end
       end
 
-      BLAS.blascopy!(n, xt, 1, x, 1)
+      x .= xt
       f = ft
-      ∇f = grad(nlp, x)
-      ∇fNorm2 = BLAS.nrm2(n, ∇f, 1)
+      grad!(nlp, x, ∇f)
+      ∇fNorm2 = nrm2(n, ∇f)
     end
 
     infoline *= @sprintf("%8.1e  %5d  %2d  %s",
