@@ -28,7 +28,7 @@ function trunk(nlp :: AbstractNLPModel;
   x = copy(nlp.meta.x0)
   n = nlp.meta.nvar
 
-  max_f == 0 && (max_f = max(min(100, 2 * n), 5000))
+  max_f == 0 && (max_f = min(max(100, 2 * n), 5000))
   cgtol = 1.0  # Must be ≤ 1.
 
   # Armijo linesearch parameter.
