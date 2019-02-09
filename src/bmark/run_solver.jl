@@ -12,9 +12,7 @@ Apply a solver to a set of problems.
   CUTEst problems).
 
 #### Keyword arguments
-* `logger::AbstractLogger`: logger used to show the statistics. Recommended `NullLogger`
-  for nothing or `ConsoleLogger`. (default: `NullLogger`).
-* `solver_logger::AbstractLogger`: logger to be passed to the solver. (default: `NullLogger`).
+* `solver_logger::AbstractLogger`: logger wrapping the solver call. (default: `NullLogger`).
 * `skipif::Function`: function to be applied to a problem and return whether to skip it
   (default: `x->false`)
 * `prune`: do not include skipped problems in the final statistics (default: `true`)
@@ -24,7 +22,6 @@ Apply a solver to a set of problems.
 * a `DataFrame` where each row is a problem, minus the skipped ones if `prune` is true.
 """
 function solve_problems(solver :: Function, problems :: Any;
-                        logger :: AbstractLogger=NullLogger(),
                         solver_logger :: AbstractLogger=NullLogger(),
                         skipif :: Function=x->false,
                         colstats :: Array{Symbol,1} = [:name, :nvar, :ncon, :status],
@@ -41,10 +38,8 @@ function solve_problems(solver :: Function, problems :: Any;
 
   specific = Symbol[]
 
-  with_logger(logger) do
-    # TODO: Improve logging after #74
-    @info join(string.(colstats), "  ")
-  end
+  # TODO: Improve logging after #74
+  @info join(string.(colstats), "  ")
 
   first_problem = true
   for (id,problem) in enumerate(problems)
@@ -57,7 +52,9 @@ function solve_problems(solver :: Function, problems :: Any;
       continue
     end
     try
-      s = solver(problem; logger=solver_logger, kwargs...)
+      s = with_logger(solver_logger) do
+        solver(problem; kwargs...)
+      end
       if first_problem
         for (k,v) in s.solver_specific
           insertcols!(stats, ncol(stats)+1, k => Array{Union{typeof(v),Missing},1}())
@@ -75,9 +72,7 @@ function solve_problems(solver :: Function, problems :: Any;
     finally
       finalize(problem)
     end
-    with_logger(logger) do
-      @info join(string.(Vector(stats[end,colstats])), "  ")
-    end
+    @info join(string.(Vector(stats[end,colstats])), "  ")
   end
   return stats
 end

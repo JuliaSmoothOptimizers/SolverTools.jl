@@ -1,12 +1,12 @@
 export lbfgs
 
 function lbfgs(nlp :: AbstractNLPModel;
-               logger :: AbstractLogger=NullLogger(),
                atol :: Float64=1.0e-8, rtol :: Float64=1.0e-6,
                max_f :: Int=0,
                max_time :: Float64=Inf,
                verbose :: Bool=true,
-               mem :: Int=5)
+               mem :: Int=5,
+               kwargs...)
 
   start_time = time()
   elapsed_time = 0.0
@@ -26,9 +26,7 @@ function lbfgs(nlp :: AbstractNLPModel;
   max_f == 0 && (max_f = min(max(100, 2 * n), 5000))
   iter = 0
 
-  with_logger(logger) do
-    @info @sprintf("%4s  %8s  %7s  %8s  %4s", "iter", "f", "‖∇f‖", "∇f'd", "bk")
-  end
+  @info @sprintf("%4s  %8s  %7s  %8s  %4s", "iter", "f", "‖∇f‖", "∇f'd", "bk")
   infoline = @sprintf("%4d  %8.1e  %7.1e", iter, f, ∇fNorm)
 
   optimal = ∇fNorm ≤ ϵ
@@ -54,9 +52,7 @@ function lbfgs(nlp :: AbstractNLPModel;
     # Perform improved Armijo linesearch.
     t, good_grad, ft, nbk, nbW = armijo_wolfe(h, f, slope, ∇ft, τ₁=0.9999, bk_max=25, verbose=false)
 
-    with_logger(logger) do
-      @info infoline * @sprintf("  %4d", nbk)
-    end
+    @info infoline * @sprintf("  %4d", nbk)
 
     BLAS.blascopy!(n, x, 1, xt, 1)
     BLAS.axpy!(n, t, d, 1, xt, 1)
@@ -79,9 +75,7 @@ function lbfgs(nlp :: AbstractNLPModel;
     elapsed_time = time() - start_time
     tired = neval_obj(nlp) > max_f || elapsed_time > max_time
   end
-  with_logger(logger) do
-    @info infoline
-  end
+  @info infoline
 
   if optimal
     status = :first_order

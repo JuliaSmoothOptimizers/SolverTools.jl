@@ -14,13 +14,14 @@
 export trunk
 
 function trunk(nlp :: AbstractNLPModel;
-               logger :: AbstractLogger=NullLogger(),
+               subsolver_logger :: AbstractLogger=NullLogger(),
                atol :: Float64=1.0e-8, rtol :: Float64=1.0e-6,
                max_f :: Int=0,
                max_time :: Float64=Inf,
                bk_max :: Int=10,
                monotone :: Bool=true,
-               nm_itmax :: Int=25)
+               nm_itmax :: Int=25,
+               kwargs...)
 
   start_time = time()
   elapsed_time = 0.0
@@ -59,10 +60,8 @@ function trunk(nlp :: AbstractNLPModel;
   stalled = false
   status = :unknown
 
-  with_logger(logger) do
-    @info @sprintf("%4s  %9s  %7s  %7s  %8s  %5s  %2s  %s",
-                   "Iter", "f", "‖∇f‖", "Radius", "Ratio", "Inner", "bk", "status")
-  end
+  @info @sprintf("%4s  %9s  %7s  %7s  %8s  %5s  %2s  %s",
+                 "Iter", "f", "‖∇f‖", "Radius", "Ratio", "Inner", "bk", "status")
   infoline = @sprintf("%4d  %9.2e  %7.1e  %7.1e  ",
                       iter, f, ∇fNorm2, get_property(tr, :radius))
 
@@ -74,7 +73,7 @@ function trunk(nlp :: AbstractNLPModel;
     # In this particular case, we may use an operator with preallocation.
     H = hess_op!(nlp, x, temp)
     cgtol = max(rtol, min(0.1, 0.9 * cgtol, sqrt(∇fNorm2)))
-    (s, cg_stats) = with_logger(NullLogger()) do
+    (s, cg_stats) = with_logger(subsolver_logger) do
       cg(H, -∇f,
          atol=atol, rtol=cgtol,
          radius=get_property(tr, :radius),
@@ -191,9 +190,7 @@ function trunk(nlp :: AbstractNLPModel;
     infoline *= @sprintf("%8.1e  %5d  %2d  %s",
                          get_property(tr, :ratio), length(cg_stats.residuals),
                          bk, cg_stats.status)
-    with_logger(logger) do
-      @info infoline
-    end
+    @info infoline
 
     # Move on.
     update!(tr, sNorm)
@@ -204,9 +201,7 @@ function trunk(nlp :: AbstractNLPModel;
     elapsed_time = time() - start_time
     tired = neval_obj(nlp) > max_f || elapsed_time > max_time
   end
-  with_logger(logger) do
-    @info infoline
-  end
+  @info infoline
 
   if optimal
     status = :first_order

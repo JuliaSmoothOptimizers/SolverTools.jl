@@ -16,7 +16,7 @@ Chih-Jen Lin and Jorge J. Moré, *Newton's Method for Large Bound-Constrained
 Optimization Problems*, SIAM J. Optim., 9(4), 1100–1127, 1999.
 """
 function tron(nlp :: AbstractNLPModel;
-              logger :: AbstractLogger=NullLogger(),
+              subsolver_logger :: AbstractLogger=NullLogger(),
               μ₀ :: Real=1e-2,
               μ₁ :: Real=1.0,
               σ :: Real=10.0,
@@ -27,7 +27,8 @@ function tron(nlp :: AbstractNLPModel;
               atol :: Real=1e-8,
               rtol :: Real=1e-6,
               fatol :: Real=0.0,
-              frtol :: Real=1e-12
+              frtol :: Real=1e-12,
+              kwargs...
              )
   ℓ = nlp.meta.lvar
   u = nlp.meta.uvar
@@ -63,12 +64,10 @@ function tron(nlp :: AbstractNLPModel;
 
   αC = 1.0
   tr = TRONTrustRegion(min(max(1.0, 0.1 * norm(πx)), 100))
-  with_logger(logger) do
-    @info @sprintf("%4s  %9s  %7s  %7s  %7s  %s",
-                   "Iter", "f", "π", "Radius", "Ratio", "CG-status")
-    @info @sprintf("%4d  %9.2e  %7.1e  %7.1e",
-                   iter, fx, πx, get_property(tr, :radius))
-  end
+  @info @sprintf("%4s  %9s  %7s  %7s  %7s  %s",
+                 "Iter", "f", "π", "Radius", "Ratio", "CG-status")
+  @info @sprintf("%4d  %9.2e  %7.1e  %7.1e",
+                 iter, fx, πx, get_property(tr, :radius))
   while !(optimal || tired || stalled || unbounded)
     # Current iteration
     xc .= x
@@ -84,7 +83,9 @@ function tron(nlp :: AbstractNLPModel;
       stalled = true
       continue
     end
-    s, Hs, cgits, cginfo = projected_newton!(x, H, gx, Δ, cgtol, s, ℓ, u, max_cgiter=max_cgiter)
+    s, Hs, cgits, cginfo = with_logger(subsolver_logger) do
+      projected_newton!(x, H, gx, Δ, cgtol, s, ℓ, u, max_cgiter=max_cgiter)
+    end
     slope = dot(gx, s)
     qs = 0.5 * dot(s, Hs) + slope
     fx = f(x)
@@ -126,10 +127,8 @@ function tron(nlp :: AbstractNLPModel;
     optimal = πx <= ϵ
     unbounded = fx < fmin
 
-    with_logger(logger) do
-      @info @sprintf("%4d  %9.2e  %7.1e  %7.1e  %7.1e  %s",
-                     iter, fx, πx, Δ, tr.ratio, cginfo)
-    end
+    @info @sprintf("%4d  %9.2e  %7.1e  %7.1e  %7.1e  %s",
+                   iter, fx, πx, Δ, tr.ratio, cginfo)
   end
 
   if tired
