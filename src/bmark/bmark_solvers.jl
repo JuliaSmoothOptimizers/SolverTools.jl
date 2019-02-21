@@ -1,4 +1,4 @@
-export bmark_solvers, profile_solvers, bmark_and_profile
+export bmark_solvers
 
 """
     bmark_solvers(solvers :: Vector{Function}, args...; kwargs...)
@@ -24,7 +24,3 @@ function bmark_solvers(solvers :: Dict{Symbol,Function}, args...;
   end
   return stats
 end
-
-
-profile_solvers(args...; kwargs...) = error("BenchmarkProfiles is required for profiles")
-bmark_and_profile(args...; kwargs...) = error("BenchmarkProfiles is required for profiles")
