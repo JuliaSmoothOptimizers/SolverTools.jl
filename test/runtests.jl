@@ -1,5 +1,5 @@
 # This package
-using Optimize
+using SolverTools
 
 # Auxiliary packages
 using NLPModels

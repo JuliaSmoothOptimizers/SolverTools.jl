@@ -1,4 +1,4 @@
-module Optimize
+module SolverTools
 
 # stdlib
 using LinearAlgebra, Logging, Printf

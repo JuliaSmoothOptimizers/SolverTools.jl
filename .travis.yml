@@ -19,22 +19,11 @@ notifications:
     on_success: never
     on_failure: change
 
-addons:
-  apt_packages:
-    - gfortran
-
 branches:
   only:
     - master
     - /^v\d+\.\d+(\.\d+)?(-\S*)?$/ # tags
 
-before_install:
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update && brew cask uninstall --force oclint && brew install gcc; brew tap optimizers/cutest; brew install cutest; brew install mastsif; for f in "archdefs" "sifdecode" "mastsif" "cutest"; do source $(brew --prefix $f)/$f.bashrc; done; fi
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then unset DYLD_LIBRARY_PATH; fi
-
-script:
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia -e 'using Pkg; Pkg.clone(pwd()); Pkg.build("Optimize"); Pkg.test("Optimize"; coverage=true)'
 
 after_success:
-  - julia -e 'using Pkg; cd(Pkg.dir("Optimize")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  - julia -e 'using Pkg; cd(Pkg.dir("SolverTools")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
