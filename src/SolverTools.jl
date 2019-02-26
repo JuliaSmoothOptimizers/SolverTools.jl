@@ -6,6 +6,9 @@ using LinearAlgebra, Logging, Printf
 # our packages
 using LinearOperators, NLPModels
 
+# auxiliary packages
+using DataFrames
+
 # Auxiliary.
 include("auxiliary/blas.jl")
 include("auxiliary/bounds.jl")
