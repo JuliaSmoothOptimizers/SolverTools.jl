@@ -1,6 +1,6 @@
 # Auxiliary function related to bound-constrainted problems
 
-export active, breakpoints, compute_Hs_slope_qs, project!, project_step!
+export active, breakpoints, compute_Hs_slope_qs!, project!, project_step!
 
 """`active(x, ℓ, u; rtol = 1e-8, atol = 1e-8)`
 

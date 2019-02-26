@@ -1,6 +1,6 @@
 # A trust-region type and basic utility functions.
 import NLPModels: reset!
-export TrustRegionException, acceptable, get_property, ratio, ratio!, reset!, update!
+export TrustRegionException, acceptable, aredpred, get_property, ratio, ratio!, reset!, set_property!, update!
 
 "Exception type raised in case of error."
 mutable struct TrustRegionException <: Exception
