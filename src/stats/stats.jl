@@ -22,6 +22,7 @@ mutable struct GenericExecutionStats <: AbstractExecutionStats
   solution :: Vector # x
   objective :: Real # f(x)
   dual_feas :: Real # ‖∇f(x)‖₂ for unc, ‖P[x - ∇f(x)] - x‖₂ for bnd, etc.
+  primal_feas :: Real # ‖c(x)‖ for equalities
   iter :: Int
   counters :: NLPModels.NLSCounters
   elapsed_time :: Real
@@ -30,9 +31,10 @@ end
 
 function GenericExecutionStats(status :: Symbol,
                                nlp :: AbstractNLPModel;
-                               solution :: Vector=Float64[],
-                               objective :: Real=Inf,
-                               dual_feas :: Real=Inf,
+                               solution :: Vector=eltype(nlp.meta.x0)[],
+                               objective :: Real=eltype(solution)(Inf),
+                               dual_feas :: Real=eltype(solution)(Inf),
+                               primal_feas :: Real=unconstrained(nlp) ? zero(eltype(solution)) : eltype(solution)(Inf),
                                iter :: Int=-1,
                                elapsed_time :: Real=Inf,
                                solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}()) where {T}
@@ -50,7 +52,7 @@ function GenericExecutionStats(status :: Symbol,
       setfield!(c, counter, eval(Meta.parse("$counter"))(nlp))
     end
   end
-  return GenericExecutionStats(status, solution, objective, dual_feas, iter,
+  return GenericExecutionStats(status, solution, objective, dual_feas, primal_feas, iter,
                         c, elapsed_time, solver_specific)
 end
 
