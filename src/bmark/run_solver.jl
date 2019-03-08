@@ -32,8 +32,8 @@ function solve_problems(solver :: Function, problems :: Any;
   f_counters = collect(fieldnames(Counters))
   fnls_counters = collect(fieldnames(NLSCounters))[2:end] # Excludes :counters
   ncounters = length(f_counters) + length(fnls_counters)
-  types = [Int; String;   Int;   Int;   Int;  Symbol;    Float64;       Float64;   Int;    Float64; fill(Int, ncounters); String]
-  names = [:id;  :name; :nvar; :ncon; :nequ; :status; :objective; :elapsed_time; :iter; :dual_feas; f_counters; fnls_counters; :extrainfo]
+  types = [Int; String;   Int;   Int;   Int;  Symbol;    Float64;       Float64;   Int;    Float64;      Float64; fill(Int, ncounters); String]
+  names = [:id;  :name; :nvar; :ncon; :nequ; :status; :objective; :elapsed_time; :iter; :dual_feas; :primal_feas; f_counters; fnls_counters; :extrainfo]
   stats = DataFrame(types, names, 0)
 
   specific = Symbol[]
@@ -46,7 +46,7 @@ function solve_problems(solver :: Function, problems :: Any;
     nequ = problem isa AbstractNLSModel ? problem.nls_meta.nequ : 0
     problem_info = [id; problem.meta.name; problem.meta.nvar; problem.meta.ncon; nequ]
     if skipif(problem)
-      prune || push!(stats, [problem_info; :exception; Inf; Inf; 0; Inf;
+      prune || push!(stats, [problem_info; :exception; Inf; Inf; 0; Inf; Inf;
                              fill(0, ncounters); "skipped"; fill(missing, length(specific))])
       finalize(problem)
       continue
@@ -62,12 +62,12 @@ function solve_problems(solver :: Function, problems :: Any;
         end
         first_problem = false
       end
-      push!(stats, [problem_info; s.status; s.objective; s.elapsed_time; s.iter; s.dual_feas;
+      push!(stats, [problem_info; s.status; s.objective; s.elapsed_time; s.iter; s.dual_feas; s.primal_feas;
                     [getfield(s.counters.counters, f) for f in f_counters];
                     [getfield(s.counters, f) for f in fnls_counters]; "";
                     [s.solver_specific[k] for k in specific]])
     catch e
-      push!(stats, [problem_info; :exception; Inf; Inf; 0; Inf;
+      push!(stats, [problem_info; :exception; Inf; Inf; 0; Inf; Inf;
                     fill(0, ncounters); string(e); fill(missing, length(specific))])
     finally
       finalize(problem)
