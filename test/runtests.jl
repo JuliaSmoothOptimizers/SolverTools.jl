@@ -5,6 +5,9 @@ using SolverTools
 using NLPModels
 
 # stdlib
-using LinearAlgebra, Test
+using LinearAlgebra, Logging, Test
+
+include("dummy_solver.jl")
 
 include("test_stats.jl")
+include("test_logging.jl")

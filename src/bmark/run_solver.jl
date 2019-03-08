@@ -24,7 +24,8 @@ Apply a solver to a set of problems.
 function solve_problems(solver :: Function, problems :: Any;
                         solver_logger :: AbstractLogger=NullLogger(),
                         skipif :: Function=x->false,
-                        colstats :: Array{Symbol,1} = [:name, :nvar, :ncon, :status],
+                        infocols :: Vector{Symbol} = [:name, :nvar, :ncon, :status, :elapsed_time, :objective, :dual_feas, :primal_feas],
+                        info_hdr_override :: Dict{Symbol,String} = Dict{Symbol,String}(),
                         prune :: Bool=true, kwargs...)
   nprobs = length(problems)
   solverstr = split(string(solver), ".")[end]
@@ -38,8 +39,7 @@ function solve_problems(solver :: Function, problems :: Any;
 
   specific = Symbol[]
 
-  # TODO: Improve logging after #74
-  @info join(string.(colstats), "  ")
+  local col_idx
 
   first_problem = true
   for (id,problem) in enumerate(problems)
@@ -49,30 +49,34 @@ function solve_problems(solver :: Function, problems :: Any;
       prune || push!(stats, [problem_info; :exception; Inf; Inf; 0; Inf; Inf;
                              fill(0, ncounters); "skipped"; fill(missing, length(specific))])
       finalize(problem)
-      continue
-    end
-    try
-      s = with_logger(solver_logger) do
-        solver(problem; kwargs...)
-      end
-      if first_problem
-        for (k,v) in s.solver_specific
-          insertcols!(stats, ncol(stats)+1, k => Array{Union{typeof(v),Missing},1}())
-          push!(specific, k)
+    else
+      try
+        s = with_logger(solver_logger) do
+          solver(problem; kwargs...)
         end
-        first_problem = false
+        if first_problem
+          for (k,v) in s.solver_specific
+            insertcols!(stats, ncol(stats)+1, k => Array{Union{typeof(v),Missing},1}())
+            push!(specific, k)
+          end
+
+          col_idx = indexin(infocols, names)
+          @info log_header(infocols, types[col_idx], hdr_override=info_hdr_override)
+
+          first_problem = false
+        end
+        push!(stats, [problem_info; s.status; s.objective; s.elapsed_time; s.iter; s.dual_feas; s.primal_feas
+                      [getfield(s.counters.counters, f) for f in f_counters];
+                      [getfield(s.counters, f) for f in fnls_counters]; "";
+                      [s.solver_specific[k] for k in specific]])
+      catch e
+        push!(stats, [problem_info; :exception; Inf; Inf; 0; Inf; Inf;
+                      fill(0, ncounters); string(e); fill(missing, length(specific))])
+      finally
+        finalize(problem)
       end
-      push!(stats, [problem_info; s.status; s.objective; s.elapsed_time; s.iter; s.dual_feas; s.primal_feas;
-                    [getfield(s.counters.counters, f) for f in f_counters];
-                    [getfield(s.counters, f) for f in fnls_counters]; "";
-                    [s.solver_specific[k] for k in specific]])
-    catch e
-      push!(stats, [problem_info; :exception; Inf; Inf; 0; Inf; Inf;
-                    fill(0, ncounters); string(e); fill(missing, length(specific))])
-    finally
-      finalize(problem)
     end
-    @info join(string.(Vector(stats[end,colstats])), "  ")
+    @info log_row(stats[end,col_idx])
   end
   return stats
 end
