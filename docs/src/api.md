@@ -9,6 +9,8 @@ Pages = ["api.md"]
 active
 breakpoints
 compute_Hs_slope_qs!
+log_header
+log_row
 project!
 project_step!
 ```
