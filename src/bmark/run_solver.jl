@@ -24,7 +24,7 @@ Apply a solver to a set of problems.
 function solve_problems(solver :: Function, problems :: Any;
                         solver_logger :: AbstractLogger=NullLogger(),
                         skipif :: Function=x->false,
-                        infocols :: Vector{Symbol} = [:name, :nvar, :ncon, :status, :elapsed_time, :objective, :dual_feas, :primal_feas],
+                        colstats :: Vector{Symbol} = [:name, :nvar, :ncon, :status, :elapsed_time, :objective, :dual_feas, :primal_feas],
                         info_hdr_override :: Dict{Symbol,String} = Dict{Symbol,String}(),
                         prune :: Bool=true, kwargs...)
   nprobs = length(problems)
@@ -60,8 +60,8 @@ function solve_problems(solver :: Function, problems :: Any;
             push!(specific, k)
           end
 
-          col_idx = indexin(infocols, names)
-          @info log_header(infocols, types[col_idx], hdr_override=info_hdr_override)
+          col_idx = indexin(colstats, names)
+          @info log_header(colstats, types[col_idx], hdr_override=info_hdr_override)
 
           first_problem = false
         end

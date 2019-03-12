@@ -3,8 +3,7 @@ function test_logging()
   push!(nlps, ADNLPModel(x -> dot(x, x), ones(2), c=x->[sum(x)-1], lcon=[0.0], ucon=[0.0], name="linquad"))
 
   @info "Testing logger"
-  log_header([:col_float, :col_int, :col_symbol, :col_string],
-             [Float64, Int, Symbol, String])
+  log_header([:col_float, :col_int, :col_symbol, :col_string], [Float64, Int, Symbol, String])
   log_row([1.0, 1, :one, "one"])
 
   with_logger(ConsoleLogger()) do
@@ -17,7 +16,7 @@ function test_logging()
     reset!.(nlps)
 
     @info "Testing logger with specific columns on `solve_problems`"
-    solve_problems(dummy_solver, nlps, infocols=[:name, :nvar, :elapsed_time, :objective, :dual_feas])
+    solve_problems(dummy_solver, nlps, colstats=[:name, :nvar, :elapsed_time, :objective, :dual_feas])
     reset!.(nlps)
 
     @info "Testing logger with hdr_override on `solve_problems`"
