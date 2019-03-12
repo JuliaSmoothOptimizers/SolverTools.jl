@@ -14,14 +14,13 @@ const default_headers = Dict{Symbol, String}(:name => "Name",
                                              :primal_feas => "Primal")
 
 for (typ, fmt) in formats
-  @eval begin
-    row_formatter(x :: $typ) = @sprintf($fmt, x)
-  end
-
   hdr_fmt_foo = Symbol("header_formatter_$typ")
   len = match(r"\%([0-9]*)", fmt)[1]
   fmt2 = "%$(len)s"
+
   @eval begin
+    row_formatter(x :: $typ) = @sprintf($fmt, x)
+
     $hdr_fmt_foo(x) = @sprintf($fmt2, x)
     header_formatter(x :: Union{Symbol,String}, :: Type{<:$typ}) = $hdr_fmt_foo(x)
   end
@@ -38,13 +37,15 @@ Input:
 - `colnames::Vector{Symbol}`: Column names.
 - `coltypes::Vector{DataType}`: Column types.
 
-Keyword argument:
+Keyword arguments:
 - `hdr_override::Dict{Symbol,String}`: Overrides the default headers.
+- `colsep::Int`: Number of spaces between columns (Default: 2)
 
 See also [`log_row`](@ref).
 """
 function log_header(colnames :: AbstractVector{Symbol}, coltypes :: AbstractVector{DataType};
                     hdr_override :: Dict{Symbol,String} = Dict{Symbol,String}(),
+                    colsep :: Int = 2,
                    )
   out = ""
   for (name, typ) in zip(colnames, coltypes)
@@ -55,7 +56,7 @@ function log_header(colnames :: AbstractVector{Symbol}, coltypes :: AbstractVect
     else
       string(name)
     end
-    out *= header_formatter(x, typ) * "  "
+    out *= header_formatter(x, typ) * " "^colsep
   end
   return out
 end
@@ -66,8 +67,11 @@ end
 Creates a table row from the values on `vals` according to their types. Pass the names
 and types of `vals` to [`log_header`](@ref) for a logging table. Uses internal formatting
 specification given by `SolverTools.formats`.
+
+Keyword arguments:
+- `colsep::Int`: Number of spaces between columns (Default: 2)
 """
-function log_row(vals)
+function log_row(vals; colsep :: Int = 2)
   string_cols = (row_formatter(val) for val in vals)
-  return join(string_cols, "  ")
+  return join(string_cols, " "^colsep)
 end

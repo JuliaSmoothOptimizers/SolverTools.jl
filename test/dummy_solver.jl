@@ -17,8 +17,7 @@ function dummy_solver(nlp :: AbstractNLPModel;
   α = one(T)
 
   iter = 0
-  @info log_header([:iter, :f, :c, :t],
-             [Int, T, T, Float64])
+  @info log_header([:iter, :f, :c, :t], [Int, T, T, Float64])
   @info log_row(Any[iter, fx, norm(cx), elapsed_time])
   tired = neval_obj(nlp) + neval_cons(nlp) > max_eval || elapsed_time > max_time
 
