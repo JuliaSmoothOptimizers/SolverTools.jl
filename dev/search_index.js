@@ -57,6 +57,22 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "api/#SolverTools.log_header",
+    "page": "API",
+    "title": "SolverTools.log_header",
+    "category": "function",
+    "text": "log_header(colnames, coltypes)\n\nCreates a header using the names in colnames formatted according to the types in coltypes. Uses internal formatting specification given by SolverTools.formats and default header translation given by SolverTools.default_headers.\n\nInput:\n\ncolnames::Vector{Symbol}: Column names.\ncoltypes::Vector{DataType}: Column types.\n\nKeyword arguments:\n\nhdr_override::Dict{Symbol,String}: Overrides the default headers.\ncolsep::Int: Number of spaces between columns (Default: 2)\n\nSee also log_row.\n\n\n\n\n\n"
+},
+
+{
+    "location": "api/#SolverTools.log_row",
+    "page": "API",
+    "title": "SolverTools.log_row",
+    "category": "function",
+    "text": "log_row(vals)\n\nCreates a table row from the values on vals according to their types. Pass the names and types of vals to log_header for a logging table. Uses internal formatting specification given by SolverTools.formats.\n\nKeyword arguments:\n\ncolsep::Int: Number of spaces between columns (Default: 2)\n\n\n\n\n\n"
+},
+
+{
     "location": "api/#SolverTools.project!",
     "page": "API",
     "title": "SolverTools.project!",
@@ -77,7 +93,7 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "Auxiliary",
     "category": "section",
-    "text": "active\nbreakpoints\ncompute_Hs_slope_qs!\nproject!\nproject_step!"
+    "text": "active\nbreakpoints\ncompute_Hs_slope_qs!\nlog_header\nlog_row\nproject!\nproject_step!"
 },
 
 {
