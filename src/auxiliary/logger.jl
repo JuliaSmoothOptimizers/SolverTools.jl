@@ -1,10 +1,10 @@
 export log_header, log_row
 
-const formats = Dict{DataType, String}(Signed => "%5d",
-                                       AbstractFloat => "%8.1e",
-                                       AbstractString => "%15s",
-                                       Symbol => "%15s",
-                                       Missing => "%15s"
+const formats = Dict{DataType, String}(Signed => "%-5d",
+                                       AbstractFloat => "%-8.1e",
+                                       AbstractString => "%-15s",
+                                       Symbol => "%-15s",
+                                       Missing => "%-15s"
                                       )
 
 const default_headers = Dict{Symbol, String}(:name => "Name",
@@ -15,8 +15,8 @@ const default_headers = Dict{Symbol, String}(:name => "Name",
 
 for (typ, fmt) in formats
   hdr_fmt_foo = Symbol("header_formatter_$typ")
-  len = match(r"\%([0-9]*)", fmt)[1]
-  fmt2 = "%$(len)s"
+  len = match(r"\%-([0-9]*)", fmt)[1]
+  fmt2 = "%-$(len)s"
 
   @eval begin
     row_formatter(x :: $typ) = @sprintf($fmt, x)
