@@ -17,6 +17,26 @@ const STATUSES = Dict(:unknown => "unknown",
 
 abstract type AbstractExecutionStats end
 
+"""
+    GenericExecutionStats(status, nlp; ...)
+
+A GenericExecutionStats is a struct for storing output information of solvers.
+It contains the following fields:
+- `status`: One of `SolverTools.STATUSES`, indicating the output of the solver;
+- `solution`: The final approximation returned by the solver (default: `[]`);
+- `objective`: The objective value at `solution` (default: `Inf`);
+- `dual_feas`: The dual feasibility norm at `solution` (default: `Inf`);
+- `primal_feas`: The primal feasibility norm at `solution` (default: `0.0` if uncontrained, `Inf` otherwise);
+- `iter`: The number of iterations computed by the solver (default: `-1`);
+- `elapsed_time`: The elapsed time computed by the solver (default: `Inf`);
+- `counters::NLPModels.NLSCounters`: The Internal structure storing the number of functions evaluations;
+- `solver_specific::Dict{Symbol,Any}`: A solver specific dictionary.
+
+The `counters` variable is a copy of `nlp`'s counters, and `status` is mandatory on construction.
+All other variables can be input as keyword arguments.
+
+Notice that `GenericExecutionStats` does not compute anything, it simply stores.
+"""
 mutable struct GenericExecutionStats <: AbstractExecutionStats
   status :: Symbol
   solution :: Vector # x
