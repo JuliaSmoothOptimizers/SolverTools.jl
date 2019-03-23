@@ -33,6 +33,12 @@ hess
 redirect!
 ```
 
+## Stats
+
+```@docs
+GenericExecutionStats
+```
+
 ## Trust-Region
 
 ```@docs
