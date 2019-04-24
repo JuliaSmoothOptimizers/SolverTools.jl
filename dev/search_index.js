@@ -177,6 +177,22 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "api/#SolverTools.GenericExecutionStats",
+    "page": "API",
+    "title": "SolverTools.GenericExecutionStats",
+    "category": "type",
+    "text": "GenericExecutionStats(status, nlp; ...)\n\nA GenericExecutionStats is a struct for storing output information of solvers. It contains the following fields:\n\nstatus: One of SolverTools.STATUSES, indicating the output of the solver;\nsolution: The final approximation returned by the solver (default: []);\nobjective: The objective value at solution (default: Inf);\ndual_feas: The dual feasibility norm at solution (default: Inf);\nprimal_feas: The primal feasibility norm at solution (default: 0.0 if uncontrained, Inf otherwise);\niter: The number of iterations computed by the solver (default: -1);\nelapsed_time: The elapsed time computed by the solver (default: Inf);\ncounters::NLPModels.NLSCounters: The Internal structure storing the number of functions evaluations;\nsolver_specific::Dict{Symbol,Any}: A solver specific dictionary.\n\nThe counters variable is a copy of nlp\'s counters, and status is mandatory on construction. All other variables can be input as keyword arguments.\n\nNotice that GenericExecutionStats does not compute anything, it simply stores.\n\n\n\n\n\n"
+},
+
+{
+    "location": "api/#Stats-1",
+    "page": "API",
+    "title": "Stats",
+    "category": "section",
+    "text": "GenericExecutionStats"
+},
+
+{
     "location": "api/#SolverTools.TrustRegionException",
     "page": "API",
     "title": "SolverTools.TrustRegionException",
