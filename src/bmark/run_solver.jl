@@ -39,7 +39,7 @@ function solve_problems(solver :: Function, problems :: Any;
 
   specific = Symbol[]
 
-  local col_idx
+  col_idx = indexin(colstats, names)
 
   first_problem = true
   for (id,problem) in enumerate(problems)
@@ -60,7 +60,6 @@ function solve_problems(solver :: Function, problems :: Any;
             push!(specific, k)
           end
 
-          col_idx = indexin(colstats, names)
           @info log_header(colstats, types[col_idx], hdr_override=info_hdr_override)
 
           first_problem = false
