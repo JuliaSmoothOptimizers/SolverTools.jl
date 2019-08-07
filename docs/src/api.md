@@ -37,6 +37,7 @@ redirect!
 
 ```@docs
 GenericExecutionStats
+show_statuses
 ```
 
 ## Trust-Region

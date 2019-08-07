@@ -1,20 +1,34 @@
 export AbstractExecutionStats, GenericExecutionStats, Printf,
-       statsgetfield, statshead, statsline, getStatus
+       statsgetfield, statshead, statsline, getStatus, show_statuses
 
-const STATUSES = Dict(:unknown => "unknown",
-                      :first_order => "first-order stationary",
-                      :infeasible => "problem may be infeasible",
-                      :max_eval => "maximum number of function evaluations",
-                      :max_time => "maximum elapsed time",
-                      :max_iter => "maximum iteration",
-                      :not_desc => "not a descent direction",
-                      :neg_pred => "negative predicted reduction",
-                      :small_step => "step too small",
-                      :unbounded => "objective function may be unbounded from below",
-                      :exception => "unhandled exception",
-                      :stalled => "stalled",
-                      :small_residual => "small residual"
-                     )
+const STATUSES = Dict(
+        :exception      => "unhandled exception",
+        :first_order    => "first-order stationary",
+        :infeasible     => "problem may be infeasible",
+        :max_eval       => "maximum number of function evaluations",
+        :max_iter       => "maximum iteration",
+        :max_time       => "maximum elapsed time",
+        :neg_pred       => "negative predicted reduction",
+        :not_desc       => "not a descent direction",
+        :small_residual => "small residual",
+        :small_step     => "step too small",
+        :stalled        => "stalled",
+        :unbounded      => "objective function may be unbounded from below",
+        :unknown        => "unknown",
+       )
+
+"""
+    show_statuses()
+
+Show the list of available statuses to use with `GenericExecutionStats`.
+"""
+function show_statuses()
+  println("STATUSES:")
+  for k in keys(STATUSES) |> collect |> sort
+    v = STATUSES[k]
+    @printf("  :%-14s => %s\n", k, v)
+  end
+end
 
 abstract type AbstractExecutionStats end
 
@@ -23,7 +37,7 @@ abstract type AbstractExecutionStats end
 
 A GenericExecutionStats is a struct for storing output information of solvers.
 It contains the following fields:
-- `status`: One of `SolverTools.STATUSES`, indicating the output of the solver;
+- `status`: Indicates the output of the solver. Use `show_statuses()` for the full list;
 - `solution`: The final approximation returned by the solver (default: `[]`);
 - `objective`: The objective value at `solution` (default: `Inf`);
 - `dual_feas`: The dual feasibility norm at `solution` (default: `Inf`);
