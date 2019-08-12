@@ -1,8 +1,8 @@
 # BLAS
 import LinearAlgebra: dot
-import LinearAlgebra.BLAS: nrm2, blascopy!, axpy!, scal!
+import LinearAlgebra.BLAS: nrm2, blascopy!, axpy!, axpby!, scal!
 
-export dot, nrm2, blascopy!, axpy!, scal!, copyaxpy!
+export dot, nrm2, blascopy!, axpy!, axpby!, scal!, copyaxpy!
 
 nrm2(n :: Int, x :: Vector{T}) where T <: BLAS.BlasReal = BLAS.nrm2(n, x, 1)
 nrm2(n :: Int, x :: AbstractVector{T}) where T <: Number = norm(x)

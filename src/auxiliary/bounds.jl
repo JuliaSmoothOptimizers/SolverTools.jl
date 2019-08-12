@@ -2,7 +2,8 @@
 
 export active, breakpoints, compute_Hs_slope_qs!, project!, project_step!
 
-"""`active(x, ℓ, u; rtol = 1e-8, atol = 1e-8)`
+"""
+    active(x, ℓ, u; rtol = 1e-8, atol = 1e-8)
 
 Computes the active bounds at x, using tolerance `min(rtol * (uᵢ-ℓᵢ), atol)`.
 If ℓᵢ or uᵢ is not finite, only `atol` is used.
@@ -55,7 +56,8 @@ function breakpoints(x::AbstractVector{T}, d::AbstractVector{T},
   return nbrk, brkmin, brkmax
 end
 
-"""`slope, qs = compute_Hs_slope_qs!(Hs, H, s, g)`
+"""
+    slope, qs = compute_Hs_slope_qs!(Hs, H, s, g)
 
 Computes
 
@@ -71,7 +73,8 @@ function compute_Hs_slope_qs!(Hs::AbstractVector{T}, H::Union{AbstractMatrix,Abs
   return slope, qs
 end
 
-"""`project!(y, x, ℓ, u)`
+"""
+    project!(y, x, ℓ, u)
 
 Projects `x` into bounds `ℓ` and `u`, in the sense of
 `yᵢ = max(ℓᵢ, min(xᵢ, uᵢ))`.
@@ -81,7 +84,8 @@ function project!(y :: AbstractVector{T}, x :: AbstractVector{T},
   y .= max.(ℓ, min.(x, u))
 end
 
-"""`project_step!(y, x, d, ℓ, u, α = 1.0)`
+"""
+    project_step!(y, x, d, ℓ, u, α = 1.0)
 
 Computes the projected direction `y = P(x + α * d) - x`.
 """
