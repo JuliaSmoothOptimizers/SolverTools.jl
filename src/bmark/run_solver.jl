@@ -27,7 +27,6 @@ function solve_problems(solver :: Function, problems :: Any;
                         colstats :: Vector{Symbol} = [:name, :nvar, :ncon, :status, :elapsed_time, :objective, :dual_feas, :primal_feas],
                         info_hdr_override :: Dict{Symbol,String} = Dict{Symbol,String}(),
                         prune :: Bool=true, kwargs...)
-  nprobs = length(problems)
   solverstr = split(string(solver), ".")[end]
 
   f_counters = collect(fieldnames(Counters))
@@ -56,7 +55,7 @@ function solve_problems(solver :: Function, problems :: Any;
         end
         if first_problem
           for (k,v) in s.solver_specific
-            insertcols!(stats, ncol(stats)+1, k => Array{Union{typeof(v),Missing},1}())
+            insertcols!(stats, ncol(stats)+1, k => Vector{Union{typeof(v),Missing}}())
             push!(specific, k)
           end
 
@@ -70,6 +69,7 @@ function solve_problems(solver :: Function, problems :: Any;
                       [getfield(s.counters, f) for f in fnls_counters]; "";
                       [s.solver_specific[k] for k in specific]])
       catch e
+        @error "caught exception" e
         push!(stats, [problem_info; :exception; Inf; Inf; 0; Inf; Inf;
                       fill(0, ncounters); string(e); fill(missing, length(specific))])
       finally
