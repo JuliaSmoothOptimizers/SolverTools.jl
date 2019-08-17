@@ -181,7 +181,15 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "SolverTools.GenericExecutionStats",
     "category": "type",
-    "text": "GenericExecutionStats(status, nlp; ...)\n\nA GenericExecutionStats is a struct for storing output information of solvers. It contains the following fields:\n\nstatus: One of SolverTools.STATUSES, indicating the output of the solver;\nsolution: The final approximation returned by the solver (default: []);\nobjective: The objective value at solution (default: Inf);\ndual_feas: The dual feasibility norm at solution (default: Inf);\nprimal_feas: The primal feasibility norm at solution (default: 0.0 if uncontrained, Inf otherwise);\niter: The number of iterations computed by the solver (default: -1);\nelapsed_time: The elapsed time computed by the solver (default: Inf);\ncounters::NLPModels.NLSCounters: The Internal structure storing the number of functions evaluations;\nsolver_specific::Dict{Symbol,Any}: A solver specific dictionary.\n\nThe counters variable is a copy of nlp\'s counters, and status is mandatory on construction. All other variables can be input as keyword arguments.\n\nNotice that GenericExecutionStats does not compute anything, it simply stores.\n\n\n\n\n\n"
+    "text": "GenericExecutionStats(status, nlp; ...)\n\nA GenericExecutionStats is a struct for storing output information of solvers. It contains the following fields:\n\nstatus: Indicates the output of the solver. Use show_statuses() for the full list;\nsolution: The final approximation returned by the solver (default: []);\nobjective: The objective value at solution (default: Inf);\ndual_feas: The dual feasibility norm at solution (default: Inf);\nprimal_feas: The primal feasibility norm at solution (default: 0.0 if uncontrained, Inf otherwise);\niter: The number of iterations computed by the solver (default: -1);\nelapsed_time: The elapsed time computed by the solver (default: Inf);\ncounters::NLPModels.NLSCounters: The Internal structure storing the number of functions evaluations;\nsolver_specific::Dict{Symbol,Any}: A solver specific dictionary.\n\nThe counters variable is a copy of nlp\'s counters, and status is mandatory on construction. All other variables can be input as keyword arguments.\n\nNotice that GenericExecutionStats does not compute anything, it simply stores.\n\n\n\n\n\n"
+},
+
+{
+    "location": "api/#SolverTools.show_statuses",
+    "page": "API",
+    "title": "SolverTools.show_statuses",
+    "category": "function",
+    "text": "show_statuses()\n\nShow the list of available statuses to use with GenericExecutionStats.\n\n\n\n\n\n"
 },
 
 {
@@ -189,7 +197,7 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "Stats",
     "category": "section",
-    "text": "GenericExecutionStats"
+    "text": "GenericExecutionStats\nshow_statuses"
 },
 
 {
