@@ -3,6 +3,7 @@ export AbstractExecutionStats, GenericExecutionStats, Printf,
 
 const STATUSES = Dict(:unknown => "unknown",
                       :first_order => "first-order stationary",
+                      :infeasible => "problem may be infeasible",
                       :max_eval => "maximum number of function evaluations",
                       :max_time => "maximum elapsed time",
                       :max_iter => "maximum iteration",
