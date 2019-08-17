@@ -13,7 +13,6 @@ const STATUSES = Dict(:unknown => "unknown",
                       :unbounded => "objective function may be unbounded from below",
                       :exception => "unhandled exception",
                       :stalled => "stalled",
-                      :infeasible => "infeasible point",
                       :small_residual => "small residual"
                      )
 
