@@ -80,12 +80,13 @@ function print(io :: IO, stats :: GenericExecutionStats; showvec :: Function=dis
   @printf(io, "Generic Execution stats\n")
   @printf(io, "  status: "); show(io, getStatus(stats)); @printf(io, "\n")
   @printf(io, "  objective value: "); show(io, stats.objective); @printf(io, "\n")
+  @printf(io, "  primal feasibility: "); show(io, stats.primal_feas); @printf(io, "\n")
   @printf(io, "  dual feasibility: "); show(io, stats.dual_feas); @printf(io, "\n")
   @printf(io, "  solution: "); showvec(io, stats.solution); @printf(io, "\n")
   @printf(io, "  iterations: "); show(io, stats.iter); @printf(io, "\n")
   @printf(io, "  elapsed time: "); show(io, stats.elapsed_time); @printf(io, "\n")
   if length(stats.solver_specific) > 0
-    @printf(io, "  solver specifics:\n")
+    @printf(io, "  solver specific:\n")
     for (k,v) in stats.solver_specific
       @printf(io, "    %s: ", k)
       if isa(v, Vector)
