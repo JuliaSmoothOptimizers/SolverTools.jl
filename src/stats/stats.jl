@@ -4,6 +4,7 @@ export AbstractExecutionStats, GenericExecutionStats, Printf,
 const STATUSES = Dict(
         :exception      => "unhandled exception",
         :first_order    => "first-order stationary",
+        :acceptable     => "solved to within acceptable tolerances",
         :infeasible     => "problem may be infeasible",
         :max_eval       => "maximum number of function evaluations",
         :max_iter       => "maximum iteration",
@@ -15,6 +16,7 @@ const STATUSES = Dict(
         :stalled        => "stalled",
         :unbounded      => "objective function may be unbounded from below",
         :unknown        => "unknown",
+        :user           => "user-requested stop",
        )
 
 """
