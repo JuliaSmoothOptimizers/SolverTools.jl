@@ -21,12 +21,12 @@ Apply a solver to a set of problems.
 #### Return value
 * a `DataFrame` where each row is a problem, minus the skipped ones if `prune` is true.
 """
-function solve_problems(solver :: Function, problems :: Any;
+function solve_problems(solver :: F, problems :: Any;
                         solver_logger :: AbstractLogger=NullLogger(),
                         skipif :: Function=x->false,
                         colstats :: Vector{Symbol} = [:name, :nvar, :ncon, :status, :elapsed_time, :objective, :dual_feas, :primal_feas],
                         info_hdr_override :: Dict{Symbol,String} = Dict{Symbol,String}(),
-                        prune :: Bool=true, kwargs...)
+                        prune :: Bool=true, kwargs...) where F <: Function
   solverstr = split(string(solver), ".")[end]
 
   f_counters = collect(fieldnames(Counters))
