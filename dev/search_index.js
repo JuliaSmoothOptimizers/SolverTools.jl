@@ -101,7 +101,7 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "SolverTools.bmark_solvers",
     "category": "function",
-    "text": "bmark_solvers(solvers :: Vector{Function}, args...; kwargs...)\n\nRun a set of solvers on a set of problems.\n\nArguments\n\nsolvers: a vector of solvers to which each problem should be passed\nother positional arguments accepted by solve_problems(), except for a solver name\n\nKeyword arguments\n\nAny keyword argument accepted by solve_problems()\n\nReturn value\n\nA Dict{Symbol, AbstractExecutionStats} of statistics.\n\n\n\n\n\n"
+    "text": "bmark_solvers(solvers :: Dict{Symbol,Any}, args...; kwargs...)\n\nRun a set of solvers on a set of problems.\n\nArguments\n\nsolvers: a dictionary of solvers to which each problem should be passed\nother positional arguments accepted by solve_problems(), except for a solver name\n\nKeyword arguments\n\nAny keyword argument accepted by solve_problems()\n\nReturn value\n\nA Dict{Symbol, AbstractExecutionStats} of statistics.\n\n\n\n\n\n"
 },
 
 {
@@ -109,7 +109,7 @@ var documenterSearchIndex = {"docs": [
     "page": "API",
     "title": "SolverTools.solve_problems",
     "category": "function",
-    "text": "solve_problems(solver :: Function, problems :: Any; kwargs...)\n\nApply a solver to a set of problems.\n\nArguments\n\nsolver: the function name of a solver\nproblems: the set of problems to pass to the solver, as an iterable of AbstractNLPModel.  It is recommended to use a generator expression (necessary for CUTEst problems).\n\nKeyword arguments\n\nsolver_logger::AbstractLogger: logger wrapping the solver call. (default: NullLogger).\nskipif::Function: function to be applied to a problem and return whether to skip it (default: x->false)\nprune: do not include skipped problems in the final statistics (default: true)\nany other keyword argument to be passed to the solver\n\nReturn value\n\na DataFrame where each row is a problem, minus the skipped ones if prune is true.\n\n\n\n\n\n"
+    "text": "solve_problems(solver, problems :: Any; kwargs...)\n\nApply a solver to a set of problems.\n\nArguments\n\nsolver: the function name of a solver\nproblems: the set of problems to pass to the solver, as an iterable of AbstractNLPModel.  It is recommended to use a generator expression (necessary for CUTEst problems).\n\nKeyword arguments\n\nsolver_logger::AbstractLogger: logger wrapping the solver call. (default: NullLogger).\nskipif::Function: function to be applied to a problem and return whether to skip it (default: x->false)\nprune: do not include skipped problems in the final statistics (default: true)\nany other keyword argument to be passed to the solver\n\nReturn value\n\na DataFrame where each row is a problem, minus the skipped ones if prune is true.\n\n\n\n\n\n"
 },
 
 {
