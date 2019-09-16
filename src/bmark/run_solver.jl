@@ -23,6 +23,7 @@ Apply a solver to a set of problems.
 """
 function solve_problems(solver, problems :: Any;
                         solver_logger :: AbstractLogger=NullLogger(),
+                        reset_problem :: Bool = true,
                         skipif :: Function=x->false,
                         colstats :: Vector{Symbol} = [:name, :nvar, :ncon, :status, :elapsed_time, :objective, :dual_feas, :primal_feas],
                         info_hdr_override :: Dict{Symbol,String} = Dict{Symbol,String}(),
@@ -42,6 +43,9 @@ function solve_problems(solver, problems :: Any;
 
   first_problem = true
   for (id,problem) in enumerate(problems)
+    if reset_problem
+      reset!(problem)
+    end
     nequ = problem isa AbstractNLSModel ? problem.nls_meta.nequ : 0
     problem_info = [id; problem.meta.name; problem.meta.nvar; problem.meta.ncon; nequ]
     if skipif(problem)
