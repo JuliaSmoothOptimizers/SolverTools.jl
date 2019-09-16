@@ -1,6 +1,6 @@
 name = "SolverTools"
 uuid = "b5612192-2639-5dc1-abfe-fbedd65fab29"
-version = "0.1.4"
+version = "0.1.5"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
