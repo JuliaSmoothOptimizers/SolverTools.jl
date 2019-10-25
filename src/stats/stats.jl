@@ -118,7 +118,6 @@ function print(io :: IO, stats :: GenericExecutionStats; showvec :: Function=dis
   @printf(io, "  objective value: "); show(io, stats.objective); @printf(io, "\n")
   @printf(io, "  primal feasibility: "); show(io, stats.primal_feas); @printf(io, "\n")
   @printf(io, "  dual feasibility: "); show(io, stats.dual_feas); @printf(io, "\n")
-  @printf(io, "  primal feasibility: "); show(io, stats.primal_feas); @printf(io, "\n")
   @printf(io, "  solution: "); showvec(io, stats.solution); @printf(io, "\n")
   @printf(io, "  iterations: "); show(io, stats.iter); @printf(io, "\n")
   @printf(io, "  elapsed time: "); show(io, stats.elapsed_time); @printf(io, "\n")
