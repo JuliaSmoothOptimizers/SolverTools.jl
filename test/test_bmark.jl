@@ -13,8 +13,8 @@ function test_bmark()
     callable = CallableSolver()
     stats = solve_problems(dummy_solver, problems)
     @test stats isa DataFrame
-    stats = solve_problems(dummy_solver, problems, reset_solver=false)
-    stats = solve_problems(dummy_solver, problems, reset_solver=true)
+    stats = solve_problems(dummy_solver, problems, reset_problem=false)
+    stats = solve_problems(dummy_solver, problems, reset_problem=true)
 
     solve_problems(callable, problems)
 
