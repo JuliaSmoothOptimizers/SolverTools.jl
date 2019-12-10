@@ -31,6 +31,7 @@ grad
 grad!
 hess
 redirect!
+armijo_wolfe
 ```
 
 ## Stats

@@ -1,5 +1,36 @@
 export armijo_wolfe
 
+"""
+    t, good_grad, ht, nbk, nbW = armijo_wolfe(h, h₀, slope, g)
+
+Performs a line search among the `LineModel` ``h(t) = f(x + t d)``, where
+`h₀ = h(0.0) = f(x)`, `slope = h'(0.0) = ∇f(x)ᵀd` and `g` is a which will be
+overwritten with the gradient at various points. On exit, if `good_grad=true`,
+`g` contains the gradient at the returned step length.
+The steplength is chosen to satisfy the Armijo and Wolfe conditions. The Armijo condition is
+```math
+h(t) ≤ h₀ + τ₀ t slope
+```
+and the Wolfe condition is
+```math
+h'(t) ≤ τ₁ slope.
+```
+
+The output is the following:
+- t: the step length;
+- good_grad: whether `g` is the gradient at `t`;
+- ht: the model at `t`, i.e., `f(x + t * d)`;
+- nbk: the number of times the steplength was decreased to satisfy the Armijo condition, i.e., number of backtracks;
+- nbW: the number of times the steplength was increased to satisfy the Wolfe condition.
+
+The following keyword arguments can be provided:
+- `t`: starting steplength (default `1`);
+- `τ₀`: acceptance argument in the Armijo condition (default `max(1e-4, √ϵₘ)`);
+- `τ₁`: acceptance argument in the Wolfe condition (default `0.9999`):
+- `bk_max`: maximum number of backtracks (default `10`);
+- `bW_max`: maximum number of increases (default `5`);
+- `verbose`: whether to print information (default `false`).
+"""
 function armijo_wolfe(h :: LineModel,
                       h₀ :: T,
                       slope :: T,
@@ -8,7 +39,7 @@ function armijo_wolfe(h :: LineModel,
                       τ₀ :: T=max(T(1.0e-4), sqrt(eps(T))),
                       τ₁ :: T=T(0.9999),
                       bk_max :: Int=10,
-                      nbWM :: Int=5,
+                      bW_max :: Int=5,
                       verbose :: Bool=false) where T <: AbstractFloat
 
   # Perform improved Armijo linesearch.
@@ -18,7 +49,7 @@ function armijo_wolfe(h :: LineModel,
   # First try to increase t to satisfy loose Wolfe condition
   ht = obj(h, t)
   slope_t = grad!(h, t, g)
-  while (slope_t < τ₁*slope) && (ht <= h₀ + τ₀ * t * slope) && (nbW < nbWM)
+  while (slope_t < τ₁*slope) && (ht <= h₀ + τ₀ * t * slope) && (nbW < bW_max)
     t *= 5
     ht = obj(h, t)
     slope_t = grad!(h, t, g)
