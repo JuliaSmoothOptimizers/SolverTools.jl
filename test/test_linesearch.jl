@@ -9,10 +9,10 @@
     @test obj(lm, 0.0) == obj(nlp, x)
     @test grad(lm, 0.0) == dot(grad(nlp, x), d)
     @test grad!(lm, 0.0, g) == dot(grad(nlp, x), d)
-    @test g == grad(nlp, nlp.meta.x0)
+    @test g == grad(nlp, x)
     @test derivative(lm, 0.0) == dot(grad(nlp, x), d)
     @test derivative!(lm, 0.0, g) == dot(grad(nlp, x), d)
-    @test g == grad(nlp, nlp.meta.x0)
+    @test g == grad(nlp, x)
     @test hess(lm, 0.0) == dot(d, Symmetric(hess(nlp, x), :L) * d)
 
     @test obj(lm,  1.0) == 0.0
