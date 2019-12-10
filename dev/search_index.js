@@ -169,11 +169,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "api/#SolverTools.armijo_wolfe",
+    "page": "API",
+    "title": "SolverTools.armijo_wolfe",
+    "category": "function",
+    "text": "t, good_grad, ht, nbk, nbW = armijo_wolfe(h, h₀, slope, g)\n\nPerforms a line search from x along the direction d as defined by the LineModel h(t) = f(x + t d), where h₀ = h(0) = f(x), slope = h\'(0) = ∇f(x)ᵀd and g is a vector that will be overwritten with the gradient at various points. On exit, if good_grad=true, g contains the gradient at the final step length. The steplength is chosen trying to satisfy the Armijo and Wolfe conditions. The Armijo condition is\n\nh(t)  h₀ + τ₀ t h(0)\n\nand the Wolfe condition is\n\nh(t)  τ₁ h(0)\n\nInitially the step is increased trying to satisfy the Wolfe condition. Afterwards, only backtracking is performed in order to try to satisfy the Armijo condition. The final steplength may only satisfy Armijo\'s condition.\n\nThe output is the following:\n\nt: the step length;\ngood_grad: whether g is the gradient at x + t * d;\nht: the model value at t, i.e., f(x + t * d);\nnbk: the number of times the steplength was decreased to satisfy the Armijo condition, i.e., number of backtracks;\nnbW: the number of times the steplength was increased to satisfy the Wolfe condition.\n\nThe following keyword arguments can be provided:\n\nt: starting steplength (default 1);\nτ₀: slope factor in the Armijo condition (default max(1e-4, √ϵₘ));\nτ₁: slope factor in the Wolfe condition. It should satisfy τ₁ > τ₀ (default 0.9999);\nbk_max: maximum number of backtracks (default 10);\nbW_max: maximum number of increases (default 5);\nverbose: whether to print information (default false).\n\n\n\n\n\n"
+},
+
+{
     "location": "api/#Line-Search-1",
     "page": "API",
     "title": "Line-Search",
     "category": "section",
-    "text": "LineModel\nobj\ngrad\ngrad!\nhess\nredirect!"
+    "text": "LineModel\nobj\ngrad\ngrad!\nhess\nredirect!\narmijo_wolfe"
 },
 
 {
