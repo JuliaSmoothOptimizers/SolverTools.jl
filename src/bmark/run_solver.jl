@@ -48,7 +48,8 @@ function solve_problems(solver, problems :: Any;
     end
     nequ = problem isa AbstractNLSModel ? problem.nls_meta.nequ : 0
     problem_info = [id; problem.meta.name; problem.meta.nvar; problem.meta.ncon; nequ]
-    if skipif(problem)
+    skipthis = skipif(problem)
+    if skipthis
       prune || push!(stats, [problem_info; :exception; Inf; Inf; 0; Inf; Inf;
                              fill(0, ncounters); "skipped"; fill(missing, length(specific))])
       finalize(problem)
@@ -79,7 +80,7 @@ function solve_problems(solver, problems :: Any;
         finalize(problem)
       end
     end
-    @info log_row(stats[end,col_idx])
+    (skipthis && prune) || @info log_row(stats[end,col_idx])
   end
   return stats
 end
