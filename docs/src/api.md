@@ -17,9 +17,20 @@ project_step!
 
 ## Benchmarking
 
+### Main Benchmarking Functions
+
 ```@docs
 bmark_solvers
 solve_problems
+```
+
+### Utilities
+
+```@docs
+save_stats
+load_stats
+count_unique
+quick_summary
 ```
 
 ## Line-Search
