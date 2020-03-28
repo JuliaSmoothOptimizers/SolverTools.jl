@@ -24,6 +24,21 @@ function test_bmark()
     for k in keys(solvers)
       @test haskey(stats, k)
     end
+
+    # write stats to file
+    filename = tempname()
+    save_stats(stats, filename)
+
+    # read stats from file
+    stats2 = load_stats(filename)
+
+    # check that they are the same
+    for k ∈ keys(stats)
+      @test k ∈ keys(stats2)
+      @test stats[k] == stats2[k]
+    end
+
+    statuses, avgs = quick_summary(stats)
   end
 end
 
