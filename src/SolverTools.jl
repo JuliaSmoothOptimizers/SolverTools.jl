@@ -7,7 +7,7 @@ using LinearAlgebra, Logging, Printf
 using LinearOperators, NLPModels
 
 # auxiliary packages
-using DataFrames
+using DataFrames, JLD2
 
 # Auxiliary.
 include("auxiliary/blas.jl")
@@ -21,6 +21,7 @@ include("trust-region/trust-region.jl")
 
 # Utilities.
 include("bmark/bmark_solvers.jl")
+include("bmark/bmark_utils.jl")
 include("bmark/run_solver.jl")
 
 end
