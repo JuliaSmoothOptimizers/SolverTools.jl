@@ -102,35 +102,35 @@ end
 # TODO: Expose NLPModels dsp in nlp_types.jl function print
 function disp_vector(io :: IO, x :: Vector)
   if length(x) == 0
-    @printf(io, "∅")
+    print(io, "∅")
   elseif length(x) <= 5
     Base.show_delim_array(io, x, "[", " ", "]", false)
   else
     Base.show_delim_array(io, x[1:4], "[", " ", "", false)
-    @printf(io, " ⋯ %s]", x[end])
+    print(io, " ⋯ $(x[end])]")
   end
 end
 
 function print(io :: IO, stats :: GenericExecutionStats; showvec :: Function=disp_vector)
   # TODO: Show evaluations
-  @printf(io, "Generic Execution stats\n")
-  @printf(io, "  status: "); show(io, getStatus(stats)); @printf(io, "\n")
-  @printf(io, "  objective value: "); show(io, stats.objective); @printf(io, "\n")
-  @printf(io, "  primal feasibility: "); show(io, stats.primal_feas); @printf(io, "\n")
-  @printf(io, "  dual feasibility: "); show(io, stats.dual_feas); @printf(io, "\n")
-  @printf(io, "  solution: "); showvec(io, stats.solution); @printf(io, "\n")
-  @printf(io, "  iterations: "); show(io, stats.iter); @printf(io, "\n")
-  @printf(io, "  elapsed time: "); show(io, stats.elapsed_time); @printf(io, "\n")
+  println(io, "Generic Execution stats")
+  println(io, "  status: " * getStatus(stats))
+  println(io, "  objective value: ", stats.objective)
+  println(io, "  primal feasibility: ", stats.primal_feas)
+  println(io, "  dual feasibility: ", stats.dual_feas)
+  print(io, "  solution: "); showvec(io, stats.solution); println(io, "")
+  println(io, "  iterations: ", stats.iter)
+  println(io, "  elapsed time: ", stats.elapsed_time)
   if length(stats.solver_specific) > 0
-    @printf(io, "  solver specific:\n")
+    println(io, "  solver specific:")
     for (k,v) in stats.solver_specific
-      @printf(io, "    %s: ", k)
-      if isa(v, Vector)
+      print(io, "    %s: ", k)
+      if v isa Vector
         showvec(io, v)
       else
         show(io, v)
       end
-      @printf(io, "\n")
+      println(io, "")
     end
   end
 end
