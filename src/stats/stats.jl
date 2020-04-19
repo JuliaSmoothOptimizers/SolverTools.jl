@@ -124,7 +124,7 @@ function print(io :: IO, stats :: GenericExecutionStats; showvec :: Function=dis
   if length(stats.solver_specific) > 0
     println(io, "  solver specific:")
     for (k,v) in stats.solver_specific
-      print(io, "    %s: ", k)
+      @printf(io, "    %s: ", k)
       if v isa Vector
         showvec(io, v)
       else
