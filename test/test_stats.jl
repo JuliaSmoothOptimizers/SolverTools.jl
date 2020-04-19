@@ -64,6 +64,9 @@ function test_stats()
       @test typeof(stats.dual_feas) == T
       @test typeof(stats.primal_feas) == T
       @test eltype(stats.solution) == T
+      @test eltype(stats.multipliers) == T
+      @test eltype(stats.multipliers_L) == T
+      @test eltype(stats.multipliers_U) == T
 
       nlp = ADNLPModel(x->dot(x, x), ones(T, 2), c=x->[sum(x)-1], lcon=[0.0], ucon=[0.0])
 
@@ -74,6 +77,9 @@ function test_stats()
       @test typeof(stats.dual_feas) == T
       @test typeof(stats.primal_feas) == T
       @test eltype(stats.solution) == T
+      @test eltype(stats.multipliers) == T
+      @test eltype(stats.multipliers_L) == T
+      @test eltype(stats.multipliers_U) == T
     end
   end
 end
