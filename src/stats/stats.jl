@@ -1,4 +1,4 @@
-export AbstractExecutionStats, GenericExecutionStats, Printf,
+export AbstractExecutionStats, GenericExecutionStats,
        statsgetfield, statshead, statsline, getStatus, show_statuses
 
 const STATUSES = Dict(
