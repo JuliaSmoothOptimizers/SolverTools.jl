@@ -44,6 +44,9 @@ It contains the following fields:
 - `objective`: The objective value at `solution` (default: `Inf`);
 - `dual_feas`: The dual feasibility norm at `solution` (default: `Inf`);
 - `primal_feas`: The primal feasibility norm at `solution` (default: `0.0` if uncontrained, `Inf` otherwise);
+- `multipliers`: The Lagrange multiplers wrt to the constraints (default: `[]`);
+- `multipliers_L`: The Lagrange multiplers wrt to the lower bounds on the variables (default: `[]`);
+- `multipliers_U`: The Lagrange multiplers wrt to the upper bounds on the variables (default: `[]`);
 - `iter`: The number of iterations computed by the solver (default: `-1`);
 - `elapsed_time`: The elapsed time computed by the solver (default: `Inf`);
 - `counters::NLPModels.NLSCounters`: The Internal structure storing the number of functions evaluations;
@@ -60,6 +63,9 @@ mutable struct GenericExecutionStats <: AbstractExecutionStats
   objective :: Real # f(x)
   dual_feas :: Real # ‖∇f(x)‖₂ for unc, ‖P[x - ∇f(x)] - x‖₂ for bnd, etc.
   primal_feas :: Real # ‖c(x)‖ for equalities
+  multipliers :: Vector # y
+  multipliers_L :: Vector # zL
+  multipliers_U :: Vector # zU
   iter :: Int
   counters :: NLPModels.NLSCounters
   elapsed_time :: Real
@@ -71,7 +77,10 @@ function GenericExecutionStats(status :: Symbol,
                                solution :: Vector=eltype(nlp.meta.x0)[],
                                objective :: Real=eltype(solution)(Inf),
                                dual_feas :: Real=eltype(solution)(Inf),
-                               primal_feas :: Real=unconstrained(nlp) ? zero(eltype(solution)) : eltype(solution)(Inf),
+                               primal_feas :: Real=unconstrained(nlp) || bound_constrained(nlp) ? zero(eltype(solution)) : eltype(solution)(Inf),
+                               multipliers :: Vector=eltype(nlp.meta.x0)[],
+                               multipliers_L :: Vector=eltype(nlp.meta.x0)[],
+                               multipliers_U :: Vector=eltype(nlp.meta.x0)[],
                                iter :: Int=-1,
                                elapsed_time :: Real=Inf,
                                solver_specific :: Dict{Symbol,T}=Dict{Symbol,Any}()) where {T}
@@ -89,8 +98,9 @@ function GenericExecutionStats(status :: Symbol,
       setfield!(c, counter, eval(Meta.parse("$counter"))(nlp))
     end
   end
-  return GenericExecutionStats(status, solution, objective, dual_feas, primal_feas, iter,
-                        c, elapsed_time, solver_specific)
+  return GenericExecutionStats(status, solution, objective, dual_feas, primal_feas,
+                               multipliers, multipliers_L, multipliers_U, iter,
+                               c, elapsed_time, solver_specific)
 end
 
 import Base.show, Base.print, Base.println
@@ -119,6 +129,9 @@ function print(io :: IO, stats :: GenericExecutionStats; showvec :: Function=dis
   println(io, "  primal feasibility: ", stats.primal_feas)
   println(io, "  dual feasibility: ", stats.dual_feas)
   print(io, "  solution: "); showvec(io, stats.solution); println(io, "")
+  length(stats.multipliers) > 0 && (print(io, "  multipliers: "); showvec(io, stats.multipliers); println(io, ""))
+  length(stats.multipliers_L) > 0 && (print(io, "  multipliers_L: "); showvec(io, stats.multipliers_L); println(io, ""))
+  length(stats.multipliers_U) > 0 && (print(io, "  multipliers_U: "); showvec(io, stats.multipliers_U); println(io, ""))
   println(io, "  iterations: ", stats.iter)
   println(io, "  elapsed time: ", stats.elapsed_time)
   if length(stats.solver_specific) > 0
