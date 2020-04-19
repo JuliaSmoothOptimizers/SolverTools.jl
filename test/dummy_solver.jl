@@ -12,38 +12,57 @@ function dummy_solver(nlp :: AbstractNLPModel;
   nvar, ncon = nlp.meta.nvar, nlp.meta.ncon
   T = eltype(x)
 
-  fx = obj(nlp, x)
-  cx = ncon > 0 ? cons(nlp, x) : zeros(T)
-  α = one(T)
+  cx = ncon > 0 ? cons(nlp, x) : zeros(T, 0)
+  gx = grad(nlp, x)
+  Jx = ncon > 0 ? jac(nlp, x) : zeros(T, 0, nvar)
+  y = -Jx' \ gx
+  Hxy = ncon > 0 ? hess(nlp, x, y) : hess(nlp, x)
+
+  dual = gx + Jx' * y
 
   iter = 0
-  @info log_header([:iter, :f, :c, :t], [Int, T, T, Float64])
-  @info log_row(Any[iter, fx, norm(cx), elapsed_time])
+
+  ϵd = atol + rtol * norm(dual)
+  ϵp = atol
+
+  fx = obj(nlp, x)
+  @info log_header([:iter, :f, :c, :dual, :t], [Int, T, T, Float64])
+  @info log_row(Any[iter, fx, norm(cx), norm(dual), elapsed_time])
+  solved = norm(dual) < ϵd && norm(cx) < ϵp
   tired = neval_obj(nlp) + neval_cons(nlp) > max_eval || elapsed_time > max_time
 
-  while !tired
-    xt = x + α * convert.(T, randn(nvar))
-    ft = obj(nlp, xt)
-    ct = ncon > 0 ? cons(nlp, xt) : zeros(T)
-    if ft < fx && norm(ct) ≤ norm(cx)
-      x .= xt
-      fx = ft
-      cx .= ct
-    else
-      α = 9α / 10
-    end
+  while !(solved || tired)
+    Hxy = ncon > 0 ? hess(nlp, x, y) : hess(nlp, x)
+    W = Symmetric([Hxy  zeros(T, nvar, ncon); Jx  zeros(T, ncon, ncon)], :L)
+    Δxy = -W \ [dual; cx]
+    Δx = Δxy[1:nvar]
+    Δy = Δxy[nvar+1:end]
+    x += Δx
+    y += Δy
+
+    cx = ncon > 0 ? cons(nlp, x) : zeros(T, 0)
+    gx = grad(nlp, x)
+    Jx = ncon > 0 ? jac(nlp, x) : zeros(T, 0, nvar)
+    dual = gx + Jx' * y
+    elapsed_time = time() - start_time
+    solved = norm(dual) < ϵd && norm(cx) < ϵp
+    tired = neval_obj(nlp) + neval_cons(nlp) > max_eval || elapsed_time > max_time
 
     iter += 1
-    elapsed_time = time() - start_time
-    tired = neval_obj(nlp) + neval_cons(nlp) > max_eval || elapsed_time > max_time
-    @info log_row(Any[iter, fx, norm(cx), elapsed_time])
+    fx = obj(nlp, x)
+    @info log_row(Any[iter, fx, norm(cx), norm(dual), elapsed_time])
+  end
+
+  status = if solved
+    :first_order
+  elseif elapsed_time > max_time
+    :max_time
+  else
+    :max_eval
   end
 
   return GenericExecutionStats(:unknown, nlp,
-                               objective=fx,
-                               dual_feas=norm(grad(nlp, x)),
-                               primal_feas=norm(cx),
-                               elapsed_time=elapsed_time,
-                               solution=x,
+                               objective=fx, dual_feas=norm(dual), primal_feas=norm(cx),
+                               elapsed_time=elapsed_time, solution=x, iter=iter
                               )
 end
