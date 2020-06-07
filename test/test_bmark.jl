@@ -10,8 +10,8 @@ end
 function test_bmark()
   @testset "Testing bmark" begin
     problems = [ADNLPModel(x -> sum(x.^2), ones(2), name="Quadratic"),
-                ADNLPModel(x -> sum(x.^2), ones(2), c=x->[sum(x)-1], lcon=[0.0], ucon=[0.0], name="Cons quadratic"),
-                ADNLPModel(x -> (x[1] - 1)^2 + 4 * (x[2] - x[1]^2)^2, ones(2), c=x->[x[1]^2 + x[2]^2 - 1], lcon=[0.0], ucon=[0.0], name="Cons Rosen")]
+                ADNLPModel(x -> sum(x.^2), ones(2), x->[sum(x)-1], [0.0], [0.0], name="Cons quadratic"),
+                ADNLPModel(x -> (x[1] - 1)^2 + 4 * (x[2] - x[1]^2)^2, ones(2), x->[x[1]^2 + x[2]^2 - 1], [0.0], [0.0], name="Cons Rosen")]
     callable = CallableSolver()
     stats = solve_problems(dummy_solver, problems)
     @test stats isa DataFrame
