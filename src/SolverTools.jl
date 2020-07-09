@@ -19,9 +19,4 @@ include("stats/stats.jl")
 include("linesearch/linesearch.jl")
 include("trust-region/trust-region.jl")
 
-# Utilities.
-include("bmark/bmark_solvers.jl")
-include("bmark/bmark_utils.jl")
-include("bmark/run_solver.jl")
-
 end
