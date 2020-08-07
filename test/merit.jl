@@ -98,8 +98,8 @@ end
     ),
     (
       "AugLagMerit",
-      (nlp, η; kwargs...) -> AugLagMerit(nlp, η, y=ones(typeof(η), nlp.meta.ncon); kwargs...),
-      (nlp, x, η) -> obj(nlp, x) - sum(cons(nlp, x)) + η * norm(cons(nlp, x))^2 / 2 # y = (1,…,1)ᵀ
+      (nlp, η; kwargs...) -> AugLagMerit(nlp, η, y=-ones(typeof(η), nlp.meta.ncon); kwargs...),
+      (nlp, x, η) -> obj(nlp, x) - sum(cons(nlp, x)) + η * norm(cons(nlp, x))^2 / 2 # y = (-1,…,-1)ᵀ
     )
   ]
   for (name, merit, ϕ) in merits

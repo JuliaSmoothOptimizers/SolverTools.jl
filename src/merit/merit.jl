@@ -17,26 +17,20 @@ All models allow a constructor of form
     Merit(nlp, η; fx=Inf, cx=[Inf,…,Inf], gx=[Inf,…,Inf], Ad=[Inf,…,Inf])
 
 Additional arguments and constructors may be provided.
-"""
-abstract type AbstractMeritModel end
 
-"""
-    obj(merit, x; update=true)
+An AbstractMeritModel is an AbstractNLPModel, but the API may not be completely implemented. For
+instance, the `L1Merit` model doesn't provide any gradient function, but it provides a directional
+derivative function.
 
-Computes the `merit` function value at `x`.
-This will call `obj` and `cons` for the internal model, unless `update` is called with `false`.
-The option exist to allow updating the `η` parameter without recomputing `fx` and `cx`.
+Furthermore, all implemented methods accept an `update` keyword that defaults to `true`. It is used
+to determine whether the internal stored values should be updated or not.
 """
-function NLPModels.obj(merit::AbstractMeritModel, x::AbstractVector)
-    # I'd prefer to use only `function NLPModels.obj end` instead, but it doesn't work and using
-    # only `function obj end` overwrites the docstring
-    throw(MethodError(NLPModels.obj, (merit, x)))
-end
+abstract type AbstractMeritModel <: AbstractNLPModel end
 
 """
     derivative(merit, x, d; update=true)
 
-Computes the derivative derivative of `merit` at `x` on direction `d`.
+Computes the directional derivative of `merit` at `x` on direction `d`.
 This will call `grad!` and `jprod` to update the internal values of `gx` and `Ad`, but will assume that `cx` is correct.
 The option exist to allow updating the `η` parameter without recomputing `fx` and `cx`.
 """
