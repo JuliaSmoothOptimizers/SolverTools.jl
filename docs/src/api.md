@@ -27,6 +27,17 @@ redirect!
 armijo_wolfe
 ```
 
+## Merit
+
+See also [`obj`](@ref).
+
+```@docs
+AbstractMeritModel
+derivative
+L1Merit
+AugLagMerit
+```
+
 ## Stats
 
 ```@docs
