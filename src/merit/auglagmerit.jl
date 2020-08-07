@@ -1,5 +1,20 @@
 export AugLagMerit
 
+@doc raw"""
+    AugLagMerit(nlp, η; kwargs...)
+
+Creates an augmented Lagrangian merit function for the equality constrained problem
+```math
+\min f(x) \quad \text{s.to} \quad c(x) = 0
+```
+defined by
+```math
+\phi(x, yₖ; η) = f(x) - yₖᵀc(x) + η ½\|c(x)\|²
+```
+
+In addition to the keyword arguments declared in [`AbstractMeritModel`](@ref), an `AugLagMerit` also
+accepts the argument `y`.
+"""
 mutable struct AugLagMerit{M <: AbstractNLPModel, T <: Real, V <: AbstractVector} <: AbstractMeritModel
     nlp :: M
     η :: T

@@ -1,5 +1,17 @@
 export L1Merit
 
+@doc raw"""
+    L1Merit(nlp, η; kwargs...)
+
+Creates a ℓ₁ merit function for the equality constrained problem
+```math
+\min f(x) \quad \text{s.to} \quad c(x) = 0
+```
+defined by
+```math
+\phi_1(x; η) = f(x) + η\|c(x)\|₁
+```
+"""
 mutable struct L1Merit{M <: AbstractNLPModel, T <: Real, V <: AbstractVector} <: AbstractMeritModel
     nlp :: M
     η :: T
