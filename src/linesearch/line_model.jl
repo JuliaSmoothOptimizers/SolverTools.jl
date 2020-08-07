@@ -1,5 +1,3 @@
-import NLPModels: obj, grad, grad!, hess
-
 export LineModel
 export obj, grad, derivative, grad!, derivative!, hess, redirect!
 
@@ -38,7 +36,7 @@ end
 
     ϕ(t) := f(x + td).
 """
-function obj(f :: LineModel, t :: AbstractFloat)
+function NLPModels.obj(f :: LineModel, t :: AbstractFloat)
   NLPModels.increment!(f, :neval_obj)
   return obj(f.nlp, f.x + t * f.d)
 end
@@ -51,7 +49,7 @@ i.e.,
 
     ϕ'(t) = ∇f(x + td)ᵀd.
 """
-function grad(f :: LineModel, t :: AbstractFloat)
+function NLPModels.grad(f :: LineModel, t :: AbstractFloat)
   NLPModels.increment!(f, :neval_grad)
   return dot(grad(f.nlp, f.x + t * f.d), f.d)
 end
@@ -67,7 +65,7 @@ i.e.,
 
 The gradient ∇f(x + td) is stored in `g`.
 """
-function grad!(f :: LineModel, t :: AbstractFloat, g :: AbstractVector)
+function NLPModels.grad!(f :: LineModel, t :: AbstractFloat, g :: AbstractVector)
   NLPModels.increment!(f, :neval_grad)
   return dot(grad!(f.nlp, f.x + t * f.d, g), f.d)
 end
@@ -81,7 +79,7 @@ i.e.,
 
     ϕ"(t) = dᵀ∇²f(x + td)d.
 """
-function hess(f :: LineModel, t :: AbstractFloat)
+function NLPModels.hess(f :: LineModel, t :: AbstractFloat)
   NLPModels.increment!(f, :neval_hess)
   return dot(f.d, hprod(f.nlp, f.x + t * f.d, f.d))
 end
