@@ -15,7 +15,7 @@ defined by
 In addition to the keyword arguments declared in [`AbstractMeritModel`](@ref), an `AugLagMerit` also
 accepts the argument `y`.
 """
-mutable struct AugLagMerit{M <: AbstractNLPModel, T <: Real, V <: AbstractVector} <: AbstractMeritModel
+mutable struct AugLagMerit{M <: AbstractNLPModel, T <: Real, V <: AbstractVector} <: AbstractMeritModel{M,T,V}
   meta :: NLPModelMeta
   counters :: Counters
   nlp  :: M

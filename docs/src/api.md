@@ -18,24 +18,21 @@ project_step!
 ## Line-Search
 
 ```@docs
-LineModel
-obj
-grad
-grad!
-hess
-redirect!
-armijo_wolfe
+linesearch
+LineSearchOutput
+armijo!
+armijo_wolfe!
 ```
 
 ## Merit
 
-See also [`obj`](@ref).
-
 ```@docs
 AbstractMeritModel
+obj
 derivative
 L1Merit
 AugLagMerit
+UncMerit
 ```
 
 ## Stats

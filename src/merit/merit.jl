@@ -25,16 +25,27 @@ derivative function.
 Furthermore, all implemented methods accept an `update` keyword that defaults to `true`. It is used
 to determine whether the internal stored values should be updated or not.
 """
-abstract type AbstractMeritModel <: AbstractNLPModel end
+abstract type AbstractMeritModel{M,T,V} <: AbstractNLPModel end
+
+"""
+    obj(merit, x; update=true)
+
+Evaluates the `merit` model at `x`.
+This will call `obj` and `cons!` to update the internal values of `fx` and `cx`, unless `update=false`.
+"""
+function NLPModels.obj(merit :: AbstractMeritModel, x :: AbstractVector; update :: Bool=false)
+  throw(MethorError(obj, (merit, x)))
+end
 
 """
     derivative(merit, x, d; update=true)
 
 Computes the directional derivative of `merit` at `x` on direction `d`.
-This will call `grad!` and `jprod` to update the internal values of `gx` and `Ad`, but will assume that `cx` is correct.
-The option exist to allow updating the `η` parameter without recomputing `fx` and `cx`.
+This will call `grad!` and `jprod` to update the internal values of `gx` and `Ad`, unless `update=false`.
+This function assumes that `cx` is correct, though.
 """
 function derivative end
 
 include("auglagmerit.jl")
 include("l1merit.jl")
+include("uncmerit.jl")

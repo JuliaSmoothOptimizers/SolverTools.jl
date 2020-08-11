@@ -5,6 +5,7 @@ function dummy_linesearch_solver(
   rtol :: Real = 1e-6,
   max_eval :: Int = 1000,
   max_time :: Float64 = 30.0,
+  ls_method :: Symbol = :armijo,
   merit_constructor = L1Merit
 )
 
@@ -13,6 +14,7 @@ function dummy_linesearch_solver(
 
   nvar, ncon = nlp.meta.nvar, nlp.meta.ncon
   T = eltype(x)
+  xt = copy(x)
 
   cx = ncon > 0 ? cons(nlp, x) : zeros(T, 0)
   gx = grad(nlp, x)
@@ -51,14 +53,10 @@ function dummy_linesearch_solver(
     end
     ϕx = obj(ϕ, x, update=false)
 
-    t = 1.0
-    ϕt = obj(ϕ, x + Δx) # Updates cx
-    while !(ϕt ≤ ϕx + 1e-2 * t * Dϕx)
-      t /= 2
-      ϕt = obj(ϕ, x + t * Δx) # Updates cx
-    end
-    x += t * Δx
-    y += t * Δy
+    lso = linesearch!(ϕ, x, Δx, xt, method=ls_method)
+    x .= xt
+    t = lso.t
+    y .+= t * Δy
 
     grad!(nlp, x, gx) # Updates ϕ.gx
     if ncon > 0

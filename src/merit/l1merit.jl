@@ -12,7 +12,7 @@ defined by
 \phi_1(x; η) = f(x) + η\|c(x)\|₁
 ```
 """
-mutable struct L1Merit{M <: AbstractNLPModel, T <: Real, V <: AbstractVector} <: AbstractMeritModel
+mutable struct L1Merit{M <: AbstractNLPModel, T <: Real, V <: AbstractVector} <: AbstractMeritModel{M,T,V}
   meta :: NLPModelMeta
   counters :: Counters
   nlp :: M
