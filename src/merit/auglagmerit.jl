@@ -48,14 +48,12 @@ function AugLagMerit(
   AugLagMerit{M,T,V}(meta, Counters(), nlp, η, fx, gx, cx, Ad, y, y⁺, Jᵀy⁺, Jv, JᵀJv)
 end
 
-function NLPModels.obj(merit :: AugLagMerit, x :: AbstractVector; update :: Bool = true)
-  @lencheck merit.meta.nvar x
-  NLPModels.increment!(merit, :neval_obj)
-  if update
-    merit.fx = obj(merit.nlp, x)
-    merit.nlp.meta.ncon > 0 && cons!(merit.nlp, x, merit.cx)
-  end
-  return merit.fx + dot(merit.y, merit.cx) + merit.η * dot(merit.cx, merit.cx) / 2
+function dualobj(merit :: AugLagMerit)
+  merit.fx + dot(merit.y, merit.cx)
+end
+
+function primalobj(merit :: AugLagMerit)
+  dot(merit.cx, merit.cx) / 2
 end
 
 function derivative(merit :: AugLagMerit, x :: AbstractVector, d :: AbstractVector; update :: Bool = true)

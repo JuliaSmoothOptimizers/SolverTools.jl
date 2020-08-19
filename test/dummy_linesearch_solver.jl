@@ -1,6 +1,6 @@
 function dummy_linesearch_solver(
   nlp :: AbstractNLPModel;
-  x :: AbstractVector = nlp.meta.x0,
+  x :: AbstractVector = copy(nlp.meta.x0),
   atol :: Real = 1e-6,
   rtol :: Real = 1e-6,
   max_eval :: Int = 1000,
@@ -80,7 +80,7 @@ function dummy_linesearch_solver(
     :max_eval
   end
 
-  return GenericExecutionStats(:unknown, nlp,
+  return GenericExecutionStats(status, nlp,
                                objective=fx, dual_feas=norm(dual), primal_feas=norm(cx),
                                multipliers=y, multipliers_L=zeros(T, nvar), multipliers_U=zeros(T, nvar),
                                elapsed_time=elapsed_time, solution=x, iter=iter

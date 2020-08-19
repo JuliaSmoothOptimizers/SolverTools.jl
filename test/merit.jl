@@ -62,6 +62,21 @@ function test_merit(merit_constructor, ϕ)
     @test neval_jprod(nlp) == 1
   end
 
+  @testset "Separate parts" begin
+    nlp = ADNLPModel(x -> (x[1] - 1)^2 + 4 * (x[2] - x[1]^2)^2, [-1.2; 1.0], x -> [x[1]^2 + x[2]^2 - 1], [0.0], [0.0])
+    ϕ = merit_constructor(nlp, 0.0)
+    for i = 1:2
+      x = randn(nlp.meta.nvar)
+      d = randn(nlp.meta.nvar)
+      ϕ.η = 0.0
+      manual_dualobj = obj(ϕ, x)
+      ϕ.η = 1.0
+      manual_primalobj = obj(ϕ, x) - manual_dualobj
+      @test dualobj(ϕ) ≈ manual_dualobj
+      @test primalobj(ϕ) ≈ manual_primalobj
+    end
+  end
+
   @testset "Safe for unconstrained" begin
     nlp = ADNLPModel(x -> dot(x, x), ones(2))
     x = nlp.meta.x0
@@ -82,6 +97,20 @@ function test_merit(merit_constructor, ϕ)
 
     nlp = ADNLPModel(x -> (x[1] - 1)^2 + 4 * (x[2] - x[1]^2)^2, [-1.2; 1.0], x -> [exp(x[1] - 1) - 1], [0.0], [0.0])
     output = dummy_linesearch_solver(nlp, merit_constructor=merit_constructor, rtol=0)
+    @test isapprox(output.solution, ones(2), rtol=1e-6)
+    @test output.objective < 1e-6
+    @test output.primal_feas < 1e-6
+    @test output.dual_feas < 1e-6
+
+    nlp = ADNLPModel(x -> (x[1] - 1)^2 + 4 * (x[2] - x[1]^2)^2, [-1.2; 1.0])
+    output = dummy_trust_region_solver(nlp, merit_constructor=merit_constructor, rtol=0)
+    @test isapprox(output.solution, ones(2), rtol=1e-6)
+    @test output.objective < 1e-6
+    @test output.primal_feas == 0
+    @test output.dual_feas < 1e-6
+
+    nlp = ADNLPModel(x -> (x[1] - 1)^2 + 4 * (x[2] - x[1]^2)^2, [-1.2; 1.0], x -> [exp(x[1] - 1) - 1], [0.0], [0.0])
+    output = dummy_trust_region_solver(nlp, merit_constructor=merit_constructor, rtol=0)
     @test isapprox(output.solution, ones(2), rtol=1e-6)
     @test output.objective < 1e-6
     @test output.primal_feas < 1e-6

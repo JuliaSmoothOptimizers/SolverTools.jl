@@ -35,14 +35,12 @@ function L1Merit(
   L1Merit{M,T,V}(meta, Counters(), nlp, η, fx, gx, cx, Ad)
 end
 
-function NLPModels.obj(merit :: L1Merit, x :: AbstractVector; update :: Bool = true)
-  @lencheck merit.meta.nvar x
-  NLPModels.increment!(merit, :neval_obj)
-  if update
-    merit.fx = obj(merit.nlp, x)
-    merit.nlp.meta.ncon > 0 && cons!(merit.nlp, x, merit.cx)
-  end
-  return merit.fx + merit.η * norm(merit.cx, 1)
+function dualobj(merit :: L1Merit)
+  merit.fx
+end
+
+function primalobj(merit :: L1Merit)
+  norm(merit.cx, 1)
 end
 
 function derivative(merit :: L1Merit, x :: AbstractVector, d :: AbstractVector; update :: Bool = true)
