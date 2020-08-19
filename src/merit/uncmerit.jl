@@ -30,13 +30,12 @@ function UncMerit(
   UncMerit{M,T,V}(meta, Counters(), nlp, η, fx, gx, cx, Ad)
 end
 
-function NLPModels.obj(merit :: UncMerit, x :: AbstractVector; update :: Bool = true)
-  @lencheck merit.meta.nvar x
-  NLPModels.increment!(merit, :neval_obj)
-  if update
-    merit.fx = obj(merit.nlp, x)
-  end
-  return merit.fx
+function dualobj(merit :: UncMerit)
+  merit.fx
+end
+
+function primalobj(merit :: UncMerit)
+  zero(eltype(merit.η))
 end
 
 function derivative(merit :: UncMerit, x :: AbstractVector, d :: AbstractVector; update :: Bool = true)

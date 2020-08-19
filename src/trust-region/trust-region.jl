@@ -1,98 +1,69 @@
 # A trust-region type and basic utility functions.
-import NLPModels: reset!
-export TrustRegionException, acceptable, aredpred, get_property, ratio, ratio!, reset!, set_property!, update!
+export TrustRegionException
+export trust_region, trust_region!
+# import NLPModels: reset!
+# export TrustRegionException, acceptable, aredpred, get_property, ratio, ratio!, reset!, set_property!, update!
+
+include("trust-region-output.jl")
+include("basic-trust-region.jl")
+include("tron-trust-region.jl")
+
+const tr_dict = Dict(
+  :basic => basic_trust_region!,
+  :tron => tron_trust_region!,
+)
 
 "Exception type raised in case of error."
 mutable struct TrustRegionException <: Exception
   msg  :: String
 end
 
-"""`AbstractTrustRegion`
-
-An abstract trust region type so that specific trust regions define update
-rules differently. Child types must have at least the following fields:
-
-- `acceptance_threshold :: AbstractFloat`
-- `initial_radius :: AbstractFloat`
-- `radius :: AbstractFloat`
-- `ratio :: AbstractFloat`
-
-and the following function:
-
-- `update!(tr, step_norm)`
 """
-abstract type AbstractTrustRegion end
+    tro = trust_region(ϕ, x, d, Δq, Ad, Δ; method=:basic, penalty_update=:basic, kwargs...)
+    tro = trust_region!(ϕ, x, d, xt, Δq, Ad, Δ; method=:basic, penalty_update=:basic, kwargs...)
+    tro = trust_region(nlp, x, d, Δq, Δ; method=:basic, fx=obj(nlp, x), gx=grad(nlp, x), kwargs...)
+    tro = trust_region!(nlp, x, d, xt, Δq, Δ; method=:basic, fx=obj(nlp, x), gx=grad(nlp, x), kwargs...)
 
-"""`ared, pred = aredpred(nlp, f, f_trial, Δm, x_trial, step, slope)`
+Update `xt` and `Δ` using a trust region strategy according to the `method` keyword.
+The output is a `TrustRegionOutput`.
 
-Compute the actual and predicted reductions `∆f` and `Δm`, where
-`Δf = f_trial - f` is the actual reduction is an objective/merit/penalty function,
-`Δm = m_trial - m` is the reduction predicted by the model `m` of `f`.
-We assume that `m` is being minimized, and therefore that `Δm < 0`.
+The actual reduction of the model is given by
+```
+ared = ϕx - ϕt,
+```
+where `ϕx = obj(nlp, x; update=update_obj_at_x)` and `ϕt = obj(nlp, xt)`. The predicted reduction is
+given by
+```
+pred = ϕx - (ϕx + Δq) - ϕ.η P(ϕ.cx + Ad),
+```
+where `P` is the penalty function used by `ϕ` and `Ad` is the Jacobian times `d`.
+
+The following keyword argument are available:
+- `update_obj_at_x`: Whether to update `ϕ`'s objective at `x` (default: `false`);
+- `penalty_update`: Strategy to update the parameter `ϕ.η`. (default: `:basic`);
+- `max_radius`: Maximum value for `Δ` (default 1/√ϵ(T));
+- `ηacc`: threshold for successful step (default: 1.0e-4);
+- `ηinc`: threshold for great step (default: 0.95),
+- `σdec`: factor used in the radius decrease heuristics (default: 1/3);
+- `σinc`: factor used in the radius increase heuristics (default: 3/2);
+
+Some methods have additional keyword arguments.
+
+For the `nlp` version, the problem must be unconstrained or bound-constrained (i.e., `nlp.meta.nequ
+= 0`). In such case a `UncMerit` is created using the keyword argument `fx`.
 """
-function aredpred(nlp :: AbstractNLPModel, f :: T, f_trial :: T, Δm :: T,
-                  x_trial :: Vector{T}, step :: Vector{T}, slope :: T) where T <: AbstractFloat
-  absf = abs(f)
-  ϵ = eps(T)
-  pred = Δm - max(one(T), absf) * 10 * ϵ
+function trust_region end
 
-  ared = f_trial - f + max(one(T), absf) * 10 * ϵ
-  if (abs(Δm) < 10_000 * ϵ) || (abs(ared) < 10_000 * ϵ * absf)
-    # correct for roundoff error
-    g_trial = grad(nlp, x_trial)
-    slope_trial = dot(g_trial, step)
-    ared = (slope_trial + slope) / 2
-  end
-  return ared, pred
+function trust_region(nlp_or_ϕ, x, d, args...; kwargs...)
+  xt = copy(x)
+  trust_region!(nlp_or_ϕ, x, d, xt, args...; kwargs...)
 end
 
-
-"""`acceptable(tr)`
-
-Return `true` if a step is acceptable
-"""
-function acceptable(tr :: AbstractTrustRegion)
-  return tr.ratio >= tr.acceptance_threshold
+function trust_region!(nlp :: AbstractNLPModel, x :: AbstractVector, d :: AbstractVector, xt :: AbstractVector, Δq :: Real, Δ :: Real; fx=obj(nlp, x), kwargs...)
+  ϕ = UncMerit(nlp, fx=fx)
+  trust_region!(ϕ, x, d, xt, Δq, eltype(x)[], Δ; kwargs...)
 end
 
-"""`reset!(tr)`
-
-Reset the trust-region radius to its initial value
-"""
-function reset!(tr :: AbstractTrustRegion)
-  tr.radius = tr.initial_radius
-  return tr
+function trust_region!(ϕ :: AbstractMeritModel, x :: AbstractVector, args...; method :: Symbol=:basic, kwargs...)
+  SolverTools.tr_dict[method](ϕ, x, args...; kwargs...)
 end
-
-
-"""A basic getter for `AbstractTrustRegion` instances.
-Should be overhauled when it's possible to overload `getfield()`
-and `setfield!()`. See
-https://github.com/JuliaLang/julia/issues/1974
-"""
-function get_property(tr :: AbstractTrustRegion, prop :: Symbol)
-  # All fields are gettable.
-  gettable = fieldnames(typeof(tr))
-  prop in gettable || throw(TrustRegionException("Unknown property: $prop"))
-  getfield(tr, prop)
-end
-
-"""A basic setter for `AbstractTrustRegion` instances.
-"""
-function set_property!(tr :: AbstractTrustRegion, prop :: Symbol, value :: Any)
-  gettable = fieldnames(typeof(tr))
-  prop in gettable || throw(TrustRegionException("Unknown property: $prop"))
-  setfield!(tr, prop, value)
-end
-
-"""`update!(tr, step_norm)`
-
-Update the trust-region radius based on the ratio of actual vs. predicted reduction
-and the step norm.
-"""
-function update!(tr :: AbstractTrustRegion, ratio :: AbstractFloat, step_norm :: AbstractFloat)
-  throw(NotImplementedError("`update!` not implemented for this TrustRegion type"))
-end
-
-include("basic-trust-region.jl")
-include("tron-trust-region.jl")

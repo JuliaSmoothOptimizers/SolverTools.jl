@@ -29,6 +29,8 @@ armijo_wolfe!
 ```@docs
 AbstractMeritModel
 obj
+dualobj
+primalobj
 derivative
 L1Merit
 AugLagMerit
@@ -46,13 +48,7 @@ show_statuses
 
 ```@docs
 TrustRegionException
-SolverTools.AbstractTrustRegion
-aredpred
-acceptable
-reset!
-get_property
-set_property!
-update!
-TrustRegion
-TRONTrustRegion
+trust_region
+basic_trust_region!
+tron_trust_region!
 ```
