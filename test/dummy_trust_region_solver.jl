@@ -7,7 +7,7 @@ function dummy_trust_region_solver(
   rtol :: Real = 1e-6,
   max_eval :: Int = 1000,
   max_time :: Float64 = 30.0,
-  # ls_method :: Symbol = :armijo,
+  tr_method :: Symbol = :basic,
   merit_constructor = L1Merit
 )
 
@@ -29,7 +29,7 @@ function dummy_trust_region_solver(
   iter = 0
 
   Δ = 100.0
-  ϕ = merit_constructor(nlp, 1e-3, cx=cx, gx=gx)
+  ϕ = merit_constructor(nlp, 1e-3, cx=copy(cx), gx=gx)
 
   ϵd = atol + rtol * norm(dual)
   ϵp = atol
@@ -44,9 +44,6 @@ function dummy_trust_region_solver(
   while !(solved || tired)
     Hxy = ncon > 0 ? hess_op(nlp, x, y) : hess_op(nlp, x)
     local Δx
-    ϕx = obj(ϕ, x, update=false)
-    ϕxprimal = primalobj(ϕ)
-    ϕxdual   = dualobj(ϕ)
     if ncon > 0
       # Normal step
       v = cgls(Jx, -cx, radius=0.8Δ)[1]
@@ -57,51 +54,25 @@ function dummy_trust_region_solver(
       Δx = cg(Hxy, -dual, radius=Δ)[1]
     end
 
-    # Workaround to be agnostic to the merit function
-    # Pretend fx is the quadratic approximation to obj(nlp, x + Δx)
-    # Pretend cx is que linear approximation to cons(nlp, x + Δx)
-    ϕ.fx += dot(Δx, gx) + dot(Δx, Hxy * Δx) / 2
+    Δq = dot(Δx, gx) + dot(Δx, Hxy * Δx) / 2
     Ad = Jx * Δx
-    cpAd = cx .+ Ad
-    ct = ϕ.cx
-    ϕ.cx = cpAd
-    ϕtprimal = primalobj(ϕ)
-    ϕtdual = dualobj(ϕ)
+    tro = trust_region!(ϕ, x, Δx, xt, Δq, Ad, Δ, method=tr_method, update_obj_at_x=false)
 
-    xt = x + Δx
-    ϕt = obj(ϕ, xt, update=true)
-    ft = ϕ.fx
+    Δ = tro.Δ
+    x .= tro.xt
 
-    @assert ϕxprimal ≥ ϕtprimal
-    while ϕxdual - ϕtdual < -0.1 * ϕ.η * (ϕxprimal - ϕtprimal) < 0 # For unconstrained problems, right side is 0.
-      ϕ.η *= 2
-    end
-
-    Ared = ϕx - ϕt
-    Pred = ϕxdual - ϕtdual + ϕ.η * (ϕxprimal - ϕtprimal)
-
-    ρ = Ared / Pred
-    iter_kind = if ρ > 1e-2 # accept
-      x .= xt
-      fx = ft
-      cx = ϕ.cx
-      grad!(nlp, x, gx) # Updates ϕ.gx
+    if tro.success
+      fx = ϕ.fx
+      cx .= ϕ.cx
+      grad!(nlp, x, gx)
       if ncon > 0
         Jx = jac(nlp, x)
       end
       y = cgls(Jx', -gx)[1]
       dual = gx + Jx' * y
-      if ρ > 0.75 && norm(Δx) > 0.9Δ
-        Δ *= 2
-        :great
-      else
-        :good
-      end
     else
       ϕ.fx = fx
       ϕ.cx = cx
-      Δ /= 4
-      :bad
     end
 
     elapsed_time = time() - start_time
@@ -109,7 +80,7 @@ function dummy_trust_region_solver(
     tired = evals(nlp) > max_eval || elapsed_time > max_time
 
     iter += 1
-    @info log_row(Any[iter, evals(nlp), fx, norm(cx), norm(dual), elapsed_time, Δ, ϕ.η, iter_kind])
+    @info log_row(Any[iter, evals(nlp), fx, norm(cx), norm(dual), elapsed_time, Δ, ϕ.η, tro.status])
   end
 
   status = if solved
