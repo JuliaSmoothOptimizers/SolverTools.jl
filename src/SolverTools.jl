@@ -16,6 +16,7 @@ include("auxiliary/logger.jl")
 include("stats/stats.jl")
 
 # Algorithmic components.
+include("merit/merit.jl")
 include("linesearch/linesearch.jl")
 include("trust-region/trust-region.jl")
 

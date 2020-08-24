@@ -1,59 +1,87 @@
-export TRONTrustRegion
+export tron_trust_region!
 
-"""Trust region used by TRON"""
-mutable struct TRONTrustRegion <: AbstractTrustRegion
-  initial_radius :: AbstractFloat
-  radius :: AbstractFloat
-  max_radius :: AbstractFloat
-  acceptance_threshold :: AbstractFloat
-  decrease_threshold :: AbstractFloat
-  increase_threshold :: AbstractFloat
-  large_decrease_factor :: AbstractFloat
-  small_decrease_factor :: AbstractFloat
-  increase_factor :: AbstractFloat
-  ratio :: AbstractFloat
-  quad_min :: AbstractFloat
+"""
+    tro = tron_trust_region!(ϕ, x, Δx, xt, Δq, Δc, Δ; kwargs...)
 
-  function TRONTrustRegion(initial_radius :: T;
-                           max_radius :: T=one(T)/sqrt(eps(T)),
-                           acceptance_threshold :: T=T(1.0e-4),
-                           decrease_threshold :: T=T(0.25),
-                           increase_threshold :: T=T(0.75),
-                           large_decrease_factor :: T=T(0.25),
-                           small_decrease_factor :: T=T(0.5),
-                           increase_factor :: T=T(4)) where T <: AbstractFloat
 
-    initial_radius > 0 || (initial_radius = one(T))
-    max_radius > initial_radius || throw(TrustRegionException("Invalid initial radius"))
-    (0 < acceptance_threshold < decrease_threshold < increase_threshold < 1) || throw(TrustRegionException("Invalid thresholds"))
-    (0 < large_decrease_factor < small_decrease_factor < 1 < increase_factor) || throw(TrustRegionException("Invalid decrease/increase factors"))
+Update `xt` and `Δ` using a trust region strategy. See [`trust_region`](@ref) for the basic usage, and below for specifc information about this strategy.
 
-    return new(initial_radius, initial_radius, max_radius,
-               acceptance_threshold, decrease_threshold, increase_threshold,
-               large_decrease_factor, small_decrease_factor, increase_factor,
-               zero(T), zero(T))
-  end
-end
+This strategy corresponds to the keyword `method=:tron` on `trust_region`.
+In addition to the default keywords, the following keywords are also available:
+- `update_derivative_at_x`: Whether to call `derivative(ϕ, x, d; update=true)` to update `ϕ.gx` and `ϕ.Ad` (default: `true`);
+- `ηdec`: threshold for decreasing Δ (default: 0.25)
+- `σlarge_dec`: factor used in the decrease heuristics (default: 0.25)
 
-function aredpred(tr :: TRONTrustRegion, nlp :: AbstractNLPModel, f :: T,
-                  f_trial :: T, Δm :: T, x_trial :: Vector{T},
-                  step :: Vector{T}, slope :: T) where T <: AbstractFloat
-  ared, pred = aredpred(nlp, f, f_trial, Δm, x_trial, step, slope)
-  γ = f_trial - f - slope
-  quad_min = γ <= 0 ? tr.increase_factor : max(tr.large_decrease_factor, -slope / γ / 2)
-  return ared, pred, quad_min
-end
+Given `ρ = ared / pred`, and the `slope = Dϕ(x, d)`,
+- Compute γ = ϕt - ϕx - slope
+- Compute α = γ ≤ 0 ? σinc : max(σlarge_dec, -slope / 2γ)
+- if `ρ < ηacc`, then `xₖ₊₁ = xₖ` and `Δₖ₊₁ = min(max(α  σlarge_dec)×‖d‖, σdecΔₖ)`;
+- if `ηacc ≤ ρ < ηdec`, then `xₖ₊₁ = xₖ + d` and `Δₖ₊₁ = max(σlarge_decΔₖ, min(α‖d‖, σdecΔₖ))`;
+- if `ηec ≤ ρ < ηinc`, then `xₖ₊₁ = xₖ + d` and `Δₖ₊₁ = max(σlarge_decΔₖ, min(α‖d‖, σincΔₖ))`;
+- otherwise, then `xₖ₊₁ = xₖ + d` and `Δₖ₊₁ = min(Δₘₐₓ, max(Δₖ, min(α‖d‖, σincΔₖ)))`.
+"""
+function tron_trust_region!(
+  ϕ :: AbstractMeritModel{M,T,V},
+  x :: V,
+  d :: V,
+  xt :: V,
+  Δq :: T,
+  Ad :: V,
+  Δ :: T;
+  update_obj_at_x :: Bool=false,
+  update_derivative_at_x :: Bool=true,
+  penalty_update :: Symbol=:basic,
+  max_radius :: T=one(T)/sqrt(eps(T)),
+  ηacc :: Real=T(1.0e-4),
+  ηdec :: Real=T(0.25),
+  ηinc :: Real=T(0.95),
+  σlarge_dec :: Real=T(0.25),
+  σdec :: Real=T(0.5),
+  σinc :: Real=3 * one(T) / 2,
+) where {M <: AbstractNLPModel, T <: Real, V <: AbstractVector{<: T}}
+  (0 < ηacc < ηinc < 1) || throw(TrustRegionException("Invalid thresholds"))
+  (0 < σdec < 1 < σinc) || throw(TrustRegionException("Invalid decrease/increase factors"))
+  ϕx = obj(ϕ, x, update=update_obj_at_x)
+  slope = derivative(ϕ, x, d, update=update_derivative_at_x)
+  ϕxf = dualobj(ϕ)
+  ϕxc = primalobj(ϕ)
+  ϕ.fx += Δq
+  ϕ.cx .+= Ad
+  mf = dualobj(ϕ)
+  mc = primalobj(ϕ)
 
-function update!(tr :: TRONTrustRegion, step_norm :: AbstractFloat)
-  α, σ₁, σ₂, σ₃ = tr.quad_min, tr.large_decrease_factor, tr.small_decrease_factor, tr.increase_factor
-  tr.radius = if tr.ratio < tr.acceptance_threshold
-    min(max(α, σ₁) * step_norm, σ₂ * tr.radius)
-  elseif tr.ratio < tr.decrease_threshold
-    max(σ₁ * tr.radius, min(α * step_norm, σ₂ * tr.radius))
-  elseif tr.ratio < tr.increase_threshold
-    max(σ₁ * tr.radius, min(α * step_norm, σ₃ * tr.radius))
+  if penalty_update == :basic
+    while ϕxf - mf < -0.1ϕ.η * (ϕxc - mc) < 0
+      ϕ.η *= 2
+    end
   else
-    min(tr.max_radius, max(tr.radius, min(α * step_norm, σ₃ * tr.radius)))
+    throw(TrustRegionException("Unidentified penalty_update $penalty_update"))
   end
-  return tr
+
+  @. xt = x + d
+  ϕt = obj(ϕ, xt)
+  ϕtf = dualobj(ϕ)
+  ϕtc = primalobj(ϕ)
+
+  m = mf + ϕ.η * mc
+  ared = ϕx - ϕt
+  pred = ϕx - m
+  ρ = ared / pred
+
+  γ = ϕt - ϕx - slope
+  α = γ ≤ 0 ? σinc : max(σlarge_dec, -slope / 2γ)
+
+  normd = norm(d)
+  Δ, status = if ρ < ηacc
+    x .= xt
+    min(max(α, σlarge_dec) * normd, σdec * Δ), :bad
+  elseif ρ < ηdec
+    max(σlarge_dec * Δ, min(α * normd, σdec * Δ)), :good
+  elseif ρ < ηinc
+    max(σlarge_dec * Δ, min(α * normd, σinc * Δ)), :good
+  else
+    min(max_radius, max(Δ, min(α * normd, σinc * Δ))), :great
+  end
+
+  return TrustRegionOutput(status, ared, pred, ρ, status != :bad, Δ, xt)
 end

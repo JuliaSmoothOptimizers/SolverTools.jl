@@ -18,13 +18,23 @@ project_step!
 ## Line-Search
 
 ```@docs
-LineModel
+linesearch
+LineSearchOutput
+armijo!
+armijo_wolfe!
+```
+
+## Merit
+
+```@docs
+AbstractMeritModel
 obj
-grad
-grad!
-hess
-redirect!
-armijo_wolfe
+dualobj
+primalobj
+derivative
+L1Merit
+AugLagMerit
+UncMerit
 ```
 
 ## Stats
@@ -38,13 +48,7 @@ show_statuses
 
 ```@docs
 TrustRegionException
-SolverTools.AbstractTrustRegion
-aredpred
-acceptable
-reset!
-get_property
-set_property!
-update!
-TrustRegion
-TRONTrustRegion
+trust_region
+basic_trust_region!
+tron_trust_region!
 ```

@@ -1,63 +1,81 @@
 @testset "Linesearch" begin
-  @testset "LineModel" begin
-    nlp = ADNLPModel(x -> x[1]^2 + 4 * x[2]^2, ones(2))
-    x = nlp.meta.x0
-    d = -ones(2)
-    lm = LineModel(nlp, x, d)
-    g = zeros(2)
+  ls_methods = [:armijo, :armijo_wolfe]
+  @testset "Unconstrained problems" begin
+    specific_tests = Dict(
+      :armijo => Dict(:nbk => [0, 0, 1, 0]),
+      :armijo_wolfe => Dict(:nbk => [0, 0, 1, 5], :nbW => [0, 0, 0, 1]),
+    )
+    for ls_method in ls_methods
+      @testset "Method $ls_method" begin
+        nlp = ADNLPModel(x -> x[1]^2 + 4 * x[2]^2, ones(2))
+        x = nlp.meta.x0
+        d = -ones(2)
+        lso = linesearch(nlp, x, d, method=ls_method)
+        @test lso.t == 1
+        @test lso.ϕt == 0.0
+        for (k,v) in specific_tests[ls_method]
+          @test lso.specific[k] == v[1]
+        end
 
-    @test obj(lm, 0.0) == obj(nlp, x)
-    @test grad(lm, 0.0) == dot(grad(nlp, x), d)
-    @test grad!(lm, 0.0, g) == dot(grad(nlp, x), d)
-    @test g == grad(nlp, x)
-    @test derivative(lm, 0.0) == dot(grad(nlp, x), d)
-    @test derivative!(lm, 0.0, g) == dot(grad(nlp, x), d)
-    @test g == grad(nlp, x)
-    @test hess(lm, 0.0) == dot(d, Symmetric(hess(nlp, x), :L) * d)
+        d = -ones(2) / 2
+        lso = linesearch(nlp, x, d, method=ls_method)
+        @test lso.t == 1
+        @test lso.ϕt == 1.25
+        for (k,v) in specific_tests[ls_method]
+          @test lso.specific[k] == v[2]
+        end
 
-    @test obj(lm,  1.0) == 0.0
-    @test grad(lm, 1.0) == 0.0
-    @test hess(lm, 1.0) == 2d[1]^2 + 8d[2]^2
+        d = -2 * ones(2)
+        lso = linesearch(nlp, x, d, method=ls_method)
+        @test lso.t < 1
+        for (k,v) in specific_tests[ls_method]
+          @test lso.specific[k] == v[3]
+        end
 
-    redirect!(lm, zeros(2), ones(2))
-    @test obj(lm,  0.0) == 0.0
-    @test grad(lm, 0.0) == 0.0
-    @test hess(lm, 0.0) == 10.0
+        nlp = ADNLPModel(x -> (x[1] - 1)^2 + 4 * (x[2] - x[1]^2)^2, zeros(2))
+        x = nlp.meta.x0
+        d = [1.7; 3.2]
+        lso = linesearch(nlp, x, d, method=ls_method)
+        for (k,v) in specific_tests[ls_method]
+          @test lso.specific[k] == v[4]
+        end
+      end # @testset
+    end # for
+  end # @testset
 
-    @test neval_obj(lm) == 3
-    @test neval_grad(lm) == 6
-    @test neval_hess(lm) == 3
-  end
+  @testset "Constrainted problems" begin
+    specific_tests = Dict(
+      :armijo => Dict(:nbk => [0, 0, 1]),
+      :armijo_wolfe => Dict(:nbk => [0, 0, 1]),
+    )
+    for ls_method in ls_methods
+      @testset "Method $ls_method" begin
+        nlp = ADNLPModel(x -> x[1]^2 + 4 * x[2]^2, ones(2), x -> [x[1] + 2x[2]], [0.0], [0.0])
+        x = nlp.meta.x0
+        ϕ = L1Merit(nlp, 1.0)
+        d = -ones(2)
+        lso = linesearch(ϕ, x, d, method=ls_method, update_obj_at_x=true, update_derivative_at_x=true)
+        @test lso.t == 1
+        @test lso.ϕt == 0.0
+        for (k,v) in specific_tests[ls_method]
+          @test lso.specific[k] == v[1]
+        end
 
-  @testset "Armijo-Wolfe" begin
-    nlp = ADNLPModel(x -> x[1]^2 + 4 * x[2]^2, ones(2))
-    lm = LineModel(nlp, nlp.meta.x0, -ones(2))
-    g = zeros(2)
+        d = -ones(2) / 2
+        lso = linesearch(ϕ, x, d, method=ls_method, update_obj_at_x=true, update_derivative_at_x=true)
+        @test lso.t == 1
+        @test lso.ϕt == 1.25 + 1.5
+        for (k,v) in specific_tests[ls_method]
+          @test lso.specific[k] == v[2]
+        end
 
-    t, good_grad, ft, nbk, nbW = armijo_wolfe(lm, obj(lm, 0.0), grad(lm, 0.0), g)
-    @test t == 1
-    @test ft == 0.0
-    @test nbk == 0
-    @test nbW == 0
-
-    redirect!(lm, nlp.meta.x0, -ones(2) / 2)
-    t, good_grad, ft, nbk, nbW = armijo_wolfe(lm, obj(lm, 0.0), grad(lm, 0.0), g)
-    @test t == 1
-    @test ft == 1.25
-    @test nbk == 0
-    @test nbW == 0
-
-    redirect!(lm, nlp.meta.x0, -2 * ones(2))
-    t, good_grad, ft, nbk, nbW = armijo_wolfe(lm, obj(lm, 0.0), grad(lm, 0.0), g)
-    @test t < 1
-    @test nbk > 0
-    @test nbW == 0
-
-    nlp = ADNLPModel(x -> (x[1] - 1)^2 + 4 * (x[2] - x[1]^2)^2, zeros(2))
-    lm = LineModel(nlp, nlp.meta.x0, [1.7; 3.2])
-    t, good_grad, ft, nbk, nbW = armijo_wolfe(lm, obj(lm, 0.0), grad(lm, 0.0), g)
-    @test t < 1
-    @test nbk > 0
-    @test nbW > 0
-  end
+        d = -2 * ones(2)
+        lso = linesearch(ϕ, x, d, method=ls_method, update_obj_at_x=true, update_derivative_at_x=true)
+        @test lso.t < 1
+        for (k,v) in specific_tests[ls_method]
+          @test lso.specific[k] == v[3]
+        end
+      end # @testset
+    end # for
+  end # @testset
 end
