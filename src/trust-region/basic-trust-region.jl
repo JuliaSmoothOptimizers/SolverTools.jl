@@ -68,5 +68,5 @@ function basic_trust_region!(
     :good
   end
 
-  return TrustRegionOutput(status, ared, pred, ρ, status != :bad, Δ, xt)
+  return TrustRegionOutput(status, ared, pred, ρ, status != :bad, Δ, xt, ϕt)
 end

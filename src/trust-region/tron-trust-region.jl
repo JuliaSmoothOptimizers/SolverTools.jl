@@ -39,8 +39,8 @@ function tron_trust_region!(
   σdec :: Real=T(0.5),
   σinc :: Real=3 * one(T) / 2,
 ) where {M <: AbstractNLPModel, T <: Real, V <: AbstractVector{<: T}}
-  (0 < ηacc < ηinc < 1) || throw(TrustRegionException("Invalid thresholds"))
-  (0 < σdec < 1 < σinc) || throw(TrustRegionException("Invalid decrease/increase factors"))
+  (0 < ηacc < ηdec < ηinc < 1) || throw(TrustRegionException("Invalid thresholds"))
+  (0 < σlarge_dec < σdec < 1 < σinc) || throw(TrustRegionException("Invalid decrease/increase factors"))
   ϕx = obj(ϕ, x, update=update_obj_at_x)
   slope = derivative(ϕ, x, d, update=update_derivative_at_x)
   ϕxf = dualobj(ϕ)
@@ -83,5 +83,5 @@ function tron_trust_region!(
     min(max_radius, max(Δ, min(α * normd, σinc * Δ))), :great
   end
 
-  return TrustRegionOutput(status, ared, pred, ρ, status != :bad, Δ, xt)
+  return TrustRegionOutput(status, ared, pred, ρ, status != :bad, Δ, xt, ϕt)
 end
