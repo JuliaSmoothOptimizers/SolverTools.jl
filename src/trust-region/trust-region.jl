@@ -40,6 +40,9 @@ where `P` is the penalty function used by `ϕ` and `Ad` is the Jacobian times `d
 
 The following keyword argument are available:
 - `update_obj_at_x`: Whether to update `ϕ`'s objective at `x` (default: `false`);
+- `update_obj_at_xt`: Whether to update `ϕ`s objective at `xt` or to use the `ft` and `ct` keywords (default: `true`);
+- `ft`: If `update_obj_at_xt=false`, then used by the merit function as `obj(nlp, xt)` (default: `Inf`);
+- `ct`: If `update_obj_at_xt=false`, then used by the merit function as `cons(nlp, xt)` (default: `[]`);
 - `penalty_update`: Strategy to update the parameter `ϕ.η`. (default: `:basic`);
 - `max_radius`: Maximum value for `Δ` (default 1/√ϵ(T));
 - `ηacc`: threshold for successful step (default: 1.0e-4);
@@ -64,6 +67,10 @@ function trust_region!(nlp :: AbstractNLPModel, x :: AbstractVector, d :: Abstra
   trust_region!(ϕ, x, d, xt, Δq, eltype(x)[], Δ; kwargs...)
 end
 
-function trust_region!(ϕ :: AbstractMeritModel, x :: AbstractVector, args...; method :: Symbol=:basic, kwargs...)
-  SolverTools.tr_dict[method](ϕ, x, args...; kwargs...)
+function trust_region!(ϕ :: UncMerit, x :: AbstractVector, d :: AbstractVector, xt :: AbstractVector, Δq :: Real, Δ :: Real; kwargs...)
+  trust_region!(ϕ, x, d, xt, Δq, eltype(x)[], Δ; kwargs...)
+end
+
+function trust_region!(ϕ :: AbstractMeritModel, x :: AbstractVector, d :: AbstractVector, xt :: AbstractVector, Δq :: Real, Ad :: AbstractVector, Δ :: Real; method :: Symbol=:basic, kwargs...)
+  SolverTools.tr_dict[method](ϕ, x, d, xt, Δq, Ad, Δ; kwargs...)
 end

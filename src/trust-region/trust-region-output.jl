@@ -9,6 +9,8 @@ struct TrustRegionOutput{T <: Real, V <: AbstractVector}
   Δ :: T
   xt :: V
   ϕt :: T
+  gt :: V
+  good_grad :: Bool
   specific :: NamedTuple
 end
 
@@ -21,7 +23,9 @@ function TrustRegionOutput(
   Δ :: T,
   xt :: V,
   ϕt :: T;
-  specific :: NamedTuple = NamedTuple()
+  gt :: V=T[],
+  good_grad=false,
+  specific :: NamedTuple=NamedTuple()
 ) where {T <: Real, V <: AbstractVector{<: T}}
-  TrustRegionOutput(status, ared, pred, ρ, success, Δ, xt, ϕt, specific)
+  TrustRegionOutput(status, ared, pred, ρ, success, Δ, xt, ϕt, gt, good_grad, specific)
 end

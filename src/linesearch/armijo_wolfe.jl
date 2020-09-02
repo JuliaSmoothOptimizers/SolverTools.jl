@@ -53,6 +53,10 @@ function armijo_wolfe!(
   nbW = 0
   ϕx = obj(ϕ, x; update=update_obj_at_x)
   slope = derivative(ϕ, x, d; update=update_derivative_at_x)
+  if slope ≥ 0
+    @error "not a descent direction" slope
+    status = :not_desc
+  end
 
   # First try to increase t to satisfy loose Wolfe condition
   xt .= x .+ t .* d
@@ -85,7 +89,7 @@ function armijo_wolfe!(
     if ϕt <= ϕgoal
       Armijo = true
     elseif ϕt <= ϕx + ϵ * abs(ϕx)
-      slope_t = derivative!(ϕ, xt, d)
+      slope_t = derivative(ϕ, xt, d)
       good_grad = true
       if slope_t <= fact * slope
         Armijo = true

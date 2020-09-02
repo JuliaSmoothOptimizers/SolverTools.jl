@@ -21,6 +21,10 @@ function basic_trust_region!(
   Ad :: V,
   Δ :: T;
   update_obj_at_x :: Bool=false,
+  update_derivative_at_x :: Bool=false,
+  update_obj_at_xt :: Bool=true,
+  ft :: T=T(Inf),
+  ct :: V=T[],
   penalty_update :: Symbol=:basic,
   max_radius :: T=one(T)/sqrt(eps(T)),
   ηacc :: Real=T(1.0e-4),
@@ -47,13 +51,30 @@ function basic_trust_region!(
   end
 
   @. xt = x + d
-  ϕt = obj(ϕ, xt)
-  ϕtf = dualobj(ϕ)
-  ϕtc = primalobj(ϕ)
-
+  if !update_obj_at_xt
+    ϕ.fx = ft
+    ϕ.cx .= ct
+  end
+  ϕt = obj(ϕ, xt, update=update_obj_at_xt)
+  ϕx = ϕxf + ϕ.η * ϕxc
   m = mf + ϕ.η * mc
-  ared = ϕx - ϕt
-  pred = ϕx - m
+
+  absf = abs(ϕx)
+  ϵ = eps(T)
+  ared = ϕt - ϕx + max(one(T), absf) * 10ϵ
+  pred = mf - ϕx - max(one(T), absf) * 10ϵ
+  good_grad = if abs(Δq) < 10_000 * ϵ || abs(ared) < 10_000 * ϵ * abs(ϕx)
+    slope = derivative(ϕ, x, d, update=update_derivative_at_x)
+    ared = (slope + derivative(ϕ, xt, d, update=true)) / 2
+    true
+  else
+    false
+  end
+  # if pred ≥ 0
+  #   status = :neg_pred
+  #   stalled = true
+  #   continue
+  # end
   ρ = ared / pred
 
   normd = norm(d)
@@ -62,11 +83,10 @@ function basic_trust_region!(
     :great
   elseif ρ < ηacc
     Δ = σdec * normd
-    xt .= x
     :bad
   else
     :good
   end
 
-  return TrustRegionOutput(status, ared, pred, ρ, status != :bad, Δ, xt, ϕt)
+  return TrustRegionOutput(status, ared, pred, ρ, status != :bad, Δ, xt, ϕt, gt=ϕ.gx, good_grad=good_grad)
 end
