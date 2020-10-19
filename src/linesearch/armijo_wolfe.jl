@@ -51,12 +51,10 @@ function armijo_wolfe(h :: LineModel,
   nbW = 0
 
   # First try to increase t to satisfy loose Wolfe condition
-  ht = obj(h, t)
-  slope_t = grad!(h, t, g)
+  ht, slope_t = objgrad!(h, t, g)
   while (slope_t < τ₁*slope) && (ht <= h₀ + τ₀ * t * slope) && (nbW < bW_max)
     t *= 5
-    ht = obj(h, t)
-    slope_t = grad!(h, t, g)
+    ht, slope_t = objgrad!(h, t, g)
     nbW += 1
   end
 
