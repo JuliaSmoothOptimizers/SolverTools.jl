@@ -22,6 +22,8 @@ LineModel
 obj
 grad
 grad!
+objgrad
+objgrad!
 hess
 redirect!
 armijo_wolfe
