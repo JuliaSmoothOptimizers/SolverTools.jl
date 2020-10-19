@@ -13,6 +13,9 @@
     @test derivative(lm, 0.0) == dot(grad(nlp, x), d)
     @test derivative!(lm, 0.0, g) == dot(grad(nlp, x), d)
     @test g == grad(nlp, x)
+    @test objgrad!(lm, 1.0, g) == (obj(nlp, x + d), dot(grad(nlp, x + d), d))
+    @test g == grad(nlp, x + d)
+    @test objgrad(lm, 0.0) == (obj(nlp, x), dot(grad(nlp, x), d))
     @test hess(lm, 0.0) == dot(d, Symmetric(hess(nlp, x), :L) * d)
 
     @test obj(lm,  1.0) == 0.0
@@ -24,8 +27,8 @@
     @test grad(lm, 0.0) == 0.0
     @test hess(lm, 0.0) == 10.0
 
-    @test neval_obj(lm) == 3
-    @test neval_grad(lm) == 6
+    @test neval_obj(lm) == 5
+    @test neval_grad(lm) == 8
     @test neval_hess(lm) == 3
   end
 

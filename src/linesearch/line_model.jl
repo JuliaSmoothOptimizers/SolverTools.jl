@@ -1,7 +1,7 @@
-import NLPModels: obj, grad, grad!, hess
+import NLPModels: obj, grad, grad!, objgrad!, objgrad, hess
 
 export LineModel
-export obj, grad, derivative, grad!, derivative!, hess, redirect!
+export obj, grad, derivative, grad!, objgrad!, objgrad, derivative!, hess, redirect!
 
 """A type to represent the restriction of a function to a direction.
 Given f : R → Rⁿ, x ∈ Rⁿ and a nonzero direction d ∈ Rⁿ,
@@ -72,6 +72,35 @@ function grad!(f :: LineModel, t :: AbstractFloat, g :: AbstractVector)
   return dot(grad!(f.nlp, f.x + t * f.d, g), f.d)
 end
 derivative!(f :: LineModel, t :: AbstractFloat, g :: AbstractVector) = grad!(f, t, g)
+
+"""`objgrad!(f, t, g)` evaluates the objective and first derivative of the `LineModel`
+
+    ϕ(t) := f(x + td),
+
+and
+
+    ϕ'(t) = ∇f(x + td)ᵀd.
+
+The gradient ∇f(x + td) is stored in `g`.
+"""
+function objgrad!(f :: LineModel, t :: AbstractFloat, g :: AbstractVector)
+  NLPModels.increment!(f, :neval_obj)
+  NLPModels.increment!(f, :neval_grad)
+  fx, gx = objgrad!(f.nlp, f.x + t * f.d, g)
+  return fx, dot(gx, f.d)
+end
+
+"""`objgrad(f, t)` evaluates the objective and first derivative of the `LineModel`
+
+    ϕ(t) := f(x + td),
+
+and
+
+    ϕ'(t) = ∇f(x + td)ᵀd.
+"""
+function objgrad(f :: LineModel, t :: AbstractFloat)
+  return obj(f, t), grad(f, t)
+end
 
 """Evaluate the second derivative of the `LineModel`
 
