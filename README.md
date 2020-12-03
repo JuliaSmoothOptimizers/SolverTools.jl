@@ -8,10 +8,7 @@
 
 A framework to build novel optimization algorithms in Julia.
 
-Cite us
-
-    Dominique Orban and Abel Soares Siqueira. SolverTools.jl.
-    Zenodo. http://doi.org/10.5281/zenodo.2592349
+Please cite this repository if you use SolverTools.jl in your work: see [`CITATION.bib`](https://github.com/JuliaSmoothOptimizers/SolverTools.jl/blob/master/CITATION.bib).
 
 # Installation
 
