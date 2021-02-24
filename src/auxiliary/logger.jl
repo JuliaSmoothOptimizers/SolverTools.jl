@@ -20,6 +20,7 @@ for (typ, fmt) in formats
 
   @eval begin
     row_formatter(x :: $typ) = @sprintf($fmt, x)
+    row_formatter(:: Type{<:$typ}) = @sprintf($fmt2, "-")
 
     $hdr_fmt_foo(x) = @sprintf($fmt2, x)
     header_formatter(x :: Union{Symbol,String}, :: Type{<:$typ}) = $hdr_fmt_foo(x)
@@ -67,6 +68,16 @@ end
 Creates a table row from the values on `vals` according to their types. Pass the names
 and types of `vals` to [`log_header`](@ref) for a logging table. Uses internal formatting
 specification given by `SolverTools.formats`.
+
+To handle a missing value, add the type instead of the number:
+
+    @info log_row(Any[1.0, 1])
+    @info log_row(Any[Float64, Int])
+
+Prints
+
+    [ Info:  1.0e+00       1
+    [ Info:        -       -
 
 Keyword arguments:
 - `colsep::Int`: Number of spaces between columns (Default: 2)
