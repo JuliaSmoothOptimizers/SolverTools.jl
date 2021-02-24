@@ -5,6 +5,7 @@ function test_logging()
   @info "Testing logger"
   log_header([:col_float, :col_int, :col_symbol, :col_string], [Float64, Int, Symbol, String])
   log_row([1.0, 1, :one, "one"])
+  log_row([Float64, Int, Symbol, String])
 
   with_logger(ConsoleLogger()) do
     @info "Testing dummy solver with logger"
