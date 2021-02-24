@@ -13,6 +13,7 @@ using DataFrames, JLD2
 include("auxiliary/blas.jl")
 include("auxiliary/bounds.jl")
 include("auxiliary/logger.jl")
+include("auxiliary/solver-logger.jl")
 include("stats/stats.jl")
 
 # Algorithmic components.
