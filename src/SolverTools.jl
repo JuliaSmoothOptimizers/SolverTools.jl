@@ -1,7 +1,7 @@
 module SolverTools
 
 # stdlib
-using LinearAlgebra, Logging, Printf
+using LinearAlgebra, Printf
 
 # our packages
 using LinearOperators, NLPModels
