@@ -13,8 +13,8 @@ makedocs(
           ]
 )
 
-deploydocs(deps = nothing, make = nothing,
+deploydocs(
   repo = "github.com/JuliaSmoothOptimizers/SolverTools.jl.git",
-  target = "build",
+  push_preview = true,
   devbranch = "master"
 )
