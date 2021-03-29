@@ -9,8 +9,6 @@ Pages = ["api.md"]
 active
 breakpoints
 compute_Hs_slope_qs!
-log_header
-log_row
 project!
 project_step!
 ```
@@ -27,13 +25,6 @@ objgrad!
 hess
 redirect!
 armijo_wolfe
-```
-
-## Stats
-
-```@docs
-GenericExecutionStats
-show_statuses
 ```
 
 ## Trust-Region

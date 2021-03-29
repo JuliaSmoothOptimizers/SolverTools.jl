@@ -6,14 +6,9 @@ using LinearAlgebra, Printf
 # our packages
 using LinearOperators, NLPModels
 
-# auxiliary packages
-using DataFrames, JLD2
-
 # Auxiliary.
 include("auxiliary/blas.jl")
 include("auxiliary/bounds.jl")
-include("auxiliary/logger.jl")
-include("stats/stats.jl")
 
 # Algorithmic components.
 include("linesearch/linesearch.jl")

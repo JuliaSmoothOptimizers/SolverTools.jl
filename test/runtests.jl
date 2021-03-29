@@ -11,6 +11,4 @@ include("dummy_solver.jl")
 
 include("test_auxiliary.jl")
 include("test_linesearch.jl")
-include("test_logging.jl")
-include("test_stats.jl")
 include("test_trust_region.jl")
