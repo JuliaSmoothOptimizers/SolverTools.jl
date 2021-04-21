@@ -8,7 +8,6 @@ makedocs(
   format = Documenter.HTML(assets = ["assets/style.css"], prettyurls = get(ENV, "CI", nothing) == "true"),
   sitename = "SolverTools.jl",
   pages = ["Home" => "index.md",
-           "API" => "api.md",
            "Reference" => "reference.md",
           ]
 )
