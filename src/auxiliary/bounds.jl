@@ -8,9 +8,13 @@ export active, breakpoints, compute_Hs_slope_qs!, project!, project_step!
 Computes the active bounds at x, using tolerance `min(rtol * (uᵢ-ℓᵢ), atol)`.
 If ℓᵢ or uᵢ is not finite, only `atol` is used.
 """
-function active(x::AbstractVector{T}, ℓ::AbstractVector{T},
-                u::AbstractVector{T}; rtol::Real = sqrt(eps(eltype(x))),
-                atol::Real = sqrt(eps(eltype(x)))) where {T <: Real}
+function active(
+  x::AbstractVector{T},
+  ℓ::AbstractVector{T},
+  u::AbstractVector{T};
+  rtol::Real = sqrt(eps(eltype(x))),
+  atol::Real = sqrt(eps(eltype(x))),
+) where {T <: Real}
   A = Int[]
   n = length(x)
   for i = 1:n
@@ -33,10 +37,14 @@ Find the smallest and largest values of `α` such that `x + αd` lies on the
 boundary. `x` is assumed to be feasible. `nbrk` is the number of breakpoints
 from `x` in the direction `d`.
 """
-function breakpoints(x::AbstractVector{T}, d::AbstractVector{T},
-                     ℓ::AbstractVector{T}, u::AbstractVector{T}) where {T <: Real}
-  pos = findall( (d .> 0) .& (x .< u) )
-  neg = findall( (d .< 0) .& (x .> ℓ) )
+function breakpoints(
+  x::AbstractVector{T},
+  d::AbstractVector{T},
+  ℓ::AbstractVector{T},
+  u::AbstractVector{T},
+) where {T <: Real}
+  pos = findall((d .> 0) .& (x .< u))
+  neg = findall((d .< 0) .& (x .> ℓ))
 
   nbrk = length(pos) + length(neg)
   nbrk == 0 && return 0, zero(T), zero(T)
@@ -65,10 +73,14 @@ Computes
     slope = dot(g,s)
     qs = ¹/₂sᵀHs + slope
 """
-function compute_Hs_slope_qs!(Hs::AbstractVector{T}, H::Union{AbstractMatrix,AbstractLinearOperator},
-                              s::AbstractVector{T}, g::AbstractVector{T}) where {T <: Real}
+function compute_Hs_slope_qs!(
+  Hs::AbstractVector{T},
+  H::Union{AbstractMatrix, AbstractLinearOperator},
+  s::AbstractVector{T},
+  g::AbstractVector{T},
+) where {T <: Real}
   Hs .= H * s
-  slope = dot(g,s)
+  slope = dot(g, s)
   qs = dot(s, Hs) / 2 + slope
   return slope, qs
 end
@@ -79,8 +91,12 @@ end
 Projects `x` into bounds `ℓ` and `u`, in the sense of
 `yᵢ = max(ℓᵢ, min(xᵢ, uᵢ))`.
 """
-function project!(y :: AbstractVector{T}, x :: AbstractVector{T},
-                  ℓ :: AbstractVector{T}, u :: AbstractVector{T}) where {T <: Real}
+function project!(
+  y::AbstractVector{T},
+  x::AbstractVector{T},
+  ℓ::AbstractVector{T},
+  u::AbstractVector{T},
+) where {T <: Real}
   y .= max.(ℓ, min.(x, u))
 end
 
@@ -89,9 +105,14 @@ end
 
 Computes the projected direction `y = P(x + α * d) - x`.
 """
-function project_step!(y::AbstractVector{T}, x::AbstractVector{T},
-                       d::AbstractVector{T}, ℓ::AbstractVector{T},
-                       u::AbstractVector{T}, α::Real = 1.0) where {T <: Real}
+function project_step!(
+  y::AbstractVector{T},
+  x::AbstractVector{T},
+  d::AbstractVector{T},
+  ℓ::AbstractVector{T},
+  u::AbstractVector{T},
+  α::Real = 1.0,
+) where {T <: Real}
   y .= x .+ α .* d
   project!(y, y, ℓ, u)
   y .-= x

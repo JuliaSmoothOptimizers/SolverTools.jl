@@ -18,12 +18,12 @@
     @test objgrad(lm, 0.0) == (obj(nlp, x), dot(grad(nlp, x), d))
     @test hess(lm, 0.0) == dot(d, Symmetric(hess(nlp, x), :L) * d)
 
-    @test obj(lm,  1.0) == 0.0
+    @test obj(lm, 1.0) == 0.0
     @test grad(lm, 1.0) == 0.0
     @test hess(lm, 1.0) == 2d[1]^2 + 8d[2]^2
 
     redirect!(lm, zeros(2), ones(2))
-    @test obj(lm,  0.0) == 0.0
+    @test obj(lm, 0.0) == 0.0
     @test grad(lm, 0.0) == 0.0
     @test hess(lm, 0.0) == 10.0
 
