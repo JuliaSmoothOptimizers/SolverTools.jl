@@ -13,15 +13,15 @@ represents the function ϕ : R → R defined by
     ϕ(t) := f(x + td).
 """
 mutable struct LineModel <: AbstractNLPModel
-  meta :: NLPModelMeta
-  counters :: Counters
-  nlp :: AbstractNLPModel
-  x :: AbstractVector
-  d :: AbstractVector
+  meta::NLPModelMeta
+  counters::Counters
+  nlp::AbstractNLPModel
+  x::AbstractVector
+  d::AbstractVector
 end
 
-function LineModel(nlp :: AbstractNLPModel, x :: AbstractVector, d :: AbstractVector)
-  meta = NLPModelMeta(1, x0=zeros(eltype(x), 1), name="LineModel to $(nlp.meta.name))")
+function LineModel(nlp::AbstractNLPModel, x::AbstractVector, d::AbstractVector)
+  meta = NLPModelMeta(1, x0 = zeros(eltype(x), 1), name = "LineModel to $(nlp.meta.name))")
   return LineModel(meta, Counters(), nlp, x, d)
 end
 
@@ -29,7 +29,7 @@ end
 
 Change the values of x and d of the LineModel ϕ, but retains the counters.
 """
-function redirect!(ϕ :: LineModel, x :: AbstractVector, d :: AbstractVector)
+function redirect!(ϕ::LineModel, x::AbstractVector, d::AbstractVector)
   ϕ.x, ϕ.d = x, d
   return ϕ
 end
@@ -38,7 +38,7 @@ end
 
     ϕ(t) := f(x + td).
 """
-function obj(f :: LineModel, t :: AbstractFloat)
+function obj(f::LineModel, t::AbstractFloat)
   NLPModels.increment!(f, :neval_obj)
   return obj(f.nlp, f.x + t * f.d)
 end
@@ -51,11 +51,11 @@ i.e.,
 
     ϕ'(t) = ∇f(x + td)ᵀd.
 """
-function grad(f :: LineModel, t :: AbstractFloat)
+function grad(f::LineModel, t::AbstractFloat)
   NLPModels.increment!(f, :neval_grad)
   return dot(grad(f.nlp, f.x + t * f.d), f.d)
 end
-derivative(f :: LineModel, t :: AbstractFloat) = grad(f, t)
+derivative(f::LineModel, t::AbstractFloat) = grad(f, t)
 
 """`grad!(f, t, g)` evaluates the first derivative of the `LineModel`
 
@@ -67,11 +67,11 @@ i.e.,
 
 The gradient ∇f(x + td) is stored in `g`.
 """
-function grad!(f :: LineModel, t :: AbstractFloat, g :: AbstractVector)
+function grad!(f::LineModel, t::AbstractFloat, g::AbstractVector)
   NLPModels.increment!(f, :neval_grad)
   return dot(grad!(f.nlp, f.x + t * f.d, g), f.d)
 end
-derivative!(f :: LineModel, t :: AbstractFloat, g :: AbstractVector) = grad!(f, t, g)
+derivative!(f::LineModel, t::AbstractFloat, g::AbstractVector) = grad!(f, t, g)
 
 """`objgrad!(f, t, g)` evaluates the objective and first derivative of the `LineModel`
 
@@ -83,7 +83,7 @@ and
 
 The gradient ∇f(x + td) is stored in `g`.
 """
-function objgrad!(f :: LineModel, t :: AbstractFloat, g :: AbstractVector)
+function objgrad!(f::LineModel, t::AbstractFloat, g::AbstractVector)
   NLPModels.increment!(f, :neval_obj)
   NLPModels.increment!(f, :neval_grad)
   fx, gx = objgrad!(f.nlp, f.x + t * f.d, g)
@@ -98,7 +98,7 @@ and
 
     ϕ'(t) = ∇f(x + td)ᵀd.
 """
-function objgrad(f :: LineModel, t :: AbstractFloat)
+function objgrad(f::LineModel, t::AbstractFloat)
   return obj(f, t), grad(f, t)
 end
 
@@ -110,7 +110,7 @@ i.e.,
 
     ϕ"(t) = dᵀ∇²f(x + td)d.
 """
-function hess(f :: LineModel, t :: AbstractFloat)
+function hess(f::LineModel, t::AbstractFloat)
   NLPModels.increment!(f, :neval_hess)
   return dot(f.d, hprod(f.nlp, f.x + t * f.d, f.d))
 end
