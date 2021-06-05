@@ -12,16 +12,16 @@ represents the function ϕ : R → R defined by
 
     ϕ(t) := f(x + td).
 """
-mutable struct LineModel <: AbstractNLPModel
-  meta::NLPModelMeta
+mutable struct LineModel{T, S} <: AbstractNLPModel{T, S}
+  meta::NLPModelMeta{T, S}
   counters::Counters
-  nlp::AbstractNLPModel
+  nlp::AbstractNLPModel{T, S}
   x::AbstractVector
   d::AbstractVector
 end
 
-function LineModel(nlp::AbstractNLPModel, x::AbstractVector, d::AbstractVector)
-  meta = NLPModelMeta(1, x0 = zeros(eltype(x), 1), name = "LineModel to $(nlp.meta.name))")
+function LineModel(nlp::AbstractNLPModel{T, S}, x::AbstractVector, d::AbstractVector) where {T, S}
+  meta = NLPModelMeta{T, S}(1, x0 = zeros(T, 1), name = "LineModel to $(nlp.meta.name))")
   return LineModel(meta, Counters(), nlp, x, d)
 end
 
