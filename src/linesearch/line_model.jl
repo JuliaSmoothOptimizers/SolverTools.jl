@@ -16,11 +16,11 @@ mutable struct LineModel{T, S} <: AbstractNLPModel{T, S}
   meta::NLPModelMeta{T, S}
   counters::Counters
   nlp::AbstractNLPModel{T, S}
-  x::AbstractVector
-  d::AbstractVector
+  x::S
+  d::S
 end
 
-function LineModel(nlp::AbstractNLPModel{T, S}, x::AbstractVector, d::AbstractVector) where {T, S}
+function LineModel(nlp::AbstractNLPModel{T, S}, x::S, d::S) where {T, S}
   meta = NLPModelMeta{T, S}(1, x0 = zeros(T, 1), name = "LineModel to $(nlp.meta.name))")
   return LineModel(meta, Counters(), nlp, x, d)
 end
