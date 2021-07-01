@@ -1,10 +1,46 @@
+"""
+    @wrappedallocs(expr)
+
+Given an expression, this macro wraps that expression inside a new function
+which will evaluate that expression and measure the amount of memory allocated
+by the expression. Wrapping the expression in a new function allows for more
+accurate memory allocation detection when using global variables (e.g. when
+at the REPL).
+
+For example, `@wrappedallocs(x + y)` produces:
+
+```julia
+function g(x1, x2)
+    @allocated x1 + x2
+end
+g(x, y)
+```
+
+You can use this macro in a unit test to verify that a function does not
+allocate:
+
+```
+@test @wrappedallocs(x + y) == 0
+```
+"""
+macro wrappedallocs(expr)
+    argnames = [gensym() for a in expr.args]
+    quote
+        function g($(argnames...))
+            @allocated $(Expr(expr.head, argnames...))
+        end
+        $(Expr(:call, :g, [esc(a) for a in expr.args]...))
+    end
+end
+
 @testset "Linesearch" begin
   @testset "LineModel" begin
-    nlp = ADNLPModel(x -> x[1]^2 + 4 * x[2]^2, ones(2))
+    n = 200
+    nlp = SimpleModel(n)
     x = nlp.meta.x0
-    d = -ones(2)
+    d = -ones(n)
     lm = LineModel(nlp, x, d)
-    g = zeros(2)
+    g = zeros(n)
 
     @test obj(lm, 0.0) == obj(nlp, x)
     @test grad(lm, 0.0) == dot(grad(nlp, x), d)
@@ -17,19 +53,19 @@
     @test g == grad(nlp, x + d)
     @test objgrad(lm, 0.0) == (obj(nlp, x), dot(grad(nlp, x), d))
     @test hess(lm, 0.0) == dot(d, Symmetric(hess(nlp, x), :L) * d)
+    @test hess!(lm, 0.0, g) == dot(d, hprod!(nlp, x, d, g))
 
     @test obj(lm, 1.0) == 0.0
     @test grad(lm, 1.0) == 0.0
-    @test hess(lm, 1.0) == 2d[1]^2 + 8d[2]^2
+    @test hess(lm, 1.0) == 0.0
 
-    redirect!(lm, zeros(2), ones(2))
-    @test obj(lm, 0.0) == 0.0
-    @test grad(lm, 0.0) == 0.0
-    @test hess(lm, 0.0) == 10.0
+    @test obj(lm, 0.0) ≈ n / 12
+    @test grad(lm, 0.0) ≈ -n / 3
+    @test hess(lm, 0.0) == n
 
     @test neval_obj(lm) == 5
     @test neval_grad(lm) == 8
-    @test neval_hess(lm) == 3
+    @test neval_hess(lm) == 4
   end
 
   @testset "Armijo-Wolfe" begin
@@ -62,5 +98,44 @@
     @test t < 1
     @test nbk > 0
     @test nbW > 0
+  end
+
+  if VERSION ≥ v"1.6"
+    @testset "Don't allocate" begin
+      n = 200
+      nlp = SimpleModel(n)
+      x = nlp.meta.x0
+      g = zeros(n)
+      d = -40 * ones(n)
+      lm = LineModel(nlp, x, d)
+
+      al = @wrappedallocs obj(lm, 1.0)
+      @test al == 0
+
+      al = @wrappedallocs grad!(lm, 1.0, g)
+      @test al == 0
+
+      al = @wrappedallocs objgrad!(lm, 1.0, g)
+      @test al == 0
+
+      al = @wrappedallocs hess!(lm, 1.0, g)
+      @test al == 0
+
+      h₀ = obj(lm, 0.0)
+      slope = grad(lm, 0.0)
+      (t, gg, ht, nbk, nbW) = armijo_wolfe(lm, h₀, slope, g)
+      al = @wrappedallocs armijo_wolfe(lm, h₀, slope, g)
+      @test al == 0
+
+      function armijo_wolfe_alloc(lm, h₀, slope, g, bk_max)
+        @allocated armijo_wolfe(lm, h₀, slope, g, bk_max=bk_max)
+      end
+
+      for bk_max = 0:8
+        (t, gg, ht, nbk, nbW) = armijo_wolfe(lm, h₀, slope, g, bk_max=bk_max)
+        al = armijo_wolfe_alloc(lm, h₀, slope, g, bk_max)
+        @test al == 0
+      end
+    end
   end
 end
