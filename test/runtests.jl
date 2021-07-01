@@ -8,6 +8,7 @@ using ADNLPModels, NLPModels
 using LinearAlgebra, Logging, Test
 
 include("dummy_solver.jl")
+include("simple_model.jl")
 
 include("test_auxiliary.jl")
 include("test_linesearch.jl")
