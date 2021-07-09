@@ -16,5 +16,5 @@ makedocs(
 deploydocs(
   repo = "github.com/JuliaSmoothOptimizers/SolverTools.jl.git",
   push_preview = true,
-  devbranch = "master",
+  devbranch = "main",
 )
