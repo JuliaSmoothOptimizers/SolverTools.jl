@@ -24,13 +24,13 @@ allocate:
 ```
 """
 macro wrappedallocs(expr)
-    argnames = [gensym() for a in expr.args]
-    quote
-        function g($(argnames...))
-            @allocated $(Expr(expr.head, argnames...))
-        end
-        $(Expr(:call, :g, [esc(a) for a in expr.args]...))
+  argnames = [gensym() for a in expr.args]
+  quote
+    function g($(argnames...))
+      @allocated $(Expr(expr.head, argnames...))
     end
+    $(Expr(:call, :g, [esc(a) for a in expr.args]...))
+  end
 end
 
 @testset "Linesearch" begin
@@ -128,11 +128,11 @@ end
       @test al == 0
 
       function armijo_wolfe_alloc(lm, h₀, slope, g, bk_max)
-        @allocated armijo_wolfe(lm, h₀, slope, g, bk_max=bk_max)
+        @allocated armijo_wolfe(lm, h₀, slope, g, bk_max = bk_max)
       end
 
       for bk_max = 0:8
-        (t, gg, ht, nbk, nbW) = armijo_wolfe(lm, h₀, slope, g, bk_max=bk_max)
+        (t, gg, ht, nbk, nbW) = armijo_wolfe(lm, h₀, slope, g, bk_max = bk_max)
         al = armijo_wolfe_alloc(lm, h₀, slope, g, bk_max)
         @test al == 0
       end
