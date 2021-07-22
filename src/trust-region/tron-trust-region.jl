@@ -52,7 +52,8 @@ mutable struct TRONTrustRegion{T, V} <: AbstractTrustRegion{T, V}
   end
 end
 
-TRONTrustRegion(::Type{V}, n::Int, Δ₀::T; kwargs...) where {T, V} = TRONTrustRegion(V(undef, n), Δ₀; kwargs...)
+TRONTrustRegion(::Type{V}, n::Int, Δ₀::T; kwargs...) where {T, V} =
+  TRONTrustRegion(V(undef, n), Δ₀; kwargs...)
 TRONTrustRegion(n::Int, Δ₀::T; kwargs...) where {T} = TRONTrustRegion(Vector{T}, n, Δ₀; kwargs...)
 
 function aredpred!(

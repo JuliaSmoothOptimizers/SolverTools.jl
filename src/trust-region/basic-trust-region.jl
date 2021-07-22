@@ -44,7 +44,8 @@ mutable struct TrustRegion{T, V} <: AbstractTrustRegion{T, V}
   end
 end
 
-TrustRegion(::Type{V}, n::Int, Δ₀::T; kwargs...) where {T, V} = TrustRegion(V(undef, n), Δ₀; kwargs...)
+TrustRegion(::Type{V}, n::Int, Δ₀::T; kwargs...) where {T, V} =
+  TrustRegion(V(undef, n), Δ₀; kwargs...)
 TrustRegion(n::Int, Δ₀::T; kwargs...) where {T} = TrustRegion(Vector{T}, n, Δ₀; kwargs...)
 
 function aredpred!(
