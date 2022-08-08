@@ -10,11 +10,11 @@ function test_auxiliary()
       @test dot(n, x, y) == dot(x, y)
 
       xtd = x + t * y
-      axpy!(n, t, y, x)
+      SolverTools.axpy!(n, t, y, x)
       @test xtd == x
 
       xtd = t * y + s * x
-      axpby!(n, t, y, s, x)
+      SolverTools.axpby!(n, t, y, s, x)
       @test xtd == x
 
       y .= x / 2
