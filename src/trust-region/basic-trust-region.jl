@@ -1,6 +1,31 @@
 export TrustRegion
 
-"""Basic trust region type."""
+"""
+    TrustRegion{T, V} <: AbstractTrustRegion{T, V}
+
+Basic trust region type that contains the following fields:
+- `initial_radius::T`: initial radius;
+- `radius::T`: current radius;
+- `max_radius::T`: upper bound on the radius (default `1 / sqrt(eps(T))`);
+- `acceptance_threshold::T`: decrease radius if ratio is below this threshold between 0 and 1 (default `1e-4`);
+- `increase_threshold::T`: increase radius if ratio is beyond this threshold between 0 and 1  (default `0.95`);
+- `decrease_factor::T`: decrease factor less between 0 and 1 (default `1 / 3`);
+- `increase_factor::T`: increase factor greater than one (default `3 / 2`);
+- `ratio::T`: current ratio `ared / pred`;
+- `gt::V`: pre-allocated memory vector to store the gradient of the objective function;
+- `good_grad::Bool`: `true` if `gt` is the gradient of the objective function at the trial point.
+
+The following constructors are available:
+
+    TrustRegion(gt,::V initial_radius::T; kwargs...)
+
+If `gt` is not known, it is possible to use the following constructors:
+
+    TrustRegion(::Type{V}, n::Int, Δ₀::T; kwargs...)
+    TrustRegion(n::Int, Δ₀::T; kwargs...)
+
+that will allocate a vector of size `n` and type `V` or `Vector{T}`.
+"""
 mutable struct TrustRegion{T, V} <: AbstractTrustRegion{T, V}
   initial_radius::T
   radius::T
@@ -23,7 +48,7 @@ mutable struct TrustRegion{T, V} <: AbstractTrustRegion{T, V}
     increase_factor::T = 3 * one(T) / 2,
   ) where {T, V}
     initial_radius > 0 || (initial_radius = one(T))
-    max_radius > initial_radius || throw(TrustRegionException("Invalid initial radius"))
+    max_radius ≥ initial_radius || throw(TrustRegionException("Invalid initial radius"))
     (0 < acceptance_threshold < increase_threshold < 1) ||
       throw(TrustRegionException("Invalid thresholds"))
     (0 < decrease_factor < 1 < increase_factor) ||
@@ -47,20 +72,6 @@ end
 TrustRegion(::Type{V}, n::Int, Δ₀::T; kwargs...) where {T, V} =
   TrustRegion(V(undef, n), Δ₀; kwargs...)
 TrustRegion(n::Int, Δ₀::T; kwargs...) where {T} = TrustRegion(Vector{T}, n, Δ₀; kwargs...)
-
-function aredpred!(
-  tr::AbstractTrustRegion{T, V},
-  nlp::AbstractNLPModel{T, V},
-  f::T,
-  f_trial::T,
-  Δm::T,
-  x_trial::V,
-  step::V,
-  slope::T,
-) where {T, V}
-  ared, pred, tr.good_grad = aredpred_common(nlp, f, f_trial, Δm, x_trial, step, tr.gt, slope)
-  return ared, pred
-end
 
 function update!(tr::TrustRegion{T, V}, step_norm::T) where {T, V}
   if tr.ratio < tr.acceptance_threshold
