@@ -79,7 +79,7 @@ function compute_Hs_slope_qs!(
   s::AbstractVector{T},
   g::AbstractVector{T},
 ) where {T <: Real}
-  Hs .= H * s
+  mul!(Hs, H, s)
   slope = dot(g, s)
   qs = dot(s, Hs) / 2 + slope
   return slope, qs
