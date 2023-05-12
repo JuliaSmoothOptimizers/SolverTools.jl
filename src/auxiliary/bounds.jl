@@ -1,6 +1,6 @@
 # Auxiliary function related to bound-constrainted problems
 
-export active, breakpoints, compute_Hs_slope_qs!, project!, project_step!
+export active, active!, breakpoints, compute_Hs_slope_qs!, project!, project_step!
 
 """
     active(x, ℓ, u; rtol = 1e-8, atol = 1e-8)
@@ -15,19 +15,40 @@ function active(
   rtol::Real = sqrt(eps(eltype(x))),
   atol::Real = sqrt(eps(eltype(x))),
 ) where {T <: Real}
-  A = Int[]
+  n = length(x)
+  indices = BitVector(undef, n)
+  active!(indices, x, ℓ, u, atol = atol, rtol = rtol)
+  return findall(indices)
+end
+
+"""
+    active!(indices, x, ℓ, u; rtol = 1e-8, atol = 1e-8)
+
+Return a `BitVector` of the active bounds at x, using tolerance `min(rtol * (uᵢ-ℓᵢ), atol)`.
+If ℓᵢ or uᵢ is not finite, only `atol` is used.
+"""
+function active!(
+  indices::BitVector,
+  x::AbstractVector{T},
+  ℓ::AbstractVector{T},
+  u::AbstractVector{T};
+  rtol::Real = sqrt(eps(eltype(x))),
+  atol::Real = sqrt(eps(eltype(x))),
+) where {T <: Real}
   n = length(x)
   for i = 1:n
     δ = -Inf < ℓ[i] < u[i] < Inf ? min(rtol * (u[i] - ℓ[i]), atol) : atol
     if ℓ[i] == x[i] == u[i]
-      push!(A, i)
+      indices[i] = true
     elseif x[i] <= ℓ[i] + δ
-      push!(A, i)
+      indices[i] = true
     elseif x[i] >= u[i] - δ
-      push!(A, i)
+      indices[i] = true
+    else
+      indices[i] = false
     end
   end
-  return A
+  return indices
 end
 
 """
