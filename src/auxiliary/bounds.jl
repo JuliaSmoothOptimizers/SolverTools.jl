@@ -12,8 +12,8 @@ function active(
   x::AbstractVector{T},
   ℓ::AbstractVector{T},
   u::AbstractVector{T};
-  rtol::Real = sqrt(eps(eltype(x))),
-  atol::Real = sqrt(eps(eltype(x))),
+  rtol::Real = sqrt(eps(T)),
+  atol::Real = sqrt(eps(T)),
 ) where {T <: Real}
   n = length(x)
   indices = BitVector(undef, n)
@@ -32,8 +32,8 @@ function active!(
   x::AbstractVector{T},
   ℓ::AbstractVector{T},
   u::AbstractVector{T};
-  rtol::Real = sqrt(eps(eltype(x))),
-  atol::Real = sqrt(eps(eltype(x))),
+  rtol::Real = sqrt(eps(T)),
+  atol::Real = sqrt(eps(T)),
 ) where {T <: Real}
   n = length(x)
   for i = 1:n
