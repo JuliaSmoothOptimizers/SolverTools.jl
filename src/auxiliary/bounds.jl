@@ -69,7 +69,7 @@ function breakpoints(
   nbrk = 0
   brkmin = T(Inf)
   brkmax = zero(T)
-  for i=1:nvar
+  for i = 1:nvar
     pos = (d[i] > 0) & (x[i] < u[i])
     if pos
       step = (u[i] - x[i]) / d[i]
