@@ -64,24 +64,28 @@ function breakpoints(
   ℓ::AbstractVector{T},
   u::AbstractVector{T},
 ) where {T <: Real}
-  pos = findall((d .> 0) .& (x .< u))
-  neg = findall((d .< 0) .& (x .> ℓ))
+  nvar = length(x)
 
-  nbrk = length(pos) + length(neg)
-  nbrk == 0 && return 0, zero(T), zero(T)
-
+  nbrk = 0
   brkmin = T(Inf)
   brkmax = zero(T)
-  if length(pos) > 0
-    @views steps = (u[pos] - x[pos]) ./ d[pos]
-    brkmin = min.(brkmin, minimum(steps))
-    brkmax = max.(brkmax, maximum(steps))
+  for i=1:nvar
+    pos = (d[i] > 0) & (x[i] < u[i])
+    if pos
+      step = (u[i] - x[i]) / d[i]
+      brkmin = min(brkmin, step)
+      brkmax = max(brkmax, step)
+      nbrk += 1
+    end
+    neg = (d[i] < 0) & (x[i] > ℓ[i])
+    if neg
+      step = (ℓ[i] - x[i]) / d[i]
+      brkmin = min(brkmin, step)
+      brkmax = max(brkmax, step)
+      nbrk += 1
+    end
   end
-  if length(neg) > 0
-    @views steps = (ℓ[neg] - x[neg]) ./ d[neg]
-    brkmin = min.(brkmin, minimum(steps))
-    brkmax = max.(brkmax, maximum(steps))
-  end
+
   return nbrk, brkmin, brkmax
 end
 
