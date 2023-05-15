@@ -34,6 +34,8 @@ function test_auxiliary()
 
     d = [1.0; 1.0; 0.0; -1.0; -1.0]
     @test breakpoints(x, d, ℓ, u) == (4, 3.0, 4.0)
+    a = @allocated breakpoints(x, d, ℓ, u)
+    @test a == 0
 
     H = diagm(0 => 2 * ones(5), -1 => -ones(4), 1 => -ones(4))
     Hx = zeros(5)
@@ -41,6 +43,8 @@ function test_auxiliary()
     slope, qx = compute_Hs_slope_qs!(Hx, H, x, g)
     @test slope == dot(g, x)
     @test qx == dot(x, Hx) / 2 + slope
+    a = @allocated compute_Hs_slope_qs!(Hx, H, x, g)
+    @test a == 0
 
     z = [ℓ[1:2] - rand(2); x[3]; u[4:5] + rand(2)]
     y = rand(5)
@@ -49,6 +53,11 @@ function test_auxiliary()
 
     project_step!(y, x, -d, ℓ, u)
     @test y == [0.0; -1.0; 0.0; 1.0; 0.0]
+
+    ind = BitVector(undef, 5)
+    active!(ind, x, ℓ, u)
+    a = @allocated active!(ind, x, ℓ, u)
+    @test a == 0
   end
 end
 
