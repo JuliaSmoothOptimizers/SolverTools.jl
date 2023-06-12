@@ -100,6 +100,37 @@ function aredpred!(
   return ared, pred
 end
 
+function aredpred!(
+  tr::TRONTrustRegion{T, V},
+  nls::AbstractNLSModel{T, V},
+  f::T,
+  f_trial::T,
+  Δm::T,
+  x_trial::V,
+  step::V,
+  slope::T,
+) where {T, V}
+  Fx = similar(x_trial, nls.nls_meta.nequ)
+  return aredpred!(tr, nls, Fx, f, f_trial, Δm, x_trial, step, slope)
+end
+
+function aredpred!(
+  tr::TRONTrustRegion{T, V},
+  nls::AbstractNLSModel{T, V},
+  Fx::V,
+  f::T,
+  f_trial::T,
+  Δm::T,
+  x_trial::V,
+  step::V,
+  slope::T,
+) where {T, V}
+  ared, pred, tr.good_grad = aredpred_common(nls, Fx, f, f_trial, Δm, x_trial, step, tr.gt, slope)
+  γ = f_trial - f - slope
+  tr.quad_min = γ <= 0 ? tr.increase_factor : max(tr.large_decrease_factor, -slope / γ / 2)
+  return ared, pred
+end
+
 function update!(tr::TRONTrustRegion{T, V}, step_norm::T) where {T, V}
   α, σ₁, σ₂, σ₃ =
     tr.quad_min, tr.large_decrease_factor, tr.small_decrease_factor, tr.increase_factor
