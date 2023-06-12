@@ -38,8 +38,8 @@
 
     if VERSION ≥ v"1.6"
       @testset "Allocation" begin
-        n = 200
-        nlp = SimpleModel(n)
+        nlp = BROWNDEN()
+        n = nlp.meta.nvar
         Δ₀ = 10.0
         tr = TrustRegion(n, Δ₀)
         x = zeros(n)
@@ -78,8 +78,8 @@
 
     if VERSION ≥ v"1.6"
       @testset "Allocation" begin
-        n = 200
-        nlp = SimpleModel(n)
+        nlp = BROWNDEN()
+        n = nlp.meta.nvar
         Δ₀ = 10.0
         tr = TRONTrustRegion(n, Δ₀)
         x = zeros(n)

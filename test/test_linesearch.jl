@@ -1,7 +1,7 @@
 @testset "Linesearch" begin
   @testset "LineModel" begin
-    n = 200
-    nlp = SimpleModel(n)
+    nlp = BROWNDEN()
+    n = nlp.meta.nvar
     x = nlp.meta.x0
     d = -ones(n)
     lm = LineModel(nlp, x, d)
@@ -17,20 +17,16 @@
     @test objgrad!(lm, 1.0, g) == (obj(nlp, x + d), dot(grad(nlp, x + d), d))
     @test g == grad(nlp, x + d)
     @test objgrad(lm, 0.0) == (obj(nlp, x), dot(grad(nlp, x), d))
-    @test hess(lm, 0.0) == dot(d, Symmetric(hess(nlp, x), :L) * d)
+    @test hess(lm, 0.0) ≈ dot(d, hess(nlp, x) * d)
     @test hess!(lm, 0.0, g) == dot(d, hprod!(nlp, x, d, g))
 
-    @test obj(lm, 1.0) == 0.0
-    @test grad(lm, 1.0) == 0.0
-    @test hess(lm, 1.0) == 0.0
+    @test obj(lm, 1.0) == obj(nlp, x + d)
+    @test grad(lm, 1.0) == dot(grad(nlp, x + d), d)
+    @test hess(lm, 1.0) ≈ dot(d, hess(nlp, x + d) * d)
 
-    @test obj(lm, 0.0) ≈ n / 12
-    @test grad(lm, 0.0) ≈ -n / 3
-    @test hess(lm, 0.0) == n
-
-    @test neval_obj(lm) == 5
-    @test neval_grad(lm) == 8
-    @test neval_hess(lm) == 4
+    @test neval_obj(lm) == 4
+    @test neval_grad(lm) == 7
+    @test neval_hess(lm) == 3
   end
 
   @testset "Armijo-Wolfe" begin
@@ -67,8 +63,8 @@
 
   if VERSION ≥ v"1.6"
     @testset "Don't allocate" begin
-      n = 200
-      nlp = SimpleModel(n)
+      nlp = BROWNDEN()
+      n = nlp.meta.nvar
       x = nlp.meta.x0
       g = zeros(n)
       d = -40 * ones(n)
