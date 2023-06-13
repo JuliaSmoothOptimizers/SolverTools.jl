@@ -1,7 +1,7 @@
 @testset "Trust Region" begin
   @testset "aredpred-$(nlp.meta.name)" for nlp in (
     ADNLPModel(x -> x[1]^2 + 4 * x[2]^2, ones(2), name = "NLP"),
-    ADNLSModel(x -> [x[1];  2 * x[2]], ones(2), 2, name = "NLS"),
+    ADNLSModel(x -> [x[1]; 2 * x[2]], ones(2), 2, name = "NLS"),
   )
     x = nlp.meta.x0
     d = -ones(2)
