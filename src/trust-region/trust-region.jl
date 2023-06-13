@@ -25,6 +25,7 @@ abstract type AbstractTrustRegion{T, V} end
 
 """
     ared, pred, good_grad = aredpred_common(nlp, f, f_trial, Δm, x_trial, step, g_trial, slope)
+    ared, pred, good_grad = aredpred_common(nlp, Fx, f, f_trial, Δm, x_trial, step, g_trial, slope)
 
 Compute the actual and predicted reductions `∆f` and `Δm`, where
 `ared = Δf = f_trial - f` is the actual reduction is an objective/merit/penalty function,
@@ -32,6 +33,8 @@ Compute the actual and predicted reductions `∆f` and `Δm`, where
 We assume that `m` is being minimized, and therefore that `Δm < 0`.
 
 `good_grad` is `true` if the gradient of `nlp` at `x_trial` has been updated and stored in `g_trial`.
+For `AbstractNLSModel`, the argument `Fx` stores the residual if the gradient is updated.
+
 """
 function aredpred_common(
   nlp::AbstractNLPModel{T, V},
@@ -59,7 +62,37 @@ function aredpred_common(
   return ared, pred, good_grad
 end
 
-"""`ared, pred = aredpred(tr, nlp, f, f_trial, Δm, x_trial, step, slope)`
+function aredpred_common(
+  nls::AbstractNLSModel{T, V},
+  Fx::V,
+  f::T,
+  f_trial::T,
+  Δm::T,
+  x_trial::V,
+  step::V,
+  g_trial::V,
+  slope::T,
+) where {T, V}
+  absf = abs(f)
+  ϵ = eps(T)
+  pred = Δm - max(one(T), absf) * 10 * ϵ
+
+  good_grad = false
+  ared = f_trial - f + max(one(T), absf) * 10 * ϵ
+  if (abs(Δm) < 10_000 * ϵ) || (abs(ared) < 10_000 * ϵ * absf)
+    # correct for roundoff error
+    residual!(nls, x_trial, Fx)
+    grad!(nls, x_trial, g_trial, Fx, recompute = false)
+    good_grad = true
+    slope_trial = dot(g_trial, step)
+    ared = (slope_trial + slope) / 2
+  end
+  return ared, pred, good_grad
+end
+
+"""
+    ared, pred = aredpred(tr, nlp, f, f_trial, Δm, x_trial, step, slope)
+    ared, pred = aredpred(tr, nls, Fx, f, f_trial, Δm, x_trial, step, slope)
 
 Compute the actual and predicted reductions `∆f` and `Δm`, where
 `ared = Δf = f_trial - f` is the actual reduction is an objective/merit/penalty function,
@@ -67,6 +100,7 @@ Compute the actual and predicted reductions `∆f` and `Δm`, where
 We assume that `m` is being minimized, and therefore that `Δm < 0`.
 
 If `tr.good_grad` is `true`, then the gradient of `nlp` at `x_trial` is stored in `tr.gt`.
+For `AbstractNLSModel`, the argument `Fx` stores the residual if the gradient is updated.
 """
 function aredpred!(
   tr::AbstractTrustRegion{T, V},
@@ -79,6 +113,36 @@ function aredpred!(
   slope::T,
 ) where {T, V}
   ared, pred, tr.good_grad = aredpred_common(nlp, f, f_trial, Δm, x_trial, step, tr.gt, slope)
+  return ared, pred
+end
+
+function aredpred!(
+  tr::AbstractTrustRegion{T, V},
+  nls::AbstractNLSModel{T, V},
+  f::T,
+  f_trial::T,
+  Δm::T,
+  x_trial::V,
+  step::V,
+  slope::T,
+) where {T, V}
+  Fx = similar(x_trial, nls.nls_meta.nequ)
+  ared, pred, tr.good_grad = aredpred_common(nls, Fx, f, f_trial, Δm, x_trial, step, tr.gt, slope)
+  return ared, pred
+end
+
+function aredpred!(
+  tr::AbstractTrustRegion{T, V},
+  nls::AbstractNLSModel{T, V},
+  Fx::V,
+  f::T,
+  f_trial::T,
+  Δm::T,
+  x_trial::V,
+  step::V,
+  slope::T,
+) where {T, V}
+  ared, pred, tr.good_grad = aredpred_common(nls, Fx, f, f_trial, Δm, x_trial, step, tr.gt, slope)
   return ared, pred
 end
 

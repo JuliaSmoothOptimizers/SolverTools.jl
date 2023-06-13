@@ -1,6 +1,8 @@
 @testset "Trust Region" begin
-  @testset "aredpred" begin
-    nlp = ADNLPModel(x -> x[1]^2 + 4 * x[2]^2, ones(2))
+  @testset "aredpred-$(nlp.meta.name)" for nlp in (
+    ADNLPModel(x -> x[1]^2 + 4 * x[2]^2, ones(2), name = "NLP"),
+    ADNLSModel(x -> [x[1];  2 * x[2]], ones(2), 2, name = "NLS"),
+  )
     x = nlp.meta.x0
     d = -ones(2)
     xt = x + d
@@ -36,7 +38,7 @@
     @test tr.radius < Δ₀
     reset!(tr)
 
-    if VERSION ≥ v"1.6"
+    if VERSION ≥ v"1.7"
       @testset "Allocation" begin
         nlp = BROWNDEN()
         n = nlp.meta.nvar
@@ -48,6 +50,21 @@
         al = @wrappedallocs aredpred!(tr, nlp, f, ft, Δm, x, d, slope)
         @test al == 0
         al = @wrappedallocs aredpred!(tr, nlp, ft, ft, Δm, x, d, slope)
+        @test al == 0
+      end
+
+      @testset "Allocation - nonlinear least squares" begin
+        nlp = LLS()
+        n = nlp.meta.nvar
+        Δ₀ = 10.0
+        tr = TrustRegion(n, Δ₀)
+        x = zeros(n)
+        d = ones(n)
+        f, ft, Δm, slope = 2.0, 1.0, -1.0, -1.0
+        Fx = zeros(nlp.nls_meta.nequ)
+        al = @wrappedallocs aredpred!(tr, nlp, Fx, f, ft, Δm, x, d, slope)
+        @test al == 0
+        al = @wrappedallocs aredpred!(tr, nlp, Fx, ft, ft, Δm, x, d, slope)
         @test al == 0
       end
     end
@@ -76,7 +93,7 @@
     update!(tr, Δ₀)
     @test tr.radius > Δ₀
 
-    if VERSION ≥ v"1.6"
+    if VERSION ≥ v"1.7"
       @testset "Allocation" begin
         nlp = BROWNDEN()
         n = nlp.meta.nvar
@@ -88,6 +105,21 @@
         al = @wrappedallocs aredpred!(tr, nlp, f, ft, Δm, x, d, slope)
         @test al == 0
         al = @wrappedallocs aredpred!(tr, nlp, ft, ft, Δm, x, d, slope)
+        @test al == 0
+      end
+
+      @testset "Allocation - nonlinear least squares" begin
+        nlp = LLS()
+        n = nlp.meta.nvar
+        Δ₀ = 10.0
+        tr = TRONTrustRegion(n, Δ₀)
+        x = zeros(n)
+        d = ones(n)
+        f, ft, Δm, slope = 2.0, 1.0, -1.0, -1.0
+        Fx = zeros(nlp.nls_meta.nequ)
+        al = @wrappedallocs aredpred!(tr, nlp, Fx, f, ft, Δm, x, d, slope)
+        @test al == 0
+        al = @wrappedallocs aredpred!(tr, nlp, Fx, ft, ft, Δm, x, d, slope)
         @test al == 0
       end
     end
