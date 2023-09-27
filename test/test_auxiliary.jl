@@ -46,6 +46,16 @@ function test_auxiliary()
     a = @allocated compute_Hs_slope_qs!(Hx, H, x, g)
     @test a == 0
 
+    x1 = [10.0; 11.0; 12.0; 13.0; 14.0; 15.0; 16.0]
+    A = diagm(0 => 2 * ones(7), -1 => -ones(6), 1 => -ones(6))
+    As = zeros(7)
+    Fx = rand(7)
+    slope, qx = compute_As_slope_qs!(As, A, x1, Fx)
+    @test slope == dot(As, Fx)
+    @test qx == dot(As, As) / 2 + slope
+    b = @allocated compute_As_slope_qs!(As, A, x1, Fx)
+    @test b == 0
+
     z = [ℓ[1:2] - rand(2); x[3]; u[4:5] + rand(2)]
     y = rand(5)
     project!(y, z, ℓ, u)
