@@ -1,11 +1,12 @@
 name = "SolverTools"
 uuid = "b5612192-2639-5dc1-abfe-fbedd65fab29"
-version = "0.8.6"
+version = "0.8.5"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 LinearOperators = "5c8ed15e-5a4c-59e4-a42b-c7e8811fb125"
 NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
+SolverCore = "ff4d7338-4cf1-434d-91df-b86cb86fb843"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [compat]
@@ -17,7 +18,8 @@ julia = "^1.6"
 ADNLPModels = "54578032-b7ea-4c30-94aa-7cbd1cce6c9a"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 NLPModelsTest = "7998695d-6960-4d3a-85c4-e1bceb8cd856"
+SolverCore = "ff4d7338-4cf1-434d-91df-b86cb86fb843"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["ADNLPModels", "Logging", "NLPModelsTest", "Test"]
+test = ["ADNLPModels", "Logging", "NLPModelsTest", "SolverCore", "Test"]

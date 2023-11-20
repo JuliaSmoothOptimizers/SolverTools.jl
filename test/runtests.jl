@@ -2,7 +2,7 @@
 using SolverTools
 
 # Auxiliary packages
-using ADNLPModels, NLPModels, NLPModelsTest
+using ADNLPModels, NLPModels, NLPModelsTest, SolverCore
 
 # stdlib
 using LinearAlgebra, Logging, Test
