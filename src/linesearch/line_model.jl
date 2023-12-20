@@ -22,7 +22,7 @@ mutable struct LineModel{T, S, M <: AbstractNLPModel{T, S}} <: AbstractNLPModel{
 end
 
 function LineModel(nlp::AbstractNLPModel{T, S}, x::S, d::S; xt::S = similar(x)) where {T, S}
-  meta = NLPModelMeta{T, S}(1, x0 = zeros(T, 1), name = "LineModel to $(nlp.meta.name))")
+  meta = NLPModelMeta{T, S}(1, x0 = similar(x, 1), name = "LineModel to $(nlp.meta.name))")
   return LineModel(meta, Counters(), nlp, x, d, xt)
 end
 
