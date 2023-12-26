@@ -2,7 +2,7 @@
 using SolverTools
 
 # Auxiliary packages
-using ADNLPModels, NLPModels, NLPModelsTest
+using ADNLPModels, NLPModels, NLPModelsTest, SolverCore
 
 # stdlib
 using LinearAlgebra, Logging, Test
@@ -41,8 +41,6 @@ macro wrappedallocs(expr)
     $(Expr(:call, :g, [esc(a) for a in expr.args]...))
   end
 end
-
-include("dummy_solver.jl")
 
 include("test_auxiliary.jl")
 include("test_linesearch.jl")
