@@ -124,4 +124,19 @@
       end
     end
   end
+  
+  @testset "ARTrustRegion" begin
+    Δ₀ = 0.8
+    ar = ARTrustRegion(0.8)
+    @test ar.α₀ == 0.8 
+    @test ar.α == 0.8
+    @test ar.max_α ≈ 1 / sqrt(eps(typeof(0.8)))
+    @test ar.acceptance_threshold == 0.1  
+    @test ar.increase_threshold == 0.75
+    @test ar.reduce_threshold == 0.1
+    @test ar.increase_factor == 5.0
+    @test ar.decrease_factor == 0.1
+    @test ar.large_decrease_factor == 0.01
+    @test ar.max_unsuccinarow == 30
+  end
 end
