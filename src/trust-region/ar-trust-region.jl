@@ -15,7 +15,7 @@ The keyword arguments are:
 
 Returns a `ARTrustRegion` structure.
 
-This can be compared to https://github.com/JuliaSmoothOptimizers/SolverTools.jl/blob/main/src/trust-region/basic-trust-region.jl
+This can be compared to `TrustRegion` or `TRONTrustRegion`.
 """
 mutable struct ARTrustRegion{T}
   α₀::T
