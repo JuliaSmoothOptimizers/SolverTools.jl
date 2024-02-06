@@ -1,11 +1,5 @@
 export ARTrustRegion
 
-# Already exists in SolverTools.jl
-"Exception type raised in case of error."
-mutable struct TrustRegionException <: Exception
-  msg::String
-end
-
 """
 ARTrustRegion(α₀::T;kwargs...)
 
