@@ -9,7 +9,7 @@
 
 A framework to build novel optimization algorithms in Julia.
 
-Please cite this repository if you use SolverTools.jl in your work: see [`CITATION.bib`](https://github.com/JuliaSmoothOptimizers/SolverTools.jl/blob/main/CITATION.bib).
+Please cite this repository if you use SolverTools.jl in your work: see [`CITATION.cff`](https://github.com/JuliaSmoothOptimizers/SolverTools.jl/blob/main/CITATION.cff).
 
 # Installation
 
