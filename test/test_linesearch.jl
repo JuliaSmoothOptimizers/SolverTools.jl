@@ -61,6 +61,38 @@
     @test nbW > 0
   end
 
+  @testset "Armijo-Goldstein" begin
+    nlp = ADNLPModel(x -> x[1]^2 + 4 * x[2]^2, ones(2))
+    lm = LineModel(nlp, nlp.meta.x0, -ones(2))
+    g = zeros(2)
+
+    t, ft, nbk, nbW = armijo_goldstein(lm, obj(lm, 0.0), grad(lm, 0.0))
+    @test t == 1
+    @test ft == 0.0
+    @test nbk == 0
+    @test nbW == 0
+
+    redirect!(lm, nlp.meta.x0, -ones(2) / 2)
+    t, ft, nbk, nbW = armijo_goldstein(lm, obj(lm, 0.0), grad(lm, 0.0))
+    @test t == 1
+    @test ft == 1.25
+    @test nbk == 0
+    @test nbW == 0
+
+    redirect!(lm, nlp.meta.x0, -2 * ones(2))
+    t, ft, nbk, nbW = armijo_goldstein(lm, obj(lm, 0.0), grad(lm, 0.0))
+    @test t < 1
+    @test nbk > 0
+    @test nbW == 0
+
+    nlp = ADNLPModel(x -> (x[1] - 1)^2 + 4 * (x[2] - x[1]^2)^2, zeros(2))
+    lm = LineModel(nlp, nlp.meta.x0, [1.7; 3.2])
+    t, ft, nbk, nbW = armijo_goldstein(lm, obj(lm, 0.0), grad(lm, 0.0); t = 2.)
+    @test t == 1.
+    @test nbk == 1
+    @test nbW == 0
+  end
+
   if VERSION ≥ v"1.6"
     @testset "Don't allocate" begin
       nlp = BROWNDEN()
