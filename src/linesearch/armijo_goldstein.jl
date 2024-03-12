@@ -79,7 +79,7 @@ function armijo_goldstein(
   armijo_fail = ht > h₀ + τ₀ * t * slope
   goldstein_fail = ht < h₀ + τ₁ * t * slope
   while (armijo_fail && (nbk < bk_max)) && nbk || (goldstein_fail && (nbW < bW_max))
-    t = 1 / 2 * (t_up - t_low)
+    t = (t_up - t_low) / 2
     if armijo_fail
       t_up = t
       nbk += 1
