@@ -75,7 +75,7 @@ function armijo_goldstein(
   else
   end
 
-  # Bissect inside bracket [t_low, t_up]
+  # Bisect inside bracket [t_low, t_up]
   armijo_fail = ht > h₀ + τ₀ * t * slope
   goldstein_fail = ht < h₀ + τ₁ * t * slope
   while (armijo_fail && (nbk < bk_max)) && nbk || (goldstein_fail && (nbW < bW_max))
