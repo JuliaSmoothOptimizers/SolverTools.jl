@@ -50,8 +50,8 @@ function armijo_goldstein(
 
   ht = obj(h, t)
 
-  armijo_fail = ht > h₀ + τ₀ * t * slope
-  goldstein_fail = ht < h₀ + τ₁ * t * slope
+  armijo_fail = !armijo_condition(h₀, ht, τ₀, t, slope)
+  goldstein_fail = !goldstein_condition(h₀, ht, τ₁, t, slope)
   # Backtracking: set t_up so that Armijo condition is satisfied
   if armijo_fail
     while armijo_fail && (nbk < bk_max)
@@ -59,7 +59,7 @@ function armijo_goldstein(
       t /= 2
       ht = obj(h, t)
       nbk += 1
-      armijo_fail = ht > h₀ + τ₀ * t * slope
+      armijo_fail = !armijo_condition(h₀, ht, τ₀, t, slope)
     end
     t_low = t
     #Look ahead: set t_low so that Goldstein condition is satisfied
@@ -69,15 +69,15 @@ function armijo_goldstein(
       t *= 2
       ht = obj(h, t)
       nbW += 1
-      goldstein_fail = ht < h₀ + τ₁ * t * slope
+      goldstein_fail = !goldstein_condition(h₀, ht, τ₁, t, slope)
     end
     t_up = t
   else
   end
 
   # Bisect inside bracket [t_low, t_up]
-  armijo_fail = ht > h₀ + τ₀ * t * slope
-  goldstein_fail = ht < h₀ + τ₁ * t * slope
+  armijo_fail = !armijo_condition(h₀, ht, τ₀, t, slope)
+  goldstein_fail = !goldstein_condition(h₀, ht, τ₁, t, slope)
   while (armijo_fail && (nbk < bk_max)) && nbk || (goldstein_fail && (nbW < bW_max))
     t = (t_up - t_low) / 2
     if armijo_fail
@@ -88,11 +88,30 @@ function armijo_goldstein(
       nbW += 1
     else
     end
-    armijo_fail = ht > h₀ + τ₀ * t * slope
-    goldstein_fail = ht < h₀ + τ₁ * t * slope
+    ht = obj(h, t)
+    armijo_fail = !armijo_condition(h₀, ht, τ₀, t, slope)
+    goldstein_fail = !goldstein_condition(h₀, ht, τ₁, t, slope)
   end
 
   verbose && @printf("  %4d %4d\n", nbk, nbW)
 
   return (t, ht, nbk, nbW)
+end
+
+"""
+  armijo_condition(h₀::T, ht::T, τ₀::T, t::T, slope::T)
+
+Returns true if Armijo condition is satisfied for `τ₀`.
+""" 
+function armijo_condition(h₀::T, ht::T, τ₀::T, t::T, slope::T) where {T}
+  ht ≤ h₀ + τ₀ * t * slope
+end
+
+"""
+  goldstein_condition(h₀::T, ht::T, τ₁::T, t::T, slope::T)
+
+Returns true if Goldstein condition is satisfied for `τ₁`.
+""" 
+function goldstein_condition(h₀::T, ht::T, τ₁::T, t::T, slope::T) where {T}
+  ht ≥ h₀ + τ₁ * t * slope
 end
