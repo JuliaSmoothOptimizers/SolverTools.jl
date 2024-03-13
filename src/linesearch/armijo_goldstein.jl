@@ -36,8 +36,8 @@ function armijo_goldstein(
   h₀::T,
   slope::T;
   t::T = one(T),
-  τ₀::T = max(T(1.0e-4), sqrt(eps(T))),
-  τ₁::T = T(0.9999),
+  τ₀::T = T(eps(T)^(1/4)),
+  τ₁::T = min(prevfloat(T(1)),T(0.9999)),
   bk_max::Int = 10,
   bW_max::Int = 10,
   verbose::Bool = false,
