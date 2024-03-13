@@ -15,8 +15,6 @@ and the Goldstein condition is
 h(t) ≥ h₀ + τ₁ t h'(0).
 ```
 
-The method initializes an interval ` [t_low,t_up]` guaranteed to contain a point satifying both Armijo and Goldstein conditions, and then uses a bisection algorithm to find such a point.
-
 # Arguments
 
 - `h::LineModel{T, S, M}`: 1-D model along the search direction `d`, ``h(t) = f(x + t d)``
@@ -39,6 +37,31 @@ The keyword arguments may include
 - `nbk::Int`: the number of times the steplength was decreased to satisfy the Armijo condition, i.e., number of backtracks;
 - `nbG::Int`: the number of times the steplength was increased to satisfy the Goldstein condition.
 
+
+# References
+This implementation follows the description given in
+
+    C. Cartis, P.R. Sampaio, P.L. Toint,
+    Worst-case evaluation complexity of non-monotone gradient-related algorithms for unconstrained optimization.
+    Optimization 64(5), 1349–1361 (2015).
+    DOI: 10.1080/02331934.2013.869809
+    
+  The method initializes an interval ` [t_low,t_up]` guaranteed to contain a point satifying both Armijo and Goldstein conditions, and then uses a bisection algorithm to find such a point.
+  The method is implemented with M=0 (see reference), i.e., only the current value of the objective is required to satisfied to Armijo and Goldstein conditions. 
+
+  # Examples
+
+```jldoctest; output = false
+using SolverTools, ADNLPModels
+nlp = ADNLPModel(x -> x[1]^2 + 4 * x[2]^2, ones(2))
+lm = LineModel(nlp, nlp.meta.x0, -ones(2))
+
+t, ft, nbk, nbG = armijo_goldstein(lm, obj(lm, 0.0), grad(lm, 0.0))
+
+# output
+
+(1.0, 0.0, 0, 0)
+```
 
 """
 function armijo_goldstein(
