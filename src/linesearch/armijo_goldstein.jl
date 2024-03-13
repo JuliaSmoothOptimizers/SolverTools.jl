@@ -28,7 +28,7 @@ The following keyword arguments can be provided:
 - `τ₀`: slope factor in the Armijo condition (default `max(1e-4, √ϵₘ)`);
 - `τ₁`: slope factor in the Goldstein condition. It should satisfy `τ₁ > τ₀` (default `0.9999`);
 - `bk_max`: maximum number of backtracks (default `10`);
-- `bW_max`: maximum number of increases (default `10`);
+- `bG_max`: maximum number of increases (default `10`);
 - `verbose`: whether to print information (default `false`).
 """
 function armijo_goldstein(
