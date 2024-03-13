@@ -15,15 +15,14 @@ and the Goldstein condition is
 h(t) ≥ h₀ + τ₁ t h'(0).
 ```
 
-The method initializes an interval ` [t_low,t_up]` guaranteed to contain a point satifying both Armijo and Goldstein conditions, and then uses a bissection algorithm to find such a point.
+The method initializes an interval ` [t_low,t_up]` guaranteed to contain a point satifying both Armijo and Goldstein conditions, and then uses a bisection algorithm to find such a point.
 
-The output is the following:
-- t: the step length;
-- ht: the model value at `t`, i.e., `f(x + t * d)`;
-- nbk: the number of times the steplength was decreased to satisfy the Armijo condition, i.e., number of backtracks;
-- nbG: the number of times the steplength was increased to satisfy the Goldstein condition.
+# Arguments
 
-The following keyword arguments can be provided:
+- `h::LineModel{T, S, M}`: 1-D model along the search direction `d`, ``h(t) = f(x + t d)``
+- `h₀::T`: value of `h` at `t=0`
+- `slope`: dot product of the gradient and the search direction, ``∇f(x_k)ᵀd``
+The keyword arguments may include
 - `t::T = one(T)`: starting steplength (default `1`);
 - `τ₀::T = T(eps(T)^(1/4))`: slope factor in the Armijo condition (default `max(1e-4, √ϵₘ)`);
 - `τ₁::T = min(prevfloat(T(1)),T(0.9999))`: slope factor in the Goldstein condition. It should satisfy `τ₁ > τ₀` (default `0.9999`);
@@ -32,6 +31,15 @@ The following keyword arguments can be provided:
 - `bk_max`: maximum number of backtracks (default `10`);
 - `bG_max`: maximum number of increases (default `10`);
 - `verbose`: whether to print information (default `false`).
+
+# Outputs
+
+- `t::T`: the step length;
+- `ht::T`: the model value at `t`, i.e., `f(x + t * d)`;
+- `nbk::Int`: the number of times the steplength was decreased to satisfy the Armijo condition, i.e., number of backtracks;
+- `nbG::Int`: the number of times the steplength was increased to satisfy the Goldstein condition.
+
+
 """
 function armijo_goldstein(
   h::LineModel,
