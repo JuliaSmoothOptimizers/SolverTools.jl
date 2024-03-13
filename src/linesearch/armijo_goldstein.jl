@@ -48,7 +48,6 @@ function armijo_goldstein(
 ) where {T <: AbstractFloat}
   t_low = T(0)
   t_up = t
-  # Perform improved Armijo linesearch.
   nbk = 0
   nbG = 0
 
