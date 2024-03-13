@@ -62,32 +62,33 @@
   end
 
   @testset "Armijo-Goldstein" begin
-    nlp = ADNLPModel(x -> x[1]^2 + 4 * x[2]^2, ones(2))
-    lm = LineModel(nlp, nlp.meta.x0, -ones(2))
-    g = zeros(2)
+    T = Float32
+    nlp = ADNLPModel(x -> x[1]^2 + 4 * x[2]^2, ones(T,2))
+    lm = LineModel(nlp, nlp.meta.x0, -ones(T,2))
+    g = zeros(T,2)
 
-    t, ft, nbk, nbW = armijo_goldstein(lm, obj(lm, 0.0), grad(lm, 0.0))
+    t, ft, nbk, nbW = armijo_goldstein(lm, obj(lm, T(0.0)), grad(lm, T(0.0)))
     @test t == 1
     @test ft == 0.0
     @test nbk == 0
     @test nbW == 0
 
-    redirect!(lm, nlp.meta.x0, -ones(2) / 2)
-    t, ft, nbk, nbW = armijo_goldstein(lm, obj(lm, 0.0), grad(lm, 0.0))
+    redirect!(lm, nlp.meta.x0, -ones(T,2) / 2)
+    t, ft, nbk, nbW = armijo_goldstein(lm, obj(lm, T(0.0)), grad(lm, T(0.0)))
     @test t == 1
     @test ft == 1.25
     @test nbk == 0
     @test nbW == 0
 
-    redirect!(lm, nlp.meta.x0, -2 * ones(2))
-    t, ft, nbk, nbW = armijo_goldstein(lm, obj(lm, 0.0), grad(lm, 0.0))
+    redirect!(lm, nlp.meta.x0, -2 * ones(T,2))
+    t, ft, nbk, nbW = armijo_goldstein(lm, obj(lm, T(0.0)), grad(lm, T(0.0)))
     @test t < 1
     @test nbk > 0
     @test nbW == 0
 
-    nlp = ADNLPModel(x -> (x[1] - 1)^2 + 4 * (x[2] - x[1]^2)^2, zeros(2))
-    lm = LineModel(nlp, nlp.meta.x0, [1.7; 3.2])
-    t, ft, nbk, nbW = armijo_goldstein(lm, obj(lm, 0.0), grad(lm, 0.0); t = 2.)
+    nlp = ADNLPModel(x -> (x[1] - 1)^2 + 4 * (x[2] - x[1]^2)^2, zeros(T,2))
+    lm = LineModel(nlp, nlp.meta.x0, T.([1.7; 3.2]))
+    t, ft, nbk, nbW = armijo_goldstein(lm, obj(lm, T(0.0)), grad(lm, T(0.0)); t = T(2.))
     @test t == 1.
     @test nbk == 1
     @test nbW == 0
@@ -116,6 +117,8 @@
 
       h₀ = obj(lm, 0.0)
       slope = grad(lm, 0.0)
+
+      # armijo-wolfe
       (t, gg, ht, nbk, nbW) = armijo_wolfe(lm, h₀, slope, g)
       al = @wrappedallocs armijo_wolfe(lm, h₀, slope, g)
       @test al == 0
@@ -127,6 +130,21 @@
       for bk_max = 0:8
         (t, gg, ht, nbk, nbW) = armijo_wolfe(lm, h₀, slope, g, bk_max = bk_max)
         al = armijo_wolfe_alloc(lm, h₀, slope, g, bk_max)
+        @test al == 0
+      end
+
+      # armijo-goldstein
+      (t, ht, nbk, nbW) = armijo_goldstein(lm, h₀, slope)
+      al = @wrappedallocs armijo_goldstein(lm, h₀, slope)
+      @test al == 0
+
+      function armijo_goldstein_alloc(lm, h₀, slope, bk_max)
+        @allocated armijo_goldstein(lm, h₀, slope, bk_max = bk_max)
+      end
+
+      for bk_max = 0:8
+        (t, ht, nbk, nbW) = armijo_goldstein(lm, h₀, slope, bk_max = bk_max)
+        al = armijo_goldstein_alloc(lm, h₀, slope, bk_max)
         @test al == 0
       end
     end

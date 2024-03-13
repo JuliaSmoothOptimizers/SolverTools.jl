@@ -1,7 +1,7 @@
 export armijo_goldstein
 
 """
-    t, ht, nbk, nbW = armijo_goldstein(h, h₀, slope)
+    t, ht, nbk, nbG = armijo_goldstein(h, h₀, slope)
 
 Performs a line search from `x` along the direction `d` as defined by the
 `LineModel` ``h(t) = f(x + t d)``, where
@@ -21,14 +21,16 @@ The output is the following:
 - t: the step length;
 - ht: the model value at `t`, i.e., `f(x + t * d)`;
 - nbk: the number of times the steplength was decreased to satisfy the Armijo condition, i.e., number of backtracks;
-- nbW: the number of times the steplength was increased to satisfy the Goldstein condition.
+- nbG: the number of times the steplength was increased to satisfy the Goldstein condition.
 
 The following keyword arguments can be provided:
-- `t`: starting steplength (default `1`);
-- `τ₀`: slope factor in the Armijo condition (default `max(1e-4, √ϵₘ)`);
-- `τ₁`: slope factor in the Goldstein condition. It should satisfy `τ₁ > τ₀` (default `0.9999`);
+- `t::T = one(T)`: starting steplength (default `1`);
+- `τ₀::T = T(eps(T)^(1/4))`: slope factor in the Armijo condition (default `max(1e-4, √ϵₘ)`);
+- `τ₁::T = min(prevfloat(T(1)),T(0.9999))`: slope factor in the Goldstein condition. It should satisfy `τ₁ > τ₀` (default `0.9999`);
+- `γ₀::T = T(1 / 2)`: backtracking step length mutliplicative factor (0<γ₀<1)
+- `γ₁::T = T(2)`: look-aheqd step length mutliplicative factor (1<γ₁)
 - `bk_max`: maximum number of backtracks (default `10`);
-- `bW_max`: maximum number of increases (default `10`);
+- `bG_max`: maximum number of increases (default `10`);
 - `verbose`: whether to print information (default `false`).
 """
 function armijo_goldstein(
@@ -38,54 +40,57 @@ function armijo_goldstein(
   t::T = one(T),
   τ₀::T = T(eps(T)^(1/4)),
   τ₁::T = min(prevfloat(T(1)),T(0.9999)),
+  γ₀::T = T(1 / 2),
+  γ₁::T = T(2),
   bk_max::Int = 10,
-  bW_max::Int = 10,
+  bG_max::Int = 10,
   verbose::Bool = false,
 ) where {T <: AbstractFloat}
   t_low = T(0)
   t_up = t
   # Perform improved Armijo linesearch.
   nbk = 0
-  nbW = 0
+  nbG = 0
 
   ht = obj(h, t)
 
-  armijo_fail = !armijo_condition(h₀, ht, τ₀, t, slope)
-  goldstein_fail = !goldstein_condition(h₀, ht, τ₁, t, slope)
+  armijo_fail::Bool = !armijo_condition(h₀, ht, τ₀, t, slope)
+  goldstein_fail::Bool = !goldstein_condition(h₀, ht, τ₁, t, slope)
   # Backtracking: set t_up so that Armijo condition is satisfied
   if armijo_fail
     while armijo_fail && (nbk < bk_max)
       t_up = t
-      t /= 2
+      t *= γ₀
       ht = obj(h, t)
       nbk += 1
       armijo_fail = !armijo_condition(h₀, ht, τ₀, t, slope)
     end
+    goldstein_fail = !goldstein_condition(h₀, ht, τ₁, t, slope)
     t_low = t
     #Look ahead: set t_low so that Goldstein condition is satisfied
   elseif goldstein_fail
-    while goldstein_fail && (nbW < bW_max)
+    while goldstein_fail && (nbG < bG_max)
       t_low = t
-      t *= 2
+      t *= γ₁
       ht = obj(h, t)
-      nbW += 1
+      nbG += 1
       goldstein_fail = !goldstein_condition(h₀, ht, τ₁, t, slope)
     end
+    armijo_fail = !armijo_condition(h₀, ht, τ₀, t, slope)
     t_up = t
   else
   end
 
   # Bisect inside bracket [t_low, t_up]
-  armijo_fail = !armijo_condition(h₀, ht, τ₀, t, slope)
-  goldstein_fail = !goldstein_condition(h₀, ht, τ₁, t, slope)
-  while (armijo_fail && (nbk < bk_max)) && nbk || (goldstein_fail && (nbW < bW_max))
+  
+  while (armijo_fail && (nbk < bk_max)) && nbk || (goldstein_fail && (nbG < bG_max))
     t = (t_up - t_low) / 2
     if armijo_fail
       t_up = t
       nbk += 1
     elseif goldstein_fail
       t_low = t
-      nbW += 1
+      nbG += 1
     else
     end
     ht = obj(h, t)
@@ -93,9 +98,9 @@ function armijo_goldstein(
     goldstein_fail = !goldstein_condition(h₀, ht, τ₁, t, slope)
   end
 
-  verbose && @printf("  %4d %4d\n", nbk, nbW)
+  verbose && @printf("  %4d %4d\n", nbk, nbG)
 
-  return (t, ht, nbk, nbW)
+  return (t, ht, nbk, nbG)
 end
 
 """
