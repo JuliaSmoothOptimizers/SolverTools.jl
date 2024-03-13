@@ -62,29 +62,30 @@
   end
 
   @testset "Armijo-Goldstein" begin
-    T = Float32
-    nlp = ADNLPModel(x -> x[1]^2 + 4 * x[2]^2, ones(T,2))
-    lm = LineModel(nlp, nlp.meta.x0, -ones(T,2))
-    g = zeros(T,2)
+    nlp = ADNLPModel(x -> x[1]^2 + 4 * x[2]^2, ones(2))
+    lm = LineModel(nlp, nlp.meta.x0, -ones(2))
+    g = zeros(2)
 
-    t, ft, nbk, nbW = armijo_goldstein(lm, obj(lm, T(0.0)), grad(lm, T(0.0)))
+    t, ft, nbk, nbW = armijo_goldstein(lm, obj(lm, 0.0), grad(lm, 0.0))
     @test t == 1
     @test ft == 0.0
     @test nbk == 0
     @test nbW == 0
 
-    redirect!(lm, nlp.meta.x0, -ones(T,2) / 2)
-    t, ft, nbk, nbW = armijo_goldstein(lm, obj(lm, T(0.0)), grad(lm, T(0.0)))
+    redirect!(lm, nlp.meta.x0, -ones(2) / 2)
+    t, ft, nbk, nbW = armijo_goldstein(lm, obj(lm, 0.0), grad(lm, 0.0))
     @test t == 1
     @test ft == 1.25
     @test nbk == 0
     @test nbW == 0
 
-    redirect!(lm, nlp.meta.x0, -2 * ones(T,2))
-    t, ft, nbk, nbW = armijo_goldstein(lm, obj(lm, T(0.0)), grad(lm, T(0.0)))
+    redirect!(lm, nlp.meta.x0, -2 * ones(2))
+    t, ft, nbk, nbW = armijo_goldstein(lm, obj(lm, 0.0), grad(lm, 0.0))
     @test t < 1
     @test nbk > 0
     @test nbW == 0
+
+    T=Float32
 
     nlp = ADNLPModel(x -> (x[1] - 1)^2 + 4 * (x[2] - x[1]^2)^2, zeros(T,2))
     lm = LineModel(nlp, nlp.meta.x0, T.([1.7; 3.2]))
