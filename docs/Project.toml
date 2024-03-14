@@ -5,3 +5,4 @@ SolverTools = "b5612192-2639-5dc1-abfe-fbedd65fab29"
 
 [compat]
 Documenter = "~0.26"
+ADNLPModels = "0.7"
