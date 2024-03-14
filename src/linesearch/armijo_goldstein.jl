@@ -14,6 +14,7 @@ and the Goldstein condition is
 ```math
 h(t) ≥ h₀ + τ₁ t h'(0).
 ```
+with `1 > τ₁ > τ₀ > 0`.
 
 # Arguments
 
@@ -22,8 +23,8 @@ h(t) ≥ h₀ + τ₁ t h'(0).
 - `slope`: dot product of the gradient and the search direction, ``∇f(x_k)ᵀd``
 The keyword arguments may include
 - `t::T = one(T)`: starting steplength (default `1`);
-- `τ₀::T = T(eps(T)^(1/4))`: slope factor in the Armijo condition (default `max(1e-4, √ϵₘ)`);
-- `τ₁::T = min(prevfloat(T(1)),T(0.9999))`: slope factor in the Goldstein condition. It should satisfy `τ₁ > τ₀` (default `0.9999`);
+- `τ₀::T = T(eps(T)^(1/4))`: slope factor in the Armijo condition. It should satisfy `1 > τ₁ > τ₀ > 0`;
+- `τ₁::T = min(T(1)-eps(T),T(0.9999))`: slope factor in the Goldstein condition. It should satisfy `1 > τ₁ > τ₀ > 0`;
 - `γ₀::T = T(1 / 2)`: backtracking step length mutliplicative factor (0<γ₀<1)
 - `γ₁::T = T(2)`: look-aheqd step length mutliplicative factor (1<γ₁)
 - `bk_max`: maximum number of backtracks (default `10`);
@@ -47,7 +48,7 @@ This implementation follows the description given in
     DOI: 10.1080/02331934.2013.869809
     
   The method initializes an interval ` [t_low,t_up]` guaranteed to contain a point satifying both Armijo and Goldstein conditions, and then uses a bisection algorithm to find such a point.
-  The method is implemented with M=0 (see reference), i.e., only the current value of the objective is required to satisfied to Armijo and Goldstein conditions. 
+  The method is implemented with M=0 (see reference), i.e., Armijo and Goldstein conditions are satisfied only for the current value of the objective `h₀`. 
 
   # Examples
 
@@ -70,7 +71,7 @@ function armijo_goldstein(
   slope::T;
   t::T = one(T),
   τ₀::T = T(eps(T)^(1/4)),
-  τ₁::T = min(prevfloat(T(1)),T(0.9999)),
+  τ₁::T = min(T(1)-eps(T),T(0.9999)),
   γ₀::T = T(1 / 2),
   γ₁::T = T(2),
   bk_max::Int = 10,
@@ -108,7 +109,6 @@ function armijo_goldstein(
     end
     armijo_fail = !armijo_condition(h₀, ht, τ₀, t, slope)
     t_up = t
-  else
   end
 
   # Bisect inside bracket [t_low, t_up]
@@ -121,7 +121,6 @@ function armijo_goldstein(
     elseif goldstein_fail
       t_low = t
       nbG += 1
-    else
     end
     ht = obj(h, t)
     armijo_fail = !armijo_condition(h₀, ht, τ₀, t, slope)
