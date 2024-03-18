@@ -71,7 +71,7 @@ function armijo_goldstein(
   slope::T;
   t::T = one(T),
   τ₀::T = T(eps(T)^(1/4)),
-  τ₁::T = min(T(1)-eps(T),T(0.9999)),
+  τ₁::T = T(1)-eps(T),
   γ₀::T = T(1 / 2),
   γ₁::T = T(2),
   bk_max::Int = 10,
@@ -112,8 +112,7 @@ function armijo_goldstein(
   end
 
   # Bisect inside bracket [t_low, t_up]
-  
-  while (armijo_fail && (nbk < bk_max)) && nbk || (goldstein_fail && (nbG < bG_max))
+  while (armijo_fail && (nbk < bk_max))|| (goldstein_fail && (nbG < bG_max))
     t = (t_up - t_low) / 2
     if armijo_fail
       t_up = t
