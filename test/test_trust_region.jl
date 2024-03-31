@@ -125,6 +125,9 @@
     end
   end
   
+  struct Workspace
+    ∇fnext::Array{Float64}
+  end
   @testset "ARTrustRegion" begin
     Δ₀ = 0.8
     ar = ARTrustRegion(0.8)
@@ -138,5 +141,22 @@
     @test ar.decrease_factor == 0.1
     @test ar.large_decrease_factor == 0.01
     @test ar.max_unsuccinarow == 30
+
+
+    nlp = BROWNDEN()
+    f = 1.0 
+    Δf = 0.2 
+    Δq = 0.3 
+    slope = 0.5 
+    d = [1.0, 2.0] 
+    xnext = [0.5, 1.5] 
+    workspace = Workspace([0.8, 1.8])
+    robust = true
+
+    r, good_grad, gnext = compute_r(nlp, f, Δf, Δq, slope, d, xnext, workspace, robust)
+
+    @test r == 0.6666666666666667
+    @test good_grad == false
+    @test gnext == [0.8, 1.8]
   end
 end
