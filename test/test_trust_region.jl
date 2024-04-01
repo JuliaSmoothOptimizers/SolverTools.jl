@@ -124,17 +124,17 @@
       end
     end
   end
-  
+
   struct Workspace
     ∇fnext::Array{Float64}
   end
   @testset "ARTrustRegion" begin
     Δ₀ = 0.8
     ar = ARTrustRegion(0.8)
-    @test ar.α₀ == 0.8 
+    @test ar.α₀ == 0.8
     @test ar.α == 0.8
     @test ar.max_α ≈ 1 / sqrt(eps(typeof(0.8)))
-    @test ar.acceptance_threshold == 0.1  
+    @test ar.acceptance_threshold == 0.1
     @test ar.increase_threshold == 0.75
     @test ar.reduce_threshold == 0.1
     @test ar.increase_factor == 5.0
@@ -147,12 +147,12 @@
     end
 
     nlp = BROWNDEN()
-    f = 1.0 
-    Δf = 0.2 
+    f = 1.0
+    Δf = 0.2
     Δq = 0.4
-    slope = 0.5 
-    d = [1.0, 2.0, 3.0, 4.0] 
-    xnext = [0.5, 1.5, 2.5, 3.5] 
+    slope = 0.5
+    d = [1.0, 2.0, 3.0, 4.0]
+    xnext = [0.5, 1.5, 2.5, 3.5]
     workspace = Workspace([0.8, 1.8, 2.8, 3.8])
     robust = true
 
@@ -167,7 +167,8 @@
 
     @test r == 3.833532881060353e19
     @test good_grad == true
-    @test gnext == [-909318.2269441625, -3.4465870681692427e6, 47999.033762642575, -2142.750031496445]
+    @test gnext ==
+          [-909318.2269441625, -3.4465870681692427e6, 47999.033762642575, -2142.750031496445]
 
     workspace = Workspace([0.8, 1.8, 2.8, 3.8])
     robust = false
