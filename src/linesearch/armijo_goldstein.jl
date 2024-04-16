@@ -72,7 +72,7 @@ function armijo_goldstein(
   h₀::T,
   slope::T;
   t::T = one(T),
-  τ₀::T = T(eps(T)^(1/4)),
+  τ₀::T = T(eps(T)^(1 / 4)),
   τ₁::T = T(1)-eps(T),
   γ₀::T = T(1 / 2),
   γ₁::T = T(2),

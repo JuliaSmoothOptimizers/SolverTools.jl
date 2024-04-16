@@ -67,7 +67,7 @@
 
     t, ft, nbk, nbG = armijo_goldstein(lm, obj(lm, 0.0), grad(lm, 0.0))
     @test t == 1
-    @test ft == 0.0
+    @test ft == zero(T)
     @test nbk == 0
     @test nbG == 0
 
@@ -84,12 +84,12 @@
     @test nbk > 0
     @test nbG == 0
 
-    T=Float32
+    T = Float32
 
     nlp = ADNLPModel(x -> (x[1] - 1)^2 + 4 * (x[2] - x[1]^2)^2, zeros(T,2))
     lm = LineModel(nlp, nlp.meta.x0, T.([1.7; 3.2]))
-    t, ft, nbk, nbG = armijo_goldstein(lm, obj(lm, T(0.0)), grad(lm, T(0.0)); t = T(1.), τ₀ = T(0.1), τ₁ = T(0.2))
-    @test t < 1.
+    t, ft, nbk, nbG = armijo_goldstein(lm, obj(lm, T(0)), grad(lm, T(0)); t = T(1), τ₀ = T(0.1), τ₁ = T(0.2))
+    @test t < one(T)
     @test nbk == 4
     @test nbG == 10
 
