@@ -65,6 +65,7 @@
     nlp = ADNLPModel(x -> x[1]^2 + 4 * x[2]^2, ones(2))
     lm = LineModel(nlp, nlp.meta.x0, -ones(2))
 
+    T = Float64
     t, ft, nbk, nbG = armijo_goldstein(lm, obj(lm, 0.0), grad(lm, 0.0))
     @test t == 1
     @test ft == zero(T)
