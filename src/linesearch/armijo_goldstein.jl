@@ -29,7 +29,7 @@ with `0 < τ₀ < τ₁ < 1`.
 - `γ₀::T = T(1 / 2)`: backtracking step length mutliplicative factor (0 < γ₀ <1)
 - `γ₁::T = T(2)`: look-ahead step length mutliplicative factor (γ₁ > 1)
 - `bk_max`: maximum number of backtracks (default: `10`);
-- `bG_max`: maximum number of increases (default `10`);
+- `bG_max`: maximum number of increases (default: `10`);
 - `verbose`: whether to print information (default: `false`).
 
 # Outputs
