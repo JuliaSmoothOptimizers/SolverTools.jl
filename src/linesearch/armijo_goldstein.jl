@@ -73,7 +73,7 @@ function armijo_goldstein(
   slope::T;
   t::T = one(T),
   τ₀::T = T(eps(T)^(1 / 4)),
-  τ₁::T = T(1)-eps(T),
+  τ₁::T = T(1) - eps(T),
   γ₀::T = T(1 / 2),
   γ₁::T = T(2),
   bk_max::Int = 10,
@@ -114,7 +114,7 @@ function armijo_goldstein(
   end
 
   # Bisect inside bracket [t_low, t_up]
-  while (armijo_fail && (nbk < bk_max))|| (goldstein_fail && (nbG < bG_max))
+  while (armijo_fail && (nbk < bk_max)) || (goldstein_fail && (nbG < bG_max))
     t = (t_up - t_low) / 2
     if armijo_fail
       t_up = t
@@ -137,7 +137,7 @@ end
   armijo_condition(h₀::T, ht::T, τ₀::T, t::T, slope::T)
 
 Returns true if Armijo condition is satisfied for `τ₀`.
-""" 
+"""
 function armijo_condition(h₀::T, ht::T, τ₀::T, t::T, slope::T) where {T}
   ht ≤ h₀ + τ₀ * t * slope
 end
@@ -146,7 +146,7 @@ end
   goldstein_condition(h₀::T, ht::T, τ₁::T, t::T, slope::T)
 
 Returns true if Goldstein condition is satisfied for `τ₁`.
-""" 
+"""
 function goldstein_condition(h₀::T, ht::T, τ₁::T, t::T, slope::T) where {T}
   ht ≥ h₀ + τ₁ * t * slope
 end
