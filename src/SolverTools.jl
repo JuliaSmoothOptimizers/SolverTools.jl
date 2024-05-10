@@ -8,6 +8,7 @@ using LinearOperators, NLPModels
 
 # Auxiliary.
 include("auxiliary/blas.jl")
+include("auxiliary/slope.jl")
 include("auxiliary/bounds.jl")
 
 # Algorithmic components.
