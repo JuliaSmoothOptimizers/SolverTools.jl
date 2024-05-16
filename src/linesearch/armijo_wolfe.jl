@@ -39,7 +39,7 @@ function armijo_wolfe(
   h::LineModel,
   h₀::T,
   slope::T,
-  g::Array{T, 1};
+  g::AbstractVector{T};
   t::T = one(T),
   τ₀::T = max(T(1.0e-4), sqrt(eps(T))),
   τ₁::T = T(0.9999),
