@@ -57,7 +57,8 @@ function test_armijo_wolfe(::Type{S}) where {S}
   @test nbk > 0
   @test nbW == 0
 
-  nlp = ADNLPModel(x -> (x[1] - 1)^2 + 4 * (x[2] - x[1]^2)^2, fill!(S(undef, 2), 0), matrix_free = true)
+  nlp =
+    ADNLPModel(x -> (x[1] - 1)^2 + 4 * (x[2] - x[1]^2)^2, fill!(S(undef, 2), 0), matrix_free = true)
   d = S([1.7; 3.2])
   lm = LineModel(nlp, nlp.meta.x0, d)
   t, good_grad, ft, nbk, nbW = armijo_wolfe(lm, obj(lm, t0), grad(lm, t0), g)
@@ -104,14 +105,8 @@ function test_armijo_goldstein2(::Type{S}) where {S}
   @test nbk == 4
   @test nbG == 10
 
-  t, ft, nbk, nbG = armijo_goldstein(
-    lm,
-    obj(lm, t0),
-    grad(lm, t0);
-    t = T(0.001),
-    τ₀ = T(0.1),
-    τ₁ = T(0.2),
-  )
+  t, ft, nbk, nbG =
+    armijo_goldstein(lm, obj(lm, t0), grad(lm, t0); t = T(0.001), τ₀ = T(0.1), τ₁ = T(0.2))
   @test t < 1.0
   @test nbk == 2
   @test nbG == 10

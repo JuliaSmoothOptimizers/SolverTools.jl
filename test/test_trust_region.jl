@@ -54,9 +54,11 @@ end
 @testset "Trust Region" begin
   S = Vector{Float64}
   @testset "aredpred-$(nlp.meta.name) - $S - $TRSolver" for nlp in (
-    ADNLPModel(x -> x[1]^2 + 4 * x[2]^2, fill!(S(undef, 2), 1), name = "NLP", matrix_free = true),
-    ADNLSModel(x -> [x[1]; 2 * x[2]], fill!(S(undef, 2), 1), 2, name = "NLS", matrix_free = true),
-  ), TRSolver in (TrustRegion, TRONTrustRegion)
+      ADNLPModel(x -> x[1]^2 + 4 * x[2]^2, fill!(S(undef, 2), 1), name = "NLP", matrix_free = true),
+      ADNLSModel(x -> [x[1]; 2 * x[2]], fill!(S(undef, 2), 1), 2, name = "NLS", matrix_free = true),
+    ),
+    TRSolver in (TrustRegion, TRONTrustRegion)
+
     test_aredpred(nlp, TRSolver, S)
   end
 
@@ -64,9 +66,22 @@ end
     CUDA.allowscalar() do
       S = CuVector{Float64}
       @testset "aredpred-$(nlp.meta.name) - $S - $TRSolver" for nlp in (
-        ADNLPModel(x -> x[1]^2 + 4 * x[2]^2, fill!(S(undef, 2), 1), name = "NLP", matrix_free = true),
-        ADNLSModel(x -> [x[1]; 2 * x[2]], fill!(S(undef, 2), 1), 2, name = "NLS", matrix_free = true),
-      ), TRSolver in (TrustRegion, TRONTrustRegion)
+          ADNLPModel(
+            x -> x[1]^2 + 4 * x[2]^2,
+            fill!(S(undef, 2), 1),
+            name = "NLP",
+            matrix_free = true,
+          ),
+          ADNLSModel(
+            x -> [x[1]; 2 * x[2]],
+            fill!(S(undef, 2), 1),
+            2,
+            name = "NLS",
+            matrix_free = true,
+          ),
+        ),
+        TRSolver in (TrustRegion, TRONTrustRegion)
+
         test_aredpred(nlp, TRSolver, S)
       end
     end
