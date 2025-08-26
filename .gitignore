@@ -1,3 +1,12 @@
-docs/build
-docs/Manifest.toml
+*.jl.*.cov
+*.jl.cov
+*.jl.mem
+*.rej
+.DS_Store
+.benchmarkci
 Manifest.toml
+benchmark/*.json
+coverage
+docs/build/
+env
+node_modules

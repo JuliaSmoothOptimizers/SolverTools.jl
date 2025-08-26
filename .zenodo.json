@@ -1,26 +1,5 @@
 {
-  "description": "Tools for developing nonlinear optimization solvers in Julia",
-  "title": "SolverTools.jl",
-  "upload_type": "software",
-  "license": "MPL-2.0",
-  "creators": [
-    {
-      "affiliation": "École Polytechnique/GERAD - Montréal",
-      "name": "Dominique Orban"
-    },
-    {
-      "affiliation": "Federal University of Paraná - UFPR",
-      "name": "Abel Soares Siqueira"
-    }
-  ],
   "access_right": "open",
-  "related_identifiers": [
-    {
-      "scheme": "url",
-      "identifier": "https://github.com/JuliaSmoothOptimizers/SolverTools.jl/releases/latest",
-      "relation": "isSupplementTo"
-    }
-  ],
   "contributors": [
     {
       "name": "Alexis Montoison",
@@ -30,5 +9,26 @@
       "name": "Jean-Pierre Dussault",
       "type": "Researcher"
     }
-  ]
+  ],
+  "creators": [
+    {
+      "affiliation": "\u00c9cole Polytechnique/GERAD - Montr\u00e9al",
+      "name": "Dominique Orban"
+    },
+    {
+      "affiliation": "Federal University of Paran\u00e1 - UFPR",
+      "name": "Abel Soares Siqueira"
+    }
+  ],
+  "description": "Tools for developing nonlinear optimization solvers in Julia",
+  "license": "MPL-2.0",
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/JuliaSmoothOptimizers/SolverTools.jl/releases/latest",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    }
+  ],
+  "title": "SolverTools.jl",
+  "upload_type": "software"
 }

@@ -1,0 +1,42 @@
+# Changes here will be overwritten by Copier
+AddAllcontributors: true
+AddCitationCFF: true
+AddCodeOfConduct: true
+AddCompatHelperCI: true
+AddContributionDocs: true
+AddCopierCI: false
+AddDependabot: false
+AddDocs: true
+AddDocsCI: true
+AddFormatterAndLinterConfigFiles: true
+AddGitHubPRTemplate: true
+AddGitHubTemplates: true
+AddLintCI: true
+AddLychee: true
+AddMacToCI: true
+AddPrecommit: true
+AddTagBotCI: true
+AddTestCI: true
+AddWinToCI: true
+Authors: Dominique Orban <dominique.orban@gerad.ca>, Abel Soares Siqueira <abel.s.siqueira@gmail.com>,
+    Tangi Migot <tangi.migot@gmail.com>
+AutoIncludeTests: true
+CheckExplicitImports: true
+CodeOfConductContact: dominique.orban@gerad.ca
+ConfigIndentation: 2
+ExplicitImportsChecklist: exclude_all_qualified_accesses_are_public
+JuliaIndentation: 2
+JuliaMinCIVersion: lts
+JuliaMinVersion: lts
+License: MPL-2.0
+LicenseCopyrightHolders: Dominique Orban, Abel Soares Siqueira, Tangi Migot
+MarkdownIndentation: 2
+PackageName: SolverTools
+PackageOwner: JuliaSmoothOptimizers
+PackageUUID: b5612192-2639-5dc1-abfe-fbedd65fab29
+RunJuliaNightlyOnCI: true
+StrategyConfirmIncluded: true
+StrategyLevel: 3
+StrategyReviewExcluded: false
+UseCirrusCI: true
+_src_path: C:\Users\tangi\.julia\packages\BestieTemplate\jdG8v
