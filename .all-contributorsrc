@@ -1,0 +1,5 @@
+{
+  "projectName": "SolverTools",
+  "projectOwner": "JuliaSmoothOptimizers",
+  "files": ["README.md", "docs/src/index.md"]
+}
