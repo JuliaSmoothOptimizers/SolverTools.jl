@@ -44,7 +44,8 @@ function aredpred_common(
   x_trial::V,
   step::V,
   g_trial::V,
-  slope::T,
+  slope::T;
+  use_only_objgrad::Bool = false,
 ) where {T, V}
   absf = abs(f)
   ϵ = eps(T)
@@ -54,7 +55,11 @@ function aredpred_common(
   ared = f_trial - f + max(one(T), absf) * 10 * ϵ
   if (abs(Δm) < 10_000 * ϵ) || (abs(ared) < 10_000 * ϵ * absf)
     # correct for roundoff error
-    grad!(nlp, x_trial, g_trial)
+    if use_only_objgrad
+      objgrad!(nlp, x_trial, g_trial)
+    else
+      grad!(nlp, x_trial, g_trial)
+    end
     good_grad = true
     slope_trial = dot(g_trial, step)
     ared = (slope_trial + slope) / 2
@@ -71,7 +76,8 @@ function aredpred_common(
   x_trial::V,
   step::V,
   g_trial::V,
-  slope::T,
+  slope::T;
+  kwargs...,
 ) where {T, V}
   absf = abs(f)
   ϵ = eps(T)
@@ -110,9 +116,10 @@ function aredpred!(
   Δm::T,
   x_trial::V,
   step::V,
-  slope::T,
+  slope::T;
+  kwargs...
 ) where {T, V}
-  ared, pred, tr.good_grad = aredpred_common(nlp, f, f_trial, Δm, x_trial, step, tr.gt, slope)
+  ared, pred, tr.good_grad = aredpred_common(nlp, f, f_trial, Δm, x_trial, step, tr.gt, slope; kwargs...)
   return ared, pred
 end
 
@@ -124,10 +131,11 @@ function aredpred!(
   Δm::T,
   x_trial::V,
   step::V,
-  slope::T,
+  slope::T;
+  kwargs...
 ) where {T, V}
   Fx = similar(x_trial, nls.nls_meta.nequ)
-  ared, pred, tr.good_grad = aredpred_common(nls, Fx, f, f_trial, Δm, x_trial, step, tr.gt, slope)
+  ared, pred, tr.good_grad = aredpred_common(nls, Fx, f, f_trial, Δm, x_trial, step, tr.gt, slope; kwargs...)
   return ared, pred
 end
 
@@ -140,9 +148,10 @@ function aredpred!(
   Δm::T,
   x_trial::V,
   step::V,
-  slope::T,
+  slope::T;
+  kwargs...
 ) where {T, V}
-  ared, pred, tr.good_grad = aredpred_common(nls, Fx, f, f_trial, Δm, x_trial, step, tr.gt, slope)
+  ared, pred, tr.good_grad = aredpred_common(nls, Fx, f, f_trial, Δm, x_trial, step, tr.gt, slope; kwargs...)
   return ared, pred
 end
 
