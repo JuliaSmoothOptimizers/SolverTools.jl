@@ -1,4 +1,4 @@
-export ARTrustRegion
+export ARTrustRegion, compute_r
 
 """
 ARTrustRegion(α₀::T;kwargs...)
