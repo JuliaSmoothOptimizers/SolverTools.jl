@@ -95,7 +95,8 @@ function aredpred!(
   slope::T;
   kwargs...,
 ) where {T, V}
-  ared, pred, tr.good_grad = aredpred_common(nlp, f, f_trial, Δm, x_trial, step, tr.gt, slope; kwargs...)
+  ared, pred, tr.good_grad =
+    aredpred_common(nlp, f, f_trial, Δm, x_trial, step, tr.gt, slope; kwargs...)
   γ = f_trial - f - slope
   tr.quad_min = γ <= 0 ? tr.increase_factor : max(tr.large_decrease_factor, -slope / γ / 2)
   return ared, pred
@@ -110,7 +111,7 @@ function aredpred!(
   x_trial::V,
   step::V,
   slope::T;
-  kwargs...
+  kwargs...,
 ) where {T, V}
   Fx = similar(x_trial, nls.nls_meta.nequ)
   return aredpred!(tr, nls, Fx, f, f_trial, Δm, x_trial, step, slope; kwargs...)
@@ -126,9 +127,10 @@ function aredpred!(
   x_trial::V,
   step::V,
   slope::T;
-  kwargs...
+  kwargs...,
 ) where {T, V}
-  ared, pred, tr.good_grad = aredpred_common(nls, Fx, f, f_trial, Δm, x_trial, step, tr.gt, slope; kwargs...)
+  ared, pred, tr.good_grad =
+    aredpred_common(nls, Fx, f, f_trial, Δm, x_trial, step, tr.gt, slope; kwargs...)
   γ = f_trial - f - slope
   tr.quad_min = γ <= 0 ? tr.increase_factor : max(tr.large_decrease_factor, -slope / γ / 2)
   return ared, pred
