@@ -1,10 +1,10 @@
 module SolverTools
 
-# stdlib
-using LinearAlgebra, Printf
-
-# our packages
-using LinearOperators, NLPModels
+using LinearAlgebra: LinearAlgebra, /, BLAS, mul!, norm, tr
+using LinearOperators: LinearOperators, AbstractLinearOperator
+using NLPModels:
+  NLPModels, AbstractNLPModel, AbstractNLSModel, Counters, NLPModelMeta, hprod, hprod!, residual!
+using Printf: Printf, @printf
 
 # Auxiliary.
 include("auxiliary/blas.jl")

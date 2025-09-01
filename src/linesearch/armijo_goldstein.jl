@@ -48,9 +48,9 @@ This implementation follows the description given in
     Worst-case evaluation complexity of non-monotone gradient-related algorithms for unconstrained optimization.
     Optimization 64(5), 1349–1361 (2015).
     DOI: 10.1080/02331934.2013.869809
-    
+
   The method initializes an interval ` [t_low,t_up]` guaranteed to contain a point satifying both Armijo and Goldstein conditions, and then uses a bisection algorithm to find such a point.
-  The method is implemented with M=0 (see reference), i.e., Armijo and Goldstein conditions are satisfied only for the current value of the objective `h₀`. 
+  The method is implemented with M=0 (see reference), i.e., Armijo and Goldstein conditions are satisfied only for the current value of the objective `h₀`.
 
   # Examples
 
