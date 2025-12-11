@@ -98,11 +98,11 @@ end
     tr.ratio = T(10)
     update!(tr, Δ₀)
     @test tr.radius > Δ₀
-    reset!(tr)
+    NLPModels.reset!(tr)
     tr.ratio = -T(1)
     update!(tr, Δ₀)
     @test tr.radius < Δ₀
-    reset!(tr)
+    NLPModels.reset!(tr)
 
     if VERSION ≥ v"1.7"
       trust_region_allocs_test(TrustRegion, S)
@@ -120,15 +120,15 @@ end
     tr.ratio = tr.acceptance_threshold - 1
     update!(tr, Δ₀)
     @test tr.radius < Δ₀
-    reset!(tr)
+    NLPModels.reset!(tr)
     tr.ratio = (tr.acceptance_threshold + tr.decrease_threshold) / 2
     update!(tr, Δ₀)
     @test tr.radius < Δ₀
-    reset!(tr)
+    NLPModels.reset!(tr)
     tr.ratio = (tr.decrease_threshold + tr.increase_threshold) / 2
     update!(tr, Δ₀)
     @test tr.radius < Δ₀
-    reset!(tr)
+    NLPModels.reset!(tr)
     tr.ratio = tr.increase_threshold + 1
     tr.quad_min = T(2)
     update!(tr, Δ₀)
