@@ -117,9 +117,10 @@ function aredpred!(
   x_trial::V,
   step::V,
   slope::T;
-  kwargs...
+  kwargs...,
 ) where {T, V}
-  ared, pred, tr.good_grad = aredpred_common(nlp, f, f_trial, Δm, x_trial, step, tr.gt, slope; kwargs...)
+  ared, pred, tr.good_grad =
+    aredpred_common(nlp, f, f_trial, Δm, x_trial, step, tr.gt, slope; kwargs...)
   return ared, pred
 end
 
@@ -132,10 +133,11 @@ function aredpred!(
   x_trial::V,
   step::V,
   slope::T;
-  kwargs...
+  kwargs...,
 ) where {T, V}
   Fx = similar(x_trial, nls.nls_meta.nequ)
-  ared, pred, tr.good_grad = aredpred_common(nls, Fx, f, f_trial, Δm, x_trial, step, tr.gt, slope; kwargs...)
+  ared, pred, tr.good_grad =
+    aredpred_common(nls, Fx, f, f_trial, Δm, x_trial, step, tr.gt, slope; kwargs...)
   return ared, pred
 end
 
@@ -149,9 +151,10 @@ function aredpred!(
   x_trial::V,
   step::V,
   slope::T;
-  kwargs...
+  kwargs...,
 ) where {T, V}
-  ared, pred, tr.good_grad = aredpred_common(nls, Fx, f, f_trial, Δm, x_trial, step, tr.gt, slope; kwargs...)
+  ared, pred, tr.good_grad =
+    aredpred_common(nls, Fx, f, f_trial, Δm, x_trial, step, tr.gt, slope; kwargs...)
   return ared, pred
 end
 
