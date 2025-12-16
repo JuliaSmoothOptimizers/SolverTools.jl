@@ -1,5 +1,4 @@
 # A trust-region type and basic utility functions.
-import NLPModels: reset!
 export TrustRegionException, acceptable, aredpred!, reset!, update!
 
 "Exception type raised in case of error."
@@ -170,7 +169,7 @@ end
 
 Reset the trust-region radius to its initial value.
 """
-function reset!(tr::AbstractTrustRegion)
+function NLPModels.reset!(tr::AbstractTrustRegion)
   tr.radius = tr.initial_radius
   return tr
 end
