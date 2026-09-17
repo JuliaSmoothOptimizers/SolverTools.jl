@@ -6,7 +6,6 @@
 [![Coverage](https://codecov.io/gh/JuliaSmoothOptimizers/SolverTools.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/JuliaSmoothOptimizers/SolverTools.jl)
 [![Lint workflow Status](https://github.com/JuliaSmoothOptimizers/SolverTools.jl/actions/workflows/Lint.yml/badge.svg?branch=main)](https://github.com/JuliaSmoothOptimizers/SolverTools.jl/actions/workflows/Lint.yml?query=branch%3Amain)
 [![Docs workflow Status](https://github.com/JuliaSmoothOptimizers/SolverTools.jl/actions/workflows/Docs.yml/badge.svg?branch=main)](https://github.com/JuliaSmoothOptimizers/SolverTools.jl/actions/workflows/Docs.yml?query=branch%3Amain)
-[![Build Status](https://api.cirrus-ci.com/github/JuliaSmoothOptimizers/SolverTools.jl.svg)](https://cirrus-ci.com/github/JuliaSmoothOptimizers/SolverTools.jl)
 [![DOI](https://zenodo.org/badge/54757404.svg)](https://zenodo.org/badge/latestdoi/54757404)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 [![All Contributors](https://img.shields.io/github/all-contributors/JuliaSmoothOptimizers/SolverTools.jl?labelColor=5e1ec7&color=c0ffee&style=flat-square)](#contributors)
