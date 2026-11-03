@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 
 jobs:
-  
+
   lint:
     name: Linting
     runs-on: ubuntu-latest
@@ -61,4 +61,3 @@ jobs:
         with:
           fail: true
           args: --config '.lychee.toml' .
-  

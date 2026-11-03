@@ -2,7 +2,8 @@
 using SolverTools
 
 # Auxiliary packages
-using ADNLPModels, CUDA, NLPModels, NLPModelsTest, SolverCore
+using ADNLPModels, NLPModels, NLPModelsTest, SolverCore
+using CUDA: CUDA, CuVector
 
 # stdlib
 using LinearAlgebra, Logging, Test
