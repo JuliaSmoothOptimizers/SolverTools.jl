@@ -71,29 +71,30 @@ function test_auxiliary()
   end
 
   if CUDA.functional()
-    CUDA.allowscalar() do
-      @testset "Bounds with CuVector" begin
-        T = Float64
-        S = CuVector{T}
-        x = S([0; 1; 2; 3; 4])
-        ℓ = fill!(S(undef, 5), 0)
-        u = fill!(S(undef, 5), 4)
-        @test active(x, ℓ, u) == [1, 5]
+    # Check that the bound functions do not scalar-index GPU arrays
+    CUDA.allowscalar(false)
+    @testset "Bounds with CuVector" begin
+      T = Float64
+      S = CuVector{T}
+      x = S([0; 1; 2; 3; 4])
+      ℓ = fill!(S(undef, 5), 0)
+      u = fill!(S(undef, 5), 4)
+      @test Array(active(x, ℓ, u)) == [1, 5]
 
-        d = S([1; 1; 0; -1; -1])
-        @test breakpoints(x, d, ℓ, u) == (4, 3.0, 4.0)
+      d = S([1; 1; 0; -1; -1])
+      @test breakpoints(x, d, ℓ, u) == (4, 3.0, 4.0)
 
-        z = S([-rand(2); x[3]; 4 .+ rand(2)])
-        y = S(rand(5))
-        project!(y, z, ℓ, u)
-        @test y == [ℓ[1:2]; x[3]; u[4:5]]
+      z = S([-rand(2); 2; 4 .+ rand(2)])
+      y = S(rand(5))
+      project!(y, z, ℓ, u)
+      @test Array(y) == [0; 0; 2; 4; 4]
 
-        project_step!(y, x, -d, ℓ, u)
-        @test y == [0.0; -1.0; 0.0; 1.0; 0.0]
+      project_step!(y, x, -d, ℓ, u)
+      @test Array(y) == [0.0; -1.0; 0.0; 1.0; 0.0]
 
-        ind = BitVector(undef, 5)
-        active!(ind, x, ℓ, u)
-      end
+      ind = CuVector{Bool}(undef, 5)
+      active!(ind, x, ℓ, u)
+      @test Array(ind) == [true, false, false, false, true]
     end
   end
 end

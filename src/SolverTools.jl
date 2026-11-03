@@ -1,6 +1,6 @@
 module SolverTools
 
-using LinearAlgebra: LinearAlgebra, /, BLAS, mul!, norm, tr
+using LinearAlgebra: LinearAlgebra, BLAS, mul!, norm, tr
 using LinearOperators: LinearOperators, AbstractLinearOperator
 using NLPModels:
   NLPModels, AbstractNLPModel, AbstractNLSModel, Counters, NLPModelMeta, hprod, hprod!, residual!
